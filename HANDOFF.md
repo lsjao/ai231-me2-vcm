@@ -13,6 +13,14 @@ only `phrase_list.csv`, `manifest.csv`, `dataset/`, and `README.md`. A filesyste
 copies elsewhere on this machine either. Treating those components as **not built** until proven
 otherwise. This file now reflects actual repo state, not the aspirational description.
 
+**Second correction (same day, later sanity-check pass):** `handoff.txt` (untracked, gitignored) had
+an "Addendum Part 2" appended to it after the initial read at the start of this session — a recording
+protocol, easter-egg/playlist audio sourcing tasks, a confidence-recalibration risk, a retries-to-
+success benchmark metric, a concrete evaluator plan, and a day-5 fallback checkpoint. It went
+unnoticed until an explicit sanity-check pass re-read the file. **Going forward, edit HANDOFF.md
+directly instead of handoff.txt** — handoff.txt being gitignored means changes to it don't show up
+in `git status` and are easy to lose track of silently, exactly what happened here.
+
 ## Hard constraints
 
 - Deadline: live demo **Oct 3**. Today: **Sep 25**. 8 days, no buffer built in yet.
@@ -50,6 +58,13 @@ Creative additions, priority order if time allows: sleep timer (cross-intent w/ 
 - Per-intent counts: media_control 48, play_music 30, set_timer 30, light_dim_color 24, light_on_off 24, set_temperature 18, ask_time 12, reject 15 (offvocab only — `reject/slot=silence` and `reject/slot=noise` still need real recordings, TTS can't produce them).
 - Confirmed by class data, not theoretical: synthetic-only training fails on real voices. One classmate: 73% word error rate training on synthetic, testing on real voice. **Real voice data is the single highest-priority gap.** Folder/manifest structure is built for real recordings to drop straight in (see `README.md`).
 
+### Recording protocol (concrete spec, was never written down before this)
+
+- **Mic distance**: most samples at 6-12 inches (typical demo distance), plus a handful at 2-3 feet (worst-case) so the model isn't brittle to exact positioning.
+- **Phrasing variants**: minimum 2-3 different ways of saying each command (e.g. "pause" / "pause the music" / "stop the music for now").
+- **Noise conditions**: a portion in silence, a portion with background TV/music, a portion with ambient room noise (fan, traffic). Doesn't need to be even, but zero noisy samples is the failure mode to avoid — and this is also what fills in `reject/slot=silence` and `reject/slot=noise`, which TTS can't produce (see dataset status above).
+- **Target volume**: ~20-30 real repetitions per intent/slot combination as a baseline, more for play_media specifically since it's the graded specialty.
+
 ## Code inventory (actual, as of this session)
 
 | File | Status |
@@ -60,7 +75,7 @@ Creative additions, priority order if time allows: sleep timer (cross-intent w/ 
 | `src/vcm/train.py` | Built this session — trains, evaluates, exports Keras + TFLite (dynamic-range quantized) + labels/config JSON |
 | `src/vcm/play_music_state_machine.py` | Built this session — playlist state machine, transport controls, volume, easter eggs, duck/unduck hooks. 17 tests in `src/tests/test_play_music_state_machine.py`, all passing. |
 | `src/vcm/ambient_volume.py` | Built this session — noise-floor tracker + volume curve + hysteresis. 12 tests in `src/tests/test_ambient_volume.py`, all passing. Calibration constants are placeholders pending real mic. |
-| `src/vcm/benchmark_harness.py` | Built this session — evaluator-logging CLI, CSV per attempt (timestamp/evaluator/phrase/predicted_intent/confidence/correct/latency_ms/audio_filepath). Two modes: `live` (real mic via `sounddevice`, needs the Pi's mic) and `replay` (existing dataset WAVs, for smoke-testing the harness itself, not a real benchmark). 8 tests in `src/tests/test_benchmark_harness.py`, all passing; also run end-to-end in replay mode against the real trained model as a live smoke test (6% accuracy on 16 attempts, consistent with the classifier's known weakness, not a harness bug). |
+| `src/vcm/benchmark_harness.py` | Built this session — evaluator-logging CLI, CSV per attempt (timestamp/evaluator/phrase/predicted_intent/confidence/correct/latency_ms/audio_filepath), plus a summary with accuracy, per-intent breakdown, and retries-to-success (mean attempts until first correct prediction per command, commands that never succeeded within `reps` — the addendum's requested metric). Two modes: `live` (real mic via `sounddevice`, needs the Pi's mic) and `replay` (existing dataset WAVs, for smoke-testing the harness itself, not a real benchmark). `--evaluator-plan` runs the addendum's exact plan (every play_media command, one prompt per slot, 3x each). 15 tests in `src/tests/test_benchmark_harness.py`, all passing; also run end-to-end against the real trained model in replay mode, including with `--evaluator-plan` (45 attempts across 15 play_media commands, consistent with the classifier's known weakness, not a harness bug). |
 | `phrase_list.csv`, `dataset/`, `manifest.csv` | Present, scaffolding intact, real recordings drop in here per `README.md`. |
 
 ## Honest current status
@@ -72,9 +87,9 @@ Rebuilding the completion estimate from the corrected file inventory: a trainabl
 - This is consistent with, not contradicting, the handoff's warning about synthetic-only training: 201 clips across 8 classes from only 3 TTS voices is not enough signal, and the model is doing the predictable thing (betting on the majority classes). Expect a real jump once real recordings land and the class balance improves.
 - Artifacts: `models/vcm_crnn.keras`, `models/vcm_crnn.tflite` (595KB, not tracked in git, regenerate with `python -m vcm.train` from `src/`), `models/labels.json`, `models/training_config.json`, `models/eval_report.txt` (tracked).
 
-The play_media state machine (playlist selection, transport, volume, easter eggs, duck hooks), the ambient auto-volume module, and the evaluator-logging benchmark harness are all built and tested this session -- 37 passing tests total. **Nothing has been validated on real voice or real evaluators, nothing has touched the Pi, the ambient-volume calibration constants are unverified guesses, and the intent→slot resolution gap above has no owner yet.** Mic/speaker purchase is still the literal first blocking task for anything hardware-facing -- `benchmark_harness.py --mode live` needs `pip install sounddevice` (see `requirements-pi.txt`) plus an actual mic before it can run for real, neither of which exist on this dev machine or the Pi yet.
+The play_media state machine (playlist selection, transport, volume, easter eggs, duck hooks), the ambient auto-volume module, and the evaluator-logging benchmark harness are all built and tested this session -- 44 passing tests total. **Nothing has been validated on real voice or real evaluators, nothing has touched the Pi, the ambient-volume calibration constants are unverified guesses, and the intent→slot resolution gap above has no owner yet.** Mic/speaker purchase is still the literal first blocking task for anything hardware-facing -- `benchmark_harness.py --mode live` needs `pip install sounddevice` (see `requirements-pi.txt`) plus an actual mic before it can run for real, neither of which exist on this dev machine or the Pi yet.
 
-**Next code priorities, in order:** (1) retrain once real recordings exist -- same `python -m vcm.train` command, no code changes needed, (2) decide + build the intent→slot resolution approach (see gap above), (3) once mic exists: recruit evaluators and run `benchmark_harness.py --mode live` for real, recalibrate `ambient_volume.py`'s noise-floor constants against real (and dual-fan) ambient audio.
+**Next code priorities, in order:** (1) retrain once real recordings exist -- same `python -m vcm.train` command, no code changes needed, (2) decide + build the intent→slot resolution approach (see gap above), (3) once mic exists: recruit evaluators and run `benchmark_harness.py --mode live --evaluator-plan` for real, recalibrate `ambient_volume.py`'s noise-floor constants against real (and dual-fan) ambient audio, re-tune the reject-class confidence threshold against real audio.
 
 ## 8-day critical path
 
@@ -85,12 +100,16 @@ The play_media state machine (playlist selection, transport, volume, easter eggs
 - [x] Build ambient auto-volume (#4) — built and tested this session against synthetic noise; calibration constants are placeholders, recalibrate once mic exists
 - [ ] Wire mic capture -> VAD -> classifier -> state machine on the Pi. Test dual-fan noise the moment hardware is together
 - [x] Build the evaluator-logging script — built and tested this session (`src/vcm/benchmark_harness.py`), smoke-tested end-to-end in replay mode; live mode needs `sounddevice` + a real mic, neither installed/available yet
-- [ ] Recruit 2-3 external evaluators, run `benchmark_harness.py --mode live` for real validation
+- [ ] Recruit 2-3 external evaluators (people other than the owner), schedule for **day 5-6** — after the real classifier exists but with enough buffer to retrain if results reveal a bad failure mode. Run `python -m vcm.benchmark_harness --mode live --evaluator "<name>" --evaluator-plan` for each (every play_media command, 3x each — matches "n times" from the assignment without needing an exact number from the professor).
+- [ ] Source the easter-egg songs ("Good Morning", "No"/stage-fright) as local MP3s — copyrighted, must be sourced personally, not generated. Needed before the demo, not before training.
+- [ ] Source the 5-10 closed-playlist tracks (jazz, workout, chill, focus, general) as local files, no streaming dependency.
 - [ ] Build 1 (max 2) creative additions, sleep timer first
 - [ ] Rehearsal buffer, last 1-2 days minimum, don't skip
+- [ ] **Day-5 fallback checkpoint**: if the real classifier isn't trained and running on the Pi end-to-end by day 5, cut every creative addition immediately and put all remaining time into core play_media + reject-class reliability. A working core beats a broken feature stack on demo day.
 
 ## Open, non-blocking
 
 - Train-from-scratch clarification with professor.
 - Whether play_music/media_control stay as two internal labels (recommended — used as two separate classes in the classifier built this session) vs merge into one, decide before final report writing, not before building.
 - **Intent→slot resolution** (see feature-stack section above): the classifier says "media_control" or "play_music", the state machine needs "next" or "playlist_jazz". Nothing bridges that yet. Not blocking today (mic still isn't bought, nothing plugs into the state machine yet either), but it blocks the "wire mic → VAD → classifier → state machine" critical-path step, so it needs a decision before that step starts, not during it.
+- **Confidence threshold recalibration** (known risk, no assigned task yet): a model trained partly on clean synthetic TTS will likely be overconfident on synthetic-style input and miscalibrated on noisier real recordings. Once real recordings are mixed into training, re-tune the reject-class confidence threshold against a real-audio validation slice — don't assume whatever threshold works on synthetic data still holds. Directly affects the false-accept rate on demo day. No threshold-tuning code exists yet; revisit once real recordings exist.

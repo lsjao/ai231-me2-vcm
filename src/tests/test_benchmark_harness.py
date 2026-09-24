@@ -1,5 +1,4 @@
 import csv
-import os
 
 import numpy as np
 import pytest
@@ -14,7 +13,7 @@ from vcm.benchmark_harness import (
 )
 
 
-def test_load_prompts_one_per_intent_skips_silence_and_noise_placeholders(tmp_path):
+def test_load_prompts_intent_granularity_skips_silence_and_noise_placeholders(tmp_path):
     csv_path = tmp_path / "phrase_list.csv"
     csv_path.write_text(
         "intent,slot,phrase\n"
@@ -25,7 +24,7 @@ def test_load_prompts_one_per_intent_skips_silence_and_noise_placeholders(tmp_pa
         "reject,offvocab,i think i left my keys somewhere\n",
         encoding="utf-8",
     )
-    prompts = load_prompts(str(csv_path), one_per_intent=True)
+    prompts = load_prompts(str(csv_path), granularity="intent")
     assert len(prompts) == 2
     intents = {p.intent for p in prompts}
     assert intents == {"ask_time", "reject"}
@@ -33,7 +32,7 @@ def test_load_prompts_one_per_intent_skips_silence_and_noise_placeholders(tmp_pa
     assert reject_prompt.slot == "offvocab"
 
 
-def test_load_prompts_all_phrases_keeps_every_row_except_silence_noise(tmp_path):
+def test_load_prompts_phrase_granularity_keeps_every_row_except_silence_noise(tmp_path):
     csv_path = tmp_path / "phrase_list.csv"
     csv_path.write_text(
         "intent,slot,phrase\n"
@@ -42,8 +41,47 @@ def test_load_prompts_all_phrases_keeps_every_row_except_silence_noise(tmp_path)
         "reject,silence,__silence__\n",
         encoding="utf-8",
     )
-    prompts = load_prompts(str(csv_path), one_per_intent=False)
+    prompts = load_prompts(str(csv_path), granularity="phrase")
     assert len(prompts) == 2
+
+
+def test_load_prompts_slot_granularity_gives_one_phrase_per_slot(tmp_path):
+    csv_path = tmp_path / "phrase_list.csv"
+    csv_path.write_text(
+        "intent,slot,phrase\n"
+        "media_control,pause,pause\n"
+        "media_control,pause,pause the music\n"
+        "media_control,next,next\n"
+        "media_control,next,skip this song\n",
+        encoding="utf-8",
+    )
+    prompts = load_prompts(str(csv_path), granularity="slot")
+    assert len(prompts) == 2
+    slots = {p.slot for p in prompts}
+    assert slots == {"pause", "next"}
+
+
+def test_load_prompts_intents_filter_restricts_to_given_intents(tmp_path):
+    csv_path = tmp_path / "phrase_list.csv"
+    csv_path.write_text(
+        "intent,slot,phrase\n"
+        "ask_time,none,what time is it\n"
+        "media_control,play,play\n"
+        "play_music,playlist_jazz,play some jazz\n",
+        encoding="utf-8",
+    )
+    prompts = load_prompts(
+        str(csv_path), granularity="intent", intents={"media_control", "play_music"}
+    )
+    intents = {p.intent for p in prompts}
+    assert intents == {"media_control", "play_music"}
+
+
+def test_load_prompts_rejects_unknown_granularity(tmp_path):
+    csv_path = tmp_path / "phrase_list.csv"
+    csv_path.write_text("intent,slot,phrase\nask_time,none,what time is it\n", encoding="utf-8")
+    with pytest.raises(ValueError):
+        load_prompts(str(csv_path), granularity="nonsense")
 
 
 def _write_wav(path, seconds=1.0, sr=22050):
@@ -168,11 +206,23 @@ def test_run_session_appends_without_duplicating_header(tmp_path):
     assert len(lines) == 3  # 1 header + 2 data rows
 
 
+def _row(evaluator, expected_intent, slot, attempt_index, correct, confidence=0.5, latency_ms=1.0):
+    return {
+        "evaluator": evaluator,
+        "expected_intent": expected_intent,
+        "slot": slot,
+        "attempt_index": attempt_index,
+        "correct": correct,
+        "confidence": confidence,
+        "latency_ms": latency_ms,
+    }
+
+
 def test_summarize_computes_accuracy_and_per_intent_breakdown():
     rows = [
-        {"expected_intent": "ask_time", "correct": True, "confidence": 0.8, "latency_ms": 10.0},
-        {"expected_intent": "ask_time", "correct": False, "confidence": 0.4, "latency_ms": 20.0},
-        {"expected_intent": "set_timer", "correct": True, "confidence": 0.9, "latency_ms": 5.0},
+        _row("a", "ask_time", "none", 1, True, confidence=0.8, latency_ms=10.0),
+        _row("a", "ask_time", "none", 2, False, confidence=0.4, latency_ms=20.0),
+        _row("a", "set_timer", "1min", 1, True, confidence=0.9, latency_ms=5.0),
     ]
     summary = summarize(rows)
     assert summary["n_attempts"] == 3
@@ -184,3 +234,45 @@ def test_summarize_computes_accuracy_and_per_intent_breakdown():
 
 def test_summarize_of_empty_rows_is_empty_dict():
     assert summarize([]) == {}
+
+
+def test_summarize_attempts_to_success_counts_first_correct_attempt():
+    rows = [
+        _row("jane", "media_control", "next", 1, False),
+        _row("jane", "media_control", "next", 2, False),
+        _row("jane", "media_control", "next", 3, True),
+    ]
+    summary = summarize(rows)
+    assert summary["commands_tested"] == 1
+    assert summary["commands_never_succeeded"] == 0
+    assert summary["mean_attempts_to_success"] == pytest.approx(3.0)
+
+
+def test_summarize_tracks_commands_that_never_succeed():
+    rows = [
+        _row("jane", "media_control", "next", 1, False),
+        _row("jane", "media_control", "next", 2, False),
+        _row("jane", "media_control", "pause", 1, True),
+    ]
+    summary = summarize(rows)
+    assert summary["commands_tested"] == 2
+    assert summary["commands_never_succeeded"] == 1
+    assert summary["mean_attempts_to_success"] == pytest.approx(1.0)  # only the pause command
+
+
+def test_summarize_attempts_to_success_is_none_when_nothing_ever_succeeds():
+    rows = [_row("jane", "media_control", "next", 1, False)]
+    summary = summarize(rows)
+    assert summary["mean_attempts_to_success"] is None
+    assert summary["commands_never_succeeded"] == 1
+
+
+def test_summarize_groups_attempts_to_success_per_evaluator_separately():
+    rows = [
+        _row("jane", "media_control", "next", 1, True),   # jane succeeds immediately
+        _row("bob", "media_control", "next", 1, False),
+        _row("bob", "media_control", "next", 2, True),    # bob needs 2 attempts
+    ]
+    summary = summarize(rows)
+    assert summary["commands_tested"] == 2  # (jane, next) and (bob, next) are distinct
+    assert summary["mean_attempts_to_success"] == pytest.approx((1 + 2) / 2)

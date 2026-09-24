@@ -30,8 +30,9 @@ Usage:
     python -m vcm.benchmark_harness --mode replay --evaluator smoketest \
         --data-root .. --manifest ../manifest.csv --reps 1
 
-    # real evaluator session on the Pi, once a mic exists
-    python -m vcm.benchmark_harness --mode live --evaluator "Jane Doe" --reps 3
+    # real evaluator session on the Pi, once a mic exists -- addendum's
+    # plan: every play_media command, 3x each (see HANDOFF.md)
+    python -m vcm.benchmark_harness --mode live --evaluator "Jane Doe" --evaluator-plan
 """
 
 from __future__ import annotations
@@ -46,7 +47,15 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 import numpy as np
-import tensorflow as tf
+
+try:
+    # lean runtime this actually ships with on the Pi (requirements-pi.txt)
+    from tflite_runtime.interpreter import Interpreter
+except ImportError:
+    # dev machine: full tensorflow, no tflite_runtime installed
+    import tensorflow as tf
+
+    Interpreter = tf.lite.Interpreter
 
 from . import audio, data
 
@@ -73,19 +82,41 @@ class Prompt:
     phrase: str
 
 
-def load_prompts(phrase_list_path: str, one_per_intent: bool = True) -> list[Prompt]:
+def load_prompts(
+    phrase_list_path: str,
+    granularity: str = "intent",
+    intents: set[str] | None = None,
+) -> list[Prompt]:
+    """granularity="intent": one phrase per intent (broad coverage, short
+    session). "slot": one phrase per (intent, slot) -- e.g. every distinct
+    play_media command (play/pause/stop/next/previous/volume_up/volume_down/
+    each playlist/whats_playing/each easter egg), not just "media_control"
+    once. "phrase": every row, including repeated phrasings of the same
+    slot. `intents`, if given, restricts to those intents first.
+
+    The addendum's evaluator plan ("each evaluator says every play_media
+    command 3 times") is `granularity="slot", intents={"media_control",
+    "play_music"}` -- see HANDOFF.md and the CLI --evaluator-plan flag.
+    """
+    if granularity not in ("intent", "slot", "phrase"):
+        raise ValueError(f"unknown granularity: {granularity!r}")
+
     prompts: list[Prompt] = []
-    seen_intents: set[str] = set()
+    seen_keys: set = set()
     with open(phrase_list_path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            intent = row["intent"]
-            if intent == "reject" and row["slot"] in ("silence", "noise"):
+            intent, slot = row["intent"], row["slot"]
+            if intent == "reject" and slot in ("silence", "noise"):
                 continue  # no real phrase to say for these, TTS placeholders
-            if one_per_intent and intent in seen_intents:
+            if intents is not None and intent not in intents:
                 continue
-            seen_intents.add(intent)
-            prompts.append(Prompt(intent=intent, slot=row["slot"], phrase=row["phrase"]))
+
+            key = intent if granularity == "intent" else (intent, slot)
+            if granularity != "phrase" and key in seen_keys:
+                continue
+            seen_keys.add(key)
+            prompts.append(Prompt(intent=intent, slot=slot, phrase=row["phrase"]))
     return prompts
 
 
@@ -97,7 +128,7 @@ class Classifier:
     def __init__(self, model_dir: str):
         with open(os.path.join(model_dir, "labels.json")) as f:
             self.idx_to_label = {int(k): v for k, v in json.load(f).items()}
-        self.interpreter = tf.lite.Interpreter(
+        self.interpreter = Interpreter(
             model_path=os.path.join(model_dir, "vcm_crnn.tflite")
         )
         self.interpreter.allocate_tensors()
@@ -261,12 +292,34 @@ def summarize(rows: list[dict]) -> dict:
     for intent, bucket in per_intent.items():
         bucket["accuracy"] = bucket["correct"] / bucket["n"]
 
+    # retries-until-success: for each (evaluator, intent, slot) command,
+    # how many attempts until the first correct prediction, if any
+    commands: dict[tuple, list[dict]] = {}
+    for r in rows:
+        key = (r["evaluator"], r["expected_intent"], r["slot"])
+        commands.setdefault(key, []).append(r)
+
+    attempts_to_success = []
+    never_succeeded = 0
+    for attempts in commands.values():
+        attempts.sort(key=lambda r: r["attempt_index"])
+        first_success = next((r["attempt_index"] for r in attempts if r["correct"]), None)
+        if first_success is None:
+            never_succeeded += 1
+        else:
+            attempts_to_success.append(first_success)
+
     return {
         "n_attempts": n,
         "accuracy": accuracy,
         "mean_confidence": mean_conf,
         "mean_latency_ms": mean_latency,
         "per_intent": per_intent,
+        "commands_tested": len(commands),
+        "commands_never_succeeded": never_succeeded,
+        "mean_attempts_to_success": (
+            sum(attempts_to_success) / len(attempts_to_success) if attempts_to_success else None
+        ),
     }
 
 
@@ -276,7 +329,16 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--mode", choices=["live", "replay"], default="replay")
     p.add_argument("--reps", type=int, default=3, help="times each command is said per evaluator")
     p.add_argument("--phrase-list", default="phrase_list.csv")
-    p.add_argument("--all-phrases", action="store_true", help="use every phrase, not one per intent")
+    p.add_argument("--granularity", choices=["intent", "slot", "phrase"], default="intent")
+    p.add_argument(
+        "--intents", default=None,
+        help="comma-separated intent allowlist, e.g. media_control,play_music",
+    )
+    p.add_argument(
+        "--evaluator-plan", action="store_true",
+        help="shortcut for the addendum's plan: every play_media command, "
+        "3x each (equivalent to --granularity slot --intents media_control,play_music --reps 3)",
+    )
     p.add_argument("--model-dir", default="../models")
     p.add_argument("--output-csv", default="../benchmark_logs/results.csv")
     p.add_argument("--audio-out-dir", default="../benchmark_logs/audio")
@@ -287,7 +349,13 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    prompts = load_prompts(args.phrase_list, one_per_intent=not args.all_phrases)
+    if args.evaluator_plan:
+        args.granularity = "slot"
+        args.intents = "media_control,play_music"
+        args.reps = 3
+
+    intents = set(args.intents.split(",")) if args.intents else None
+    prompts = load_prompts(args.phrase_list, granularity=args.granularity, intents=intents)
     classifier = Classifier(args.model_dir)
 
     rows = run_session(
