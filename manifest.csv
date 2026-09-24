@@ -1,0 +1,202 @@
+filepath,intent,slot,phrase,speaker,condition,source
+dataset/intent=light_on_off/slot=on/turn_on_the_lights__voice_us.wav,light_on_off,on,turn on the lights,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=on/turn_on_the_lights__voice_gb.wav,light_on_off,on,turn on the lights,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=on/turn_on_the_lights__voice_rp.wav,light_on_off,on,turn on the lights,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=on/lights_on__voice_us.wav,light_on_off,on,lights on,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=on/lights_on__voice_gb.wav,light_on_off,on,lights on,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=on/lights_on__voice_rp.wav,light_on_off,on,lights on,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=on/switch_the_lights_on__voice_us.wav,light_on_off,on,switch the lights on,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=on/switch_the_lights_on__voice_gb.wav,light_on_off,on,switch the lights on,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=on/switch_the_lights_on__voice_rp.wav,light_on_off,on,switch the lights on,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=on/turn_the_light_on__voice_us.wav,light_on_off,on,turn the light on,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=on/turn_the_light_on__voice_gb.wav,light_on_off,on,turn the light on,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=on/turn_the_light_on__voice_rp.wav,light_on_off,on,turn the light on,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=off/turn_off_the_lights__voice_us.wav,light_on_off,off,turn off the lights,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=off/turn_off_the_lights__voice_gb.wav,light_on_off,off,turn off the lights,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=off/turn_off_the_lights__voice_rp.wav,light_on_off,off,turn off the lights,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=off/lights_off__voice_us.wav,light_on_off,off,lights off,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=off/lights_off__voice_gb.wav,light_on_off,off,lights off,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=off/lights_off__voice_rp.wav,light_on_off,off,lights off,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=off/switch_the_lights_off__voice_us.wav,light_on_off,off,switch the lights off,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=off/switch_the_lights_off__voice_gb.wav,light_on_off,off,switch the lights off,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=off/switch_the_lights_off__voice_rp.wav,light_on_off,off,switch the lights off,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=off/turn_the_light_off__voice_us.wav,light_on_off,off,turn the light off,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=off/turn_the_light_off__voice_gb.wav,light_on_off,off,turn the light off,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_on_off/slot=off/turn_the_light_off__voice_rp.wav,light_on_off,off,turn the light off,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_25/dim_the_lights_to_twenty_five_percent__voice_us.wav,light_dim_color,brightness_25,dim the lights to twenty five percent,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_25/dim_the_lights_to_twenty_five_percent__voice_gb.wav,light_dim_color,brightness_25,dim the lights to twenty five percent,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_25/dim_the_lights_to_twenty_five_percent__voice_rp.wav,light_dim_color,brightness_25,dim the lights to twenty five percent,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_25/set_brightness_to_twenty_five_percent__voice_us.wav,light_dim_color,brightness_25,set brightness to twenty five percent,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_25/set_brightness_to_twenty_five_percent__voice_gb.wav,light_dim_color,brightness_25,set brightness to twenty five percent,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_25/set_brightness_to_twenty_five_percent__voice_rp.wav,light_dim_color,brightness_25,set brightness to twenty five percent,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_50/dim_the_lights_to_fifty_percent__voice_us.wav,light_dim_color,brightness_50,dim the lights to fifty percent,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_50/dim_the_lights_to_fifty_percent__voice_gb.wav,light_dim_color,brightness_50,dim the lights to fifty percent,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_50/dim_the_lights_to_fifty_percent__voice_rp.wav,light_dim_color,brightness_50,dim the lights to fifty percent,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_50/set_brightness_to_fifty_percent__voice_us.wav,light_dim_color,brightness_50,set brightness to fifty percent,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_50/set_brightness_to_fifty_percent__voice_gb.wav,light_dim_color,brightness_50,set brightness to fifty percent,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_50/set_brightness_to_fifty_percent__voice_rp.wav,light_dim_color,brightness_50,set brightness to fifty percent,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_75/dim_the_lights_to_seventy_five_percent__voice_us.wav,light_dim_color,brightness_75,dim the lights to seventy five percent,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_75/dim_the_lights_to_seventy_five_percent__voice_gb.wav,light_dim_color,brightness_75,dim the lights to seventy five percent,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_75/dim_the_lights_to_seventy_five_percent__voice_rp.wav,light_dim_color,brightness_75,dim the lights to seventy five percent,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_75/set_brightness_to_seventy_five_percent__voice_us.wav,light_dim_color,brightness_75,set brightness to seventy five percent,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_75/set_brightness_to_seventy_five_percent__voice_gb.wav,light_dim_color,brightness_75,set brightness to seventy five percent,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_75/set_brightness_to_seventy_five_percent__voice_rp.wav,light_dim_color,brightness_75,set brightness to seventy five percent,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_100/set_lights_to_full_brightness__voice_us.wav,light_dim_color,brightness_100,set lights to full brightness,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_100/set_lights_to_full_brightness__voice_gb.wav,light_dim_color,brightness_100,set lights to full brightness,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_100/set_lights_to_full_brightness__voice_rp.wav,light_dim_color,brightness_100,set lights to full brightness,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_100/brighten_the_lights_all_the_way__voice_us.wav,light_dim_color,brightness_100,brighten the lights all the way,voice_us,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_100/brighten_the_lights_all_the_way__voice_gb.wav,light_dim_color,brightness_100,brighten the lights all the way,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=light_dim_color/slot=brightness_100/brighten_the_lights_all_the_way__voice_rp.wav,light_dim_color,brightness_100,brighten the lights all the way,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=1min/set_a_timer_for_one_minute__voice_us.wav,set_timer,1min,set a timer for one minute,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=1min/set_a_timer_for_one_minute__voice_gb.wav,set_timer,1min,set a timer for one minute,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=1min/set_a_timer_for_one_minute__voice_rp.wav,set_timer,1min,set a timer for one minute,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=1min/start_a_one_minute_timer__voice_us.wav,set_timer,1min,start a one minute timer,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=1min/start_a_one_minute_timer__voice_gb.wav,set_timer,1min,start a one minute timer,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=1min/start_a_one_minute_timer__voice_rp.wav,set_timer,1min,start a one minute timer,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=5min/set_a_timer_for_five_minutes__voice_us.wav,set_timer,5min,set a timer for five minutes,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=5min/set_a_timer_for_five_minutes__voice_gb.wav,set_timer,5min,set a timer for five minutes,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=5min/set_a_timer_for_five_minutes__voice_rp.wav,set_timer,5min,set a timer for five minutes,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=5min/start_a_five_minute_timer__voice_us.wav,set_timer,5min,start a five minute timer,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=5min/start_a_five_minute_timer__voice_gb.wav,set_timer,5min,start a five minute timer,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=5min/start_a_five_minute_timer__voice_rp.wav,set_timer,5min,start a five minute timer,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=10min/set_a_timer_for_ten_minutes__voice_us.wav,set_timer,10min,set a timer for ten minutes,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=10min/set_a_timer_for_ten_minutes__voice_gb.wav,set_timer,10min,set a timer for ten minutes,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=10min/set_a_timer_for_ten_minutes__voice_rp.wav,set_timer,10min,set a timer for ten minutes,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=10min/timer_for_ten_minutes_please__voice_us.wav,set_timer,10min,timer for ten minutes please,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=10min/timer_for_ten_minutes_please__voice_gb.wav,set_timer,10min,timer for ten minutes please,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=10min/timer_for_ten_minutes_please__voice_rp.wav,set_timer,10min,timer for ten minutes please,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=15min/set_a_timer_for_fifteen_minutes__voice_us.wav,set_timer,15min,set a timer for fifteen minutes,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=15min/set_a_timer_for_fifteen_minutes__voice_gb.wav,set_timer,15min,set a timer for fifteen minutes,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=15min/set_a_timer_for_fifteen_minutes__voice_rp.wav,set_timer,15min,set a timer for fifteen minutes,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=15min/start_a_fifteen_minute_timer__voice_us.wav,set_timer,15min,start a fifteen minute timer,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=15min/start_a_fifteen_minute_timer__voice_gb.wav,set_timer,15min,start a fifteen minute timer,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=15min/start_a_fifteen_minute_timer__voice_rp.wav,set_timer,15min,start a fifteen minute timer,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=30min/set_a_timer_for_thirty_minutes__voice_us.wav,set_timer,30min,set a timer for thirty minutes,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=30min/set_a_timer_for_thirty_minutes__voice_gb.wav,set_timer,30min,set a timer for thirty minutes,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=30min/set_a_timer_for_thirty_minutes__voice_rp.wav,set_timer,30min,set a timer for thirty minutes,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=30min/timer_for_thirty_minutes_please__voice_us.wav,set_timer,30min,timer for thirty minutes please,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=30min/timer_for_thirty_minutes_please__voice_gb.wav,set_timer,30min,timer for thirty minutes please,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_timer/slot=30min/timer_for_thirty_minutes_please__voice_rp.wav,set_timer,30min,timer for thirty minutes please,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=60/set_the_temperature_to_sixty_degrees__voice_us.wav,set_temperature,60,set the temperature to sixty degrees,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=60/set_the_temperature_to_sixty_degrees__voice_gb.wav,set_temperature,60,set the temperature to sixty degrees,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=60/set_the_temperature_to_sixty_degrees__voice_rp.wav,set_temperature,60,set the temperature to sixty degrees,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=65/set_the_temperature_to_sixty_five_degree__voice_us.wav,set_temperature,65,set the temperature to sixty five degrees,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=65/set_the_temperature_to_sixty_five_degree__voice_gb.wav,set_temperature,65,set the temperature to sixty five degrees,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=65/set_the_temperature_to_sixty_five_degree__voice_rp.wav,set_temperature,65,set the temperature to sixty five degrees,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=70/set_the_temperature_to_seventy_degrees__voice_us.wav,set_temperature,70,set the temperature to seventy degrees,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=70/set_the_temperature_to_seventy_degrees__voice_gb.wav,set_temperature,70,set the temperature to seventy degrees,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=70/set_the_temperature_to_seventy_degrees__voice_rp.wav,set_temperature,70,set the temperature to seventy degrees,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=70/make_it_seventy_degrees__voice_us.wav,set_temperature,70,make it seventy degrees,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=70/make_it_seventy_degrees__voice_gb.wav,set_temperature,70,make it seventy degrees,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=70/make_it_seventy_degrees__voice_rp.wav,set_temperature,70,make it seventy degrees,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=75/set_the_temperature_to_seventy_five_degr__voice_us.wav,set_temperature,75,set the temperature to seventy five degrees,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=75/set_the_temperature_to_seventy_five_degr__voice_gb.wav,set_temperature,75,set the temperature to seventy five degrees,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=75/set_the_temperature_to_seventy_five_degr__voice_rp.wav,set_temperature,75,set the temperature to seventy five degrees,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=80/set_the_temperature_to_eighty_degrees__voice_us.wav,set_temperature,80,set the temperature to eighty degrees,voice_us,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=80/set_the_temperature_to_eighty_degrees__voice_gb.wav,set_temperature,80,set the temperature to eighty degrees,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=set_temperature/slot=80/set_the_temperature_to_eighty_degrees__voice_rp.wav,set_temperature,80,set the temperature to eighty degrees,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=play/play__voice_us.wav,media_control,play,play,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=play/play__voice_gb.wav,media_control,play,play,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=play/play__voice_rp.wav,media_control,play,play,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=pause/pause__voice_us.wav,media_control,pause,pause,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=pause/pause__voice_gb.wav,media_control,pause,pause,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=pause/pause__voice_rp.wav,media_control,pause,pause,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=pause/pause_the_music__voice_us.wav,media_control,pause,pause the music,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=pause/pause_the_music__voice_gb.wav,media_control,pause,pause the music,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=pause/pause_the_music__voice_rp.wav,media_control,pause,pause the music,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=stop/stop__voice_us.wav,media_control,stop,stop,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=stop/stop__voice_gb.wav,media_control,stop,stop,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=stop/stop__voice_rp.wav,media_control,stop,stop,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=stop/stop_the_music__voice_us.wav,media_control,stop,stop the music,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=stop/stop_the_music__voice_gb.wav,media_control,stop,stop the music,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=stop/stop_the_music__voice_rp.wav,media_control,stop,stop the music,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=next/next__voice_us.wav,media_control,next,next,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=next/next__voice_gb.wav,media_control,next,next,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=next/next__voice_rp.wav,media_control,next,next,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=next/skip_this_song__voice_us.wav,media_control,next,skip this song,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=next/skip_this_song__voice_gb.wav,media_control,next,skip this song,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=next/skip_this_song__voice_rp.wav,media_control,next,skip this song,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=next/next_track__voice_us.wav,media_control,next,next track,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=next/next_track__voice_gb.wav,media_control,next,next track,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=next/next_track__voice_rp.wav,media_control,next,next track,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=previous/previous_song__voice_us.wav,media_control,previous,previous song,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=previous/previous_song__voice_gb.wav,media_control,previous,previous song,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=previous/previous_song__voice_rp.wav,media_control,previous,previous song,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=previous/go_back_a_track__voice_us.wav,media_control,previous,go back a track,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=previous/go_back_a_track__voice_gb.wav,media_control,previous,go back a track,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=previous/go_back_a_track__voice_rp.wav,media_control,previous,go back a track,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_up/turn_it_up__voice_us.wav,media_control,volume_up,turn it up,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_up/turn_it_up__voice_gb.wav,media_control,volume_up,turn it up,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_up/turn_it_up__voice_rp.wav,media_control,volume_up,turn it up,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_up/louder__voice_us.wav,media_control,volume_up,louder,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_up/louder__voice_gb.wav,media_control,volume_up,louder,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_up/louder__voice_rp.wav,media_control,volume_up,louder,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_up/volume_up__voice_us.wav,media_control,volume_up,volume up,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_up/volume_up__voice_gb.wav,media_control,volume_up,volume up,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_up/volume_up__voice_rp.wav,media_control,volume_up,volume up,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_down/turn_it_down__voice_us.wav,media_control,volume_down,turn it down,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_down/turn_it_down__voice_gb.wav,media_control,volume_down,turn it down,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_down/turn_it_down__voice_rp.wav,media_control,volume_down,turn it down,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_down/quieter__voice_us.wav,media_control,volume_down,quieter,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_down/quieter__voice_gb.wav,media_control,volume_down,quieter,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_down/quieter__voice_rp.wav,media_control,volume_down,quieter,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_down/volume_down__voice_us.wav,media_control,volume_down,volume down,voice_us,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_down/volume_down__voice_gb.wav,media_control,volume_down,volume down,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=media_control/slot=volume_down/volume_down__voice_rp.wav,media_control,volume_down,volume down,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=ask_time/slot=none/what_time_is_it__voice_us.wav,ask_time,none,what time is it,voice_us,synthetic_clean,tts_espeak
+dataset/intent=ask_time/slot=none/what_time_is_it__voice_gb.wav,ask_time,none,what time is it,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=ask_time/slot=none/what_time_is_it__voice_rp.wav,ask_time,none,what time is it,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=ask_time/slot=none/what_s_the_time_right_now__voice_us.wav,ask_time,none,what's the time right now,voice_us,synthetic_clean,tts_espeak
+dataset/intent=ask_time/slot=none/what_s_the_time_right_now__voice_gb.wav,ask_time,none,what's the time right now,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=ask_time/slot=none/what_s_the_time_right_now__voice_rp.wav,ask_time,none,what's the time right now,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=ask_time/slot=none/tell_me_the_time__voice_us.wav,ask_time,none,tell me the time,voice_us,synthetic_clean,tts_espeak
+dataset/intent=ask_time/slot=none/tell_me_the_time__voice_gb.wav,ask_time,none,tell me the time,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=ask_time/slot=none/tell_me_the_time__voice_rp.wav,ask_time,none,tell me the time,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=ask_time/slot=none/do_you_know_what_time_it_is__voice_us.wav,ask_time,none,do you know what time it is,voice_us,synthetic_clean,tts_espeak
+dataset/intent=ask_time/slot=none/do_you_know_what_time_it_is__voice_gb.wav,ask_time,none,do you know what time it is,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=ask_time/slot=none/do_you_know_what_time_it_is__voice_rp.wav,ask_time,none,do you know what time it is,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_general/play_music__voice_us.wav,play_music,playlist_general,play music,voice_us,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_general/play_music__voice_gb.wav,play_music,playlist_general,play music,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_general/play_music__voice_rp.wav,play_music,playlist_general,play music,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_general/play_some_music__voice_us.wav,play_music,playlist_general,play some music,voice_us,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_general/play_some_music__voice_gb.wav,play_music,playlist_general,play some music,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_general/play_some_music__voice_rp.wav,play_music,playlist_general,play some music,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_jazz/play_some_jazz__voice_us.wav,play_music,playlist_jazz,play some jazz,voice_us,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_jazz/play_some_jazz__voice_gb.wav,play_music,playlist_jazz,play some jazz,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_jazz/play_some_jazz__voice_rp.wav,play_music,playlist_jazz,play some jazz,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_workout/play_my_workout_playlist__voice_us.wav,play_music,playlist_workout,play my workout playlist,voice_us,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_workout/play_my_workout_playlist__voice_gb.wav,play_music,playlist_workout,play my workout playlist,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_workout/play_my_workout_playlist__voice_rp.wav,play_music,playlist_workout,play my workout playlist,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_chill/play_something_chill__voice_us.wav,play_music,playlist_chill,play something chill,voice_us,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_chill/play_something_chill__voice_gb.wav,play_music,playlist_chill,play something chill,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_chill/play_something_chill__voice_rp.wav,play_music,playlist_chill,play something chill,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_focus/play_my_focus_playlist__voice_us.wav,play_music,playlist_focus,play my focus playlist,voice_us,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_focus/play_my_focus_playlist__voice_gb.wav,play_music,playlist_focus,play my focus playlist,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=playlist_focus/play_my_focus_playlist__voice_rp.wav,play_music,playlist_focus,play my focus playlist,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=whats_playing/what_s_playing__voice_us.wav,play_music,whats_playing,what's playing,voice_us,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=whats_playing/what_s_playing__voice_gb.wav,play_music,whats_playing,what's playing,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=whats_playing/what_s_playing__voice_rp.wav,play_music,whats_playing,what's playing,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=whats_playing/what_song_is_this__voice_us.wav,play_music,whats_playing,what song is this,voice_us,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=whats_playing/what_song_is_this__voice_gb.wav,play_music,whats_playing,what song is this,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=whats_playing/what_song_is_this__voice_rp.wav,play_music,whats_playing,what song is this,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=easter_good_morning/good_morning__voice_us.wav,play_music,easter_good_morning,good morning,voice_us,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=easter_good_morning/good_morning__voice_gb.wav,play_music,easter_good_morning,good morning,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=easter_good_morning/good_morning__voice_rp.wav,play_music,easter_good_morning,good morning,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=easter_stage_fright/do_you_have_stage_fright__voice_us.wav,play_music,easter_stage_fright,do you have stage fright,voice_us,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=easter_stage_fright/do_you_have_stage_fright__voice_gb.wav,play_music,easter_stage_fright,do you have stage fright,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=play_music/slot=easter_stage_fright/do_you_have_stage_fright__voice_rp.wav,play_music,easter_stage_fright,do you have stage fright,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=offvocab/i_think_i_left_my_keys_somewhere__voice_us.wav,reject,offvocab,i think i left my keys somewhere,voice_us,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=offvocab/i_think_i_left_my_keys_somewhere__voice_gb.wav,reject,offvocab,i think i left my keys somewhere,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=offvocab/i_think_i_left_my_keys_somewhere__voice_rp.wav,reject,offvocab,i think i left my keys somewhere,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=offvocab/what_should_i_have_for_lunch_today__voice_us.wav,reject,offvocab,what should i have for lunch today,voice_us,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=offvocab/what_should_i_have_for_lunch_today__voice_gb.wav,reject,offvocab,what should i have for lunch today,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=offvocab/what_should_i_have_for_lunch_today__voice_rp.wav,reject,offvocab,what should i have for lunch today,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=offvocab/did_you_watch_the_game_last_night__voice_us.wav,reject,offvocab,did you watch the game last night,voice_us,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=offvocab/did_you_watch_the_game_last_night__voice_gb.wav,reject,offvocab,did you watch the game last night,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=offvocab/did_you_watch_the_game_last_night__voice_rp.wav,reject,offvocab,did you watch the game last night,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=nearmiss/can_you_believe_it_s_raining_outside__voice_us.wav,reject,nearmiss,can you believe it's raining outside,voice_us,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=nearmiss/can_you_believe_it_s_raining_outside__voice_gb.wav,reject,nearmiss,can you believe it's raining outside,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=nearmiss/can_you_believe_it_s_raining_outside__voice_rp.wav,reject,nearmiss,can you believe it's raining outside,voice_rp,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=nearmiss/it_s_kind_of_cold_in_here_today__voice_us.wav,reject,nearmiss,it's kind of cold in here today,voice_us,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=nearmiss/it_s_kind_of_cold_in_here_today__voice_gb.wav,reject,nearmiss,it's kind of cold in here today,voice_gb,synthetic_clean,tts_espeak
+dataset/intent=reject/slot=nearmiss/it_s_kind_of_cold_in_here_today__voice_rp.wav,reject,nearmiss,it's kind of cold in here today,voice_rp,synthetic_clean,tts_espeak

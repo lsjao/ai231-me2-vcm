@@ -1,0 +1,98 @@
+                 precision    recall  f1-score   support
+
+       ask_time       0.00      0.00      0.00         2
+light_dim_color       0.00      0.00      0.00         5
+   light_on_off       0.00      0.00      0.00         5
+  media_control       0.30      0.80      0.43        10
+     play_music       0.00      0.00      0.00         6
+         reject       0.00      0.00      0.00         3
+set_temperature       0.00      0.00      0.00         4
+      set_timer       0.14      0.33      0.20         6
+
+       accuracy                           0.24        41
+      macro avg       0.05      0.14      0.08        41
+   weighted avg       0.09      0.24      0.13        41
+
+confusion_matrix (rows=true, cols=pred, label order matches labels.json):
+[
+  [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    2
+  ],
+  [
+    0,
+    0,
+    0,
+    5,
+    0,
+    0,
+    0,
+    0
+  ],
+  [
+    0,
+    0,
+    0,
+    4,
+    0,
+    0,
+    0,
+    1
+  ],
+  [
+    0,
+    0,
+    0,
+    8,
+    0,
+    0,
+    0,
+    2
+  ],
+  [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    5
+  ],
+  [
+    0,
+    0,
+    0,
+    2,
+    0,
+    0,
+    0,
+    1
+  ],
+  [
+    0,
+    0,
+    0,
+    3,
+    0,
+    0,
+    0,
+    1
+  ],
+  [
+    0,
+    0,
+    0,
+    4,
+    0,
+    0,
+    0,
+    2
+  ]
+]

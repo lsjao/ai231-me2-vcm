@@ -1,0 +1,5 @@
+tensorflow>=2.20
+librosa>=0.11
+soundfile>=0.13
+numpy>=2.0
+scikit-learn>=1.5

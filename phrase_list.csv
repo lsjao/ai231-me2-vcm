@@ -1,0 +1,70 @@
+intent,slot,phrase
+light_on_off,on,turn on the lights
+light_on_off,on,lights on
+light_on_off,on,switch the lights on
+light_on_off,on,turn the light on
+light_on_off,off,turn off the lights
+light_on_off,off,lights off
+light_on_off,off,switch the lights off
+light_on_off,off,turn the light off
+light_dim_color,brightness_25,dim the lights to twenty five percent
+light_dim_color,brightness_25,set brightness to twenty five percent
+light_dim_color,brightness_50,dim the lights to fifty percent
+light_dim_color,brightness_50,set brightness to fifty percent
+light_dim_color,brightness_75,dim the lights to seventy five percent
+light_dim_color,brightness_75,set brightness to seventy five percent
+light_dim_color,brightness_100,set lights to full brightness
+light_dim_color,brightness_100,brighten the lights all the way
+set_timer,1min,set a timer for one minute
+set_timer,1min,start a one minute timer
+set_timer,5min,set a timer for five minutes
+set_timer,5min,start a five minute timer
+set_timer,10min,set a timer for ten minutes
+set_timer,10min,timer for ten minutes please
+set_timer,15min,set a timer for fifteen minutes
+set_timer,15min,start a fifteen minute timer
+set_timer,30min,set a timer for thirty minutes
+set_timer,30min,timer for thirty minutes please
+set_temperature,60,set the temperature to sixty degrees
+set_temperature,65,set the temperature to sixty five degrees
+set_temperature,70,set the temperature to seventy degrees
+set_temperature,70,make it seventy degrees
+set_temperature,75,set the temperature to seventy five degrees
+set_temperature,80,set the temperature to eighty degrees
+media_control,play,play
+media_control,pause,pause
+media_control,pause,pause the music
+media_control,stop,stop
+media_control,stop,stop the music
+media_control,next,next
+media_control,next,skip this song
+media_control,next,next track
+media_control,previous,previous song
+media_control,previous,go back a track
+media_control,volume_up,turn it up
+media_control,volume_up,louder
+media_control,volume_up,volume up
+media_control,volume_down,turn it down
+media_control,volume_down,quieter
+media_control,volume_down,volume down
+ask_time,none,what time is it
+ask_time,none,what's the time right now
+ask_time,none,tell me the time
+ask_time,none,do you know what time it is
+play_music,playlist_general,play music
+play_music,playlist_general,play some music
+play_music,playlist_jazz,play some jazz
+play_music,playlist_workout,play my workout playlist
+play_music,playlist_chill,play something chill
+play_music,playlist_focus,play my focus playlist
+play_music,whats_playing,what's playing
+play_music,whats_playing,what song is this
+play_music,easter_good_morning,good morning
+play_music,easter_stage_fright,do you have stage fright
+reject,silence,__silence__
+reject,noise,__background_noise__
+reject,offvocab,i think i left my keys somewhere
+reject,offvocab,what should i have for lunch today
+reject,offvocab,did you watch the game last night
+reject,nearmiss,can you believe it's raining outside
+reject,nearmiss,it's kind of cold in here today

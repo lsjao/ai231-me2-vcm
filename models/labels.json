@@ -1,0 +1,10 @@
+{
+  "0": "ask_time",
+  "1": "light_dim_color",
+  "2": "light_on_off",
+  "3": "media_control",
+  "4": "play_music",
+  "5": "reject",
+  "6": "set_temperature",
+  "7": "set_timer"
+}

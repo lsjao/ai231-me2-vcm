@@ -1,0 +1,14 @@
+{
+  "target_sr": 16000,
+  "clip_seconds": 3.0,
+  "n_mels": 40,
+  "n_fft": 400,
+  "hop_length": 160,
+  "fmin": 50,
+  "fmax": 7600,
+  "input_shape": [
+    40,
+    301,
+    1
+  ]
+}
