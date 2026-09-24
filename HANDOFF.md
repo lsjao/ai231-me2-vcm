@@ -18,7 +18,7 @@ otherwise. This file now reflects actual repo state, not the aspirational descri
 - Deadline: live demo **Oct 3**. Today: **Sep 25**. 8 days, no buffer built in yet.
 - No cloud, no LLM, on-device only (exception: optional Spotify metadata lookup, lowest priority, never built)
 - "Train from scratch" ambiguity unresolved with professor, current working assumption: no pretrained weights, small classifier built from zero. Confirm with professor if time allows, not currently blocking.
-- Benchmark must include evaluators other than the owner (professor's own quote: "should be able to respond to any person"), each command said n times by each evaluator, output logs required (transcript/prediction/confidence/latency per attempt).
+- Benchmark must include evaluators other than the owner (professor's own quote: "should be able to respond to any person"), each command said n times by each evaluator, output logs required (transcript/prediction/confidence/latency per attempt). **Built this session** — see feature-stack section and code inventory below. On "transcript": this project has no ASR step anywhere (audio -> intent classifier directly), so the harness logs the ground-truth prompt phrase as the transcript field. Judgment call, not certain that's what's meant; cheap to revisit if wrong.
 
 ## Hardware status
 
@@ -60,7 +60,7 @@ Creative additions, priority order if time allows: sleep timer (cross-intent w/ 
 | `src/vcm/train.py` | Built this session — trains, evaluates, exports Keras + TFLite (dynamic-range quantized) + labels/config JSON |
 | `src/vcm/play_music_state_machine.py` | Built this session — playlist state machine, transport controls, volume, easter eggs, duck/unduck hooks. 17 tests in `src/tests/test_play_music_state_machine.py`, all passing. |
 | `src/vcm/ambient_volume.py` | Built this session — noise-floor tracker + volume curve + hysteresis. 12 tests in `src/tests/test_ambient_volume.py`, all passing. Calibration constants are placeholders pending real mic. |
-| `benchmark_harness.py` | **Not built.** Needs an evaluator-logging companion (transcript/prediction/confidence/latency per attempt). |
+| `src/vcm/benchmark_harness.py` | Built this session — evaluator-logging CLI, CSV per attempt (timestamp/evaluator/phrase/predicted_intent/confidence/correct/latency_ms/audio_filepath). Two modes: `live` (real mic via `sounddevice`, needs the Pi's mic) and `replay` (existing dataset WAVs, for smoke-testing the harness itself, not a real benchmark). 8 tests in `src/tests/test_benchmark_harness.py`, all passing; also run end-to-end in replay mode against the real trained model as a live smoke test (6% accuracy on 16 attempts, consistent with the classifier's known weakness, not a harness bug). |
 | `phrase_list.csv`, `dataset/`, `manifest.csv` | Present, scaffolding intact, real recordings drop in here per `README.md`. |
 
 ## Honest current status
@@ -72,9 +72,9 @@ Rebuilding the completion estimate from the corrected file inventory: a trainabl
 - This is consistent with, not contradicting, the handoff's warning about synthetic-only training: 201 clips across 8 classes from only 3 TTS voices is not enough signal, and the model is doing the predictable thing (betting on the majority classes). Expect a real jump once real recordings land and the class balance improves.
 - Artifacts: `models/vcm_crnn.keras`, `models/vcm_crnn.tflite` (595KB, not tracked in git, regenerate with `python -m vcm.train` from `src/`), `models/labels.json`, `models/training_config.json`, `models/eval_report.txt` (tracked).
 
-The play_media state machine (playlist selection, transport, volume, easter eggs, duck hooks) and the ambient auto-volume module are also built and tested this session -- 29 passing tests total across both. **Nothing has been validated on real voice, nothing has touched the Pi, the evaluator-logging harness is unbuilt, the ambient-volume calibration constants are unverified guesses, and the intent→slot resolution gap above has no owner yet.** Mic/speaker purchase is still the literal first blocking task for anything hardware-facing.
+The play_media state machine (playlist selection, transport, volume, easter eggs, duck hooks), the ambient auto-volume module, and the evaluator-logging benchmark harness are all built and tested this session -- 37 passing tests total. **Nothing has been validated on real voice or real evaluators, nothing has touched the Pi, the ambient-volume calibration constants are unverified guesses, and the intent→slot resolution gap above has no owner yet.** Mic/speaker purchase is still the literal first blocking task for anything hardware-facing -- `benchmark_harness.py --mode live` needs `pip install sounddevice` (see `requirements-pi.txt`) plus an actual mic before it can run for real, neither of which exist on this dev machine or the Pi yet.
 
-**Next code priorities, in order:** (1) retrain once real recordings exist -- same `python -m vcm.train` command, no code changes needed, (2) decide + build the intent→slot resolution approach (see gap above), (3) evaluator-logging harness, (4) once mic exists, recalibrate `ambient_volume.py`'s noise-floor constants against real (and dual-fan) ambient audio.
+**Next code priorities, in order:** (1) retrain once real recordings exist -- same `python -m vcm.train` command, no code changes needed, (2) decide + build the intent→slot resolution approach (see gap above), (3) once mic exists: recruit evaluators and run `benchmark_harness.py --mode live` for real, recalibrate `ambient_volume.py`'s noise-floor constants against real (and dual-fan) ambient audio.
 
 ## 8-day critical path
 
@@ -84,7 +84,8 @@ The play_media state machine (playlist selection, transport, volume, easter eggs
 - [x] Build the state machine, add ducking + volume_up/down — built and tested this session (ducking logic exists but isn't wired to a wake word yet, since no wake-word detector exists)
 - [x] Build ambient auto-volume (#4) — built and tested this session against synthetic noise; calibration constants are placeholders, recalibrate once mic exists
 - [ ] Wire mic capture -> VAD -> classifier -> state machine on the Pi. Test dual-fan noise the moment hardware is together
-- [ ] Recruit 2-3 external evaluators, build the evaluator-logging script, run real validation
+- [x] Build the evaluator-logging script — built and tested this session (`src/vcm/benchmark_harness.py`), smoke-tested end-to-end in replay mode; live mode needs `sounddevice` + a real mic, neither installed/available yet
+- [ ] Recruit 2-3 external evaluators, run `benchmark_harness.py --mode live` for real validation
 - [ ] Build 1 (max 2) creative additions, sleep timer first
 - [ ] Rehearsal buffer, last 1-2 days minimum, don't skip
 

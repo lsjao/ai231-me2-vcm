@@ -7,3 +7,5 @@ vcm_dataset_scaffold.zip
 handoff.txt
 models/*.keras
 models/*.tflite
+benchmark_logs/
+.pytest_cache/
