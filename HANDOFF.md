@@ -34,7 +34,7 @@ otherwise. This file now reflects actual repo state, not the aspirational descri
 `play_media` feature stack, priority order:
 
 1. **State machine (#5)** — **built this session**, `src/vcm/play_music_state_machine.py`, 17 passing tests in `src/tests/`. No-repeat playlist selection (shuffled cycle, no immediate repeat even across wraparound), play/pause/stop/next/previous, easter eggs (`good_morning` / `stage_fright`), "what's playing" query.
-2. **Ambient auto-volume (#4)** — **not built**. Target file: `ambient_and_beatsync_skeleton.py`. Only the ambient-volume half is in scope — beat-sync (#3) is cut entirely, don't build it.
+2. **Ambient auto-volume (#4)** — **built this session**, `src/vcm/ambient_volume.py` (renamed from the planned `ambient_and_beatsync_skeleton.py` — beat-sync is fully cut, no skeleton half left to justify that name). Asymmetric-EMA noise-floor tracker (rises slowly so a brief loud sound doesn't fool it, falls quickly to recognize a quieter room) + calibration curve + hysteresis + rate limiting. 12 passing tests against synthetic white noise. **Calibration constants (`NOISE_FLOOR_QUIET_DBFS`, `NOISE_FLOOR_LOUD_DBFS`) are placeholders** — recalibrate the moment mic + Pi are together, especially against the dual-fan noise risk below.
 3. **Volume-ducking during playback** — **volume-side logic built** (`duck()`/`unduck()` methods on the state machine, drop to ~5%, restore on unduck). **Not wired to a wake word** — no wake-word detector exists yet (needs the mic, which isn't bought), so nothing calls `duck()` automatically yet. This is the one piece of the stack that's half-done rather than fully done or fully not-done.
 4. **Volume_up/volume_down handlers** — **built**, on the state machine (`_volume_up`/`_volume_down`, ±10 steps, clamped 0-100).
 5. **Beat-sync (#3)** — cut entirely, confirmed. Don't build.
@@ -59,7 +59,7 @@ Creative additions, priority order if time allows: sleep timer (cross-intent w/ 
 | `src/vcm/model.py` | Built this session — small CRNN (Conv2D blocks + GRU + softmax), sized for Pi 4 real-time inference |
 | `src/vcm/train.py` | Built this session — trains, evaluates, exports Keras + TFLite (dynamic-range quantized) + labels/config JSON |
 | `src/vcm/play_music_state_machine.py` | Built this session — playlist state machine, transport controls, volume, easter eggs, duck/unduck hooks. 17 tests in `src/tests/test_play_music_state_machine.py`, all passing. |
-| `ambient_and_beatsync_skeleton.py` | **Not built.** Ambient auto-volume only, no beat-sync. |
+| `src/vcm/ambient_volume.py` | Built this session — noise-floor tracker + volume curve + hysteresis. 12 tests in `src/tests/test_ambient_volume.py`, all passing. Calibration constants are placeholders pending real mic. |
 | `benchmark_harness.py` | **Not built.** Needs an evaluator-logging companion (transcript/prediction/confidence/latency per attempt). |
 | `phrase_list.csv`, `dataset/`, `manifest.csv` | Present, scaffolding intact, real recordings drop in here per `README.md`. |
 
@@ -72,9 +72,9 @@ Rebuilding the completion estimate from the corrected file inventory: a trainabl
 - This is consistent with, not contradicting, the handoff's warning about synthetic-only training: 201 clips across 8 classes from only 3 TTS voices is not enough signal, and the model is doing the predictable thing (betting on the majority classes). Expect a real jump once real recordings land and the class balance improves.
 - Artifacts: `models/vcm_crnn.keras`, `models/vcm_crnn.tflite` (595KB, not tracked in git, regenerate with `python -m vcm.train` from `src/`), `models/labels.json`, `models/training_config.json`, `models/eval_report.txt` (tracked).
 
-The play_media state machine (playlist selection, transport, volume, easter eggs, duck hooks) is also built and tested this session -- 17 passing tests. **Nothing has been validated on real voice, nothing has touched the Pi, ambient auto-volume and the evaluator-logging harness are unbuilt, and the intent→slot resolution gap above has no owner yet.** Mic/speaker purchase is still the literal first blocking task for anything hardware-facing.
+The play_media state machine (playlist selection, transport, volume, easter eggs, duck hooks) and the ambient auto-volume module are also built and tested this session -- 29 passing tests total across both. **Nothing has been validated on real voice, nothing has touched the Pi, the evaluator-logging harness is unbuilt, the ambient-volume calibration constants are unverified guesses, and the intent→slot resolution gap above has no owner yet.** Mic/speaker purchase is still the literal first blocking task for anything hardware-facing.
 
-**Next code priorities, in order:** (1) retrain once real recordings exist -- same `python -m vcm.train` command, no code changes needed, (2) decide + build the intent→slot resolution approach (see gap above), (3) `ambient_and_beatsync_skeleton.py` (ambient-volume half only), (4) evaluator-logging harness.
+**Next code priorities, in order:** (1) retrain once real recordings exist -- same `python -m vcm.train` command, no code changes needed, (2) decide + build the intent→slot resolution approach (see gap above), (3) evaluator-logging harness, (4) once mic exists, recalibrate `ambient_volume.py`'s noise-floor constants against real (and dual-fan) ambient audio.
 
 ## 8-day critical path
 
@@ -82,6 +82,7 @@ The play_media state machine (playlist selection, transport, volume, easter eggs
 - [ ] Today/tomorrow: record own voice against full phrase list, retrain, see the real-vs-synthetic gap directly
 - [x] Build the actual CNN/CRNN classifier (replace nonexistent `smoke_test_train.py`), quantize, export (TFLite) — pipeline built and verified this session, 24% val accuracy on synthetic-only data (expected to be weak, real data is the fix)
 - [x] Build the state machine, add ducking + volume_up/down — built and tested this session (ducking logic exists but isn't wired to a wake word yet, since no wake-word detector exists)
+- [x] Build ambient auto-volume (#4) — built and tested this session against synthetic noise; calibration constants are placeholders, recalibrate once mic exists
 - [ ] Wire mic capture -> VAD -> classifier -> state machine on the Pi. Test dual-fan noise the moment hardware is together
 - [ ] Recruit 2-3 external evaluators, build the evaluator-logging script, run real validation
 - [ ] Build 1 (max 2) creative additions, sleep timer first
