@@ -22,6 +22,7 @@ import time
 
 import numpy as np
 
+from .paths import root_path
 from . import audio
 from .ambient_volume import FRAME_SAMPLES, NOISE_FLOOR_LOUD_DBFS, NOISE_FLOOR_QUIET_DBFS, frame_dbfs
 
@@ -138,7 +139,7 @@ def check_mic(seconds: float, device: int | str | None) -> bool:
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
-    p.add_argument("--model-dir", default="../models")
+    p.add_argument("--model-dir", default=root_path("models"))
     p.add_argument("--skip-audio", action="store_true", help="skip speaker/TTS tests")
     p.add_argument("--mic", action="store_true", help="also test the mic + measure the noise floor")
     p.add_argument("--seconds", type=float, default=10.0, help="mic recording length")

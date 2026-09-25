@@ -38,6 +38,7 @@ from typing import Callable, Protocol
 import numpy as np
 import soundfile as sf
 
+from .paths import root_path
 from . import audio
 
 MANIFEST_FIELDS = ["filepath", "intent", "slot", "phrase", "speaker", "condition", "source"]
@@ -311,8 +312,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--noise-reps", type=int, default=15, help="takes for silence/noise classes")
     p.add_argument("--intents", default=None, help="comma-separated intent allowlist")
     p.add_argument("--slots", default=None, help="comma-separated slot allowlist")
-    p.add_argument("--phrase-list", default="phrase_list.csv")
-    p.add_argument("--out-root", default="data_real")
+    p.add_argument("--phrase-list", default=root_path("phrase_list.csv"))
+    p.add_argument("--out-root", default=root_path("data_real"))
     p.add_argument("--device", default=None, help="sounddevice input device index/name")
     p.add_argument("--auto", action="store_true", help="no Enter needed: prompt, short pause, beep, then it records -- speak right after the beep")
     p.add_argument("--lead-in", type=float, default=1.0, help="seconds between the prompt and the beep in --auto")

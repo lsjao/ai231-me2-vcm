@@ -32,6 +32,7 @@ from typing import Callable, Iterator
 
 import numpy as np
 
+from .paths import root_path
 from . import audio, labels
 from .ambient_volume import FRAME_MS, FRAME_SAMPLES, AmbientAutoVolume
 from .dispatch import Dispatcher
@@ -251,8 +252,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--source", choices=["file", "mic"], default="mic")
     p.add_argument("--wav", help="input WAV for --source file")
     p.add_argument("--realtime", action="store_true", help="pace file replay at real time")
-    p.add_argument("--model-dir", default="../models")
-    p.add_argument("--music-dir", default="../music")
+    p.add_argument("--model-dir", default=root_path("models"))
+    p.add_argument("--music-dir", default=root_path("music"))
     p.add_argument("--no-audio", action="store_true", help="don't play music (no speaker needed)")
     p.add_argument("--speaker", choices=["auto", "print"], default="auto")
     p.add_argument("--min-confidence", type=float, default=PipelineConfig.min_confidence)

@@ -47,6 +47,7 @@ from datetime import datetime, timezone
 
 import numpy as np
 
+from .paths import root_path
 from . import audio, labels
 from .classifier import Classifier
 
@@ -308,7 +309,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--evaluator", required=True, help="evaluator's name, used in filenames/logs")
     p.add_argument("--mode", choices=["live", "replay"], default="replay")
     p.add_argument("--reps", type=int, default=3, help="times each command is said per evaluator")
-    p.add_argument("--phrase-list", default="phrase_list.csv")
+    p.add_argument("--phrase-list", default=root_path("phrase_list.csv"))
     p.add_argument("--granularity", choices=["intent", "slot", "phrase"], default="intent")
     p.add_argument(
         "--intents", default=None,
@@ -319,11 +320,11 @@ def parse_args() -> argparse.Namespace:
         help="shortcut for the addendum's plan: every play_media command, "
         "3x each (equivalent to --granularity slot --intents media_control,play_music --reps 3)",
     )
-    p.add_argument("--model-dir", default="../models")
-    p.add_argument("--output-csv", default="../benchmark_logs/results.csv")
-    p.add_argument("--audio-out-dir", default="../benchmark_logs/audio")
-    p.add_argument("--manifest", default="../manifest.csv", help="replay mode only")
-    p.add_argument("--data-root", default="..", help="replay mode only")
+    p.add_argument("--model-dir", default=root_path("models"))
+    p.add_argument("--output-csv", default=root_path("benchmark_logs", "results.csv"))
+    p.add_argument("--audio-out-dir", default=root_path("benchmark_logs", "audio"))
+    p.add_argument("--manifest", default=root_path("manifest.csv"), help="replay mode only")
+    p.add_argument("--data-root", default=root_path(), help="replay mode only")
     return p.parse_args()
 
 

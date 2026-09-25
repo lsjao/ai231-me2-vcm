@@ -104,7 +104,9 @@ Creative additions, priority order if time allows: sleep timer (cross-intent w/ 
 
 ### How to record (do this now, laptop mic)
 
-**Windows gotcha:** this machine has several Pythons, and a bare `python` (or a VS Code terminal's active interpreter) can be one without the packages (`ModuleNotFoundError: soundfile`). From the repo root use the launcher `run.cmd`, which pins the right interpreter and runs from `src/`: `.un.cmd vcm.record_dataset --speaker josh ...` -- i.e. wherever a command below says `python -m X ...`, type `.un.cmd X ...`.
+**Windows gotcha:** this machine has several Pythons, and a bare `python` (or a VS Code terminal's active interpreter) can be one without the packages (`ModuleNotFoundError: soundfile`). From the repo root use the launcher `run.cmd`, which pins the right interpreter and runs from `src/`: `.
+un.cmd vcm.record_dataset --speaker josh ...` -- i.e. wherever a command below says `python -m X ...`, type `.
+un.cmd X ...`.
 
 Install once: `pip install sounddevice`. Play_media first (graded), then everything else. `--auto` needs no Enter: it shows the phrase, pauses 1 s, plays a beep, then records -- **speak right after the beep**; `Ctrl+C` stops safely and re-running resumes.
 
@@ -116,7 +118,7 @@ python -m vcm.record_dataset --speaker <you> --condition tv    --distance near -
 python -m vcm.record_dataset --speaker <you> --condition quiet --distance far  --reps-per-slot 3  --auto     # 2-3 ft
 ```
 
-For the `reject` silence/noise prompts: stay silent, or make TV/fan/typing noise as prompted. Then retrain: `python -m vcm.train --data-root .. --manifest manifest.csv --output-dir ../models --extra-data ../data_real`. Do a short top-up run with the USB mic on Sunday using the same commands with `--condition usbmic`.
+For the `reject` silence/noise prompts: stay silent, or make TV/fan/typing noise as prompted. Then retrain: `.un.cmd vcm.train` (paths default to the project root; `data_real/` is merged in automatically). Do a short top-up run with the USB mic on Sunday using the same commands with `--condition usbmic`.
 
 ### Pi bring-up (needs only Pi + speaker; mic Sunday)
 

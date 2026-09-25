@@ -1,11 +1,10 @@
 """Train the from-scratch CRNN command classifier and export for the Pi.
 
-Usage (from src/):
-    python -m vcm.train --data-root .. --manifest manifest.csv --output-dir ../models \
-        --extra-data ../data_real
+Usage:  run.cmd vcm.train        (all paths default to the project root)
 
---extra-data (repeatable) adds another root with its own manifest.csv, e.g.
-real recordings from record_dataset.py or a pooled classmate dataset.
+Real recordings in data_real/ are merged in automatically when present.
+--extra-data (repeatable) instead names other roots that have a manifest.csv,
+e.g. a pooled classmate dataset (this replaces the automatic data_real).
 
 Writes to output-dir:
     vcm_crnn.keras            -- full Keras model
@@ -25,16 +24,17 @@ import numpy as np
 import tensorflow as tf
 from sklearn.metrics import classification_report, confusion_matrix
 
+from .paths import root_path
 from . import audio, data, labels as label_utils, model as model_lib
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--data-root", default=".", help="root dir manifest filepaths are relative to")
+    p.add_argument("--data-root", default=root_path(), help="root dir manifest filepaths are relative to")
     p.add_argument("--manifest", default="manifest.csv")
     p.add_argument("--extra-data", action="append", default=[],
                    help="extra data root containing manifest.csv (repeatable)")
-    p.add_argument("--output-dir", default="models")
+    p.add_argument("--output-dir", default=root_path("models"))
     p.add_argument("--epochs", type=int, default=60)
     p.add_argument("--batch-size", type=int, default=16)
     p.add_argument("--val-fraction", type=float, default=0.2)
@@ -71,7 +71,11 @@ def main() -> None:
 
     manifest_path = os.path.join(args.data_root, args.manifest)
     rows = label_utils.read_manifest(manifest_path, args.data_root)
-    for extra_root in args.extra_data:
+    extra_roots = list(args.extra_data)
+    real_root = root_path("data_real")
+    if not extra_roots and os.path.exists(os.path.join(real_root, "manifest.csv")):
+        extra_roots = [real_root]  # your recordings, picked up automatically
+    for extra_root in extra_roots:
         extra = label_utils.read_manifest(os.path.join(extra_root, "manifest.csv"), extra_root)
         print(f"extra data {extra_root}: {len(extra)} clips")
         rows.extend(extra)
