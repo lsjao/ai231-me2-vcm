@@ -126,9 +126,11 @@ un.cmd vcm.train` (paths default to the project root; `data_real/` is merged in 
 
 Good for mic diversity and for getting *other people's* voices without them touching Python. Formats: m4a/aac (needs `pip install av`, already installed here), mp3, wav, flac, ogg -- no conversion needed. Per block of ~20 phrases:
 
-1. Print the script: `.un.cmd vcm.import_recording --speaker <name> --condition phone --distance near --intents media_control,play_music --block-size 20` (add `--script-file script.txt` to write it to a file you can send a friend).
+1. Print the script: `.
+un.cmd vcm.import_recording --speaker <name> --condition phone --distance near --intents media_control,play_music --block-size 20` (add `--script-file script.txt` to write it to a file you can send a friend).
 2. Record ONE voice memo reading it: ~1 s of silence first, each phrase once, ~1.5 s pause between phrases, no pauses inside a phrase, in order.
-3. Import: `.un.cmd vcm.import_recording --file "C:\path	o\memo.m4a"`. Then repeat step 1 for the next block.
+3. Import: `.
+un.cmd vcm.import_recording --file "C:\path\to\memo.m4a"`. Then repeat step 1 for the next block.
 
 It refuses (saving nothing) if it hears a different number of utterances than the script has, and prints what it heard next to what was expected -- one miscount would mislabel every take after it. Silence/noise prompts aren't in phone scripts; record those with `record_dataset` on the laptop. Use different `--speaker` names per person. Friends recorded for training must not also be your benchmark evaluators.
 
