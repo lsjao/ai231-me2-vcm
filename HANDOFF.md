@@ -104,7 +104,7 @@ Creative additions, priority order if time allows: sleep timer (cross-intent w/ 
 
 ### How to record (do this now, laptop mic; from `src/`)
 
-Install once: `pip install sounddevice`. Play_media first (graded), then everything else. `--auto` records after a short lead-in with no Enter needed; `Ctrl+C` stops safely and re-running resumes.
+Install once: `pip install sounddevice`. Play_media first (graded), then everything else. `--auto` needs no Enter: it shows the phrase, pauses 1 s, plays a beep, then records -- **speak right after the beep**; `Ctrl+C` stops safely and re-running resumes.
 
 ```
 python -m vcm.record_dataset --speaker <you> --condition quiet --distance near --reps-per-slot 16 --intents media_control,play_music --auto

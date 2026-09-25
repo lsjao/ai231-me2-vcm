@@ -84,6 +84,17 @@ class SoundDeviceRecorder:
         return rec[:, 0]
 
 
+def beep() -> None:
+    """Short cue that recording starts now, so the first word isn't clipped."""
+    import sounddevice as sd
+
+    sr = 22050
+    t = np.arange(int(0.12 * sr)) / sr
+    tone = (0.2 * np.sin(2 * np.pi * 1000 * t) * np.hanning(len(t))).astype(np.float32)
+    sd.play(tone, sr)
+    sd.wait()
+
+
 def load_phrase_rows(phrase_list_path: str) -> list[PhraseRow]:
     with open(phrase_list_path, newline="", encoding="utf-8") as f:
         return [PhraseRow(r["intent"], r["slot"], r["phrase"]) for r in csv.DictReader(f)]
@@ -283,8 +294,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--phrase-list", default="phrase_list.csv")
     p.add_argument("--out-root", default="data_real")
     p.add_argument("--device", default=None, help="sounddevice input device index/name")
-    p.add_argument("--auto", action="store_true", help="no Enter needed; records after a short lead-in")
-    p.add_argument("--lead-in", type=float, default=0.8, help="seconds before recording in --auto")
+    p.add_argument("--auto", action="store_true", help="no Enter needed: prompt, short pause, beep, then it records -- speak right after the beep")
+    p.add_argument("--lead-in", type=float, default=1.0, help="seconds between the prompt and the beep in --auto")
+    p.add_argument("--no-beep", action="store_true", help="--auto without the start-of-recording beep")
     p.add_argument("--seed", type=int, default=0)
     return p.parse_args()
 
@@ -314,6 +326,9 @@ def main() -> None:
         def ask(prompt: str) -> str:
             print(prompt)
             time.sleep(args.lead_in)
+            if not args.no_beep:
+                beep()
+                time.sleep(0.1)  # let the beep die out before the mic opens
             return ""
     else:
         def ask(prompt: str) -> str:
