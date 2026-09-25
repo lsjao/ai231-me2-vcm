@@ -55,6 +55,33 @@ def fix_length(wav: np.ndarray, n_samples: int) -> np.ndarray:
     return np.pad(wav, (0, pad), mode="constant")
 
 
+def speech_level_ok(
+    wav: np.ndarray,
+    sr: int = TARGET_SR,
+    frame_ms: int = 20,
+    min_peak_dbfs: float = -38.0,
+    min_contrast_db: float = 20.0,
+    min_active_ms: int = 150,
+) -> bool:
+    """Is there real speech in this take, or just room noise that happened to
+    wiggle? Needs the loudest frame to be absolutely loud, well above the
+    take's own floor, AND that loudness to be sustained (a click or a chair
+    creak is a few frames; even a short word like "next" is 150ms+).
+    (trim_to_speech alone is relative, so it happily 'finds' speech in a
+    silent room.)"""
+    frame = int(sr * frame_ms / 1000)
+    n_frames = len(wav) // frame
+    if n_frames == 0:
+        return False
+    frames = wav[: n_frames * frame].astype(np.float64).reshape(n_frames, frame)
+    db = 20.0 * np.log10(np.maximum(np.sqrt(np.mean(frames**2, axis=1)), 1e-10))
+    floor = np.percentile(db, 10)
+    if db.max() < min_peak_dbfs or db.max() - floor < min_contrast_db:
+        return False
+    active = db >= max(floor + 15.0, min_peak_dbfs - 6.0)
+    return int(active.sum()) >= max(1, min_active_ms // frame_ms)
+
+
 def trim_to_speech(
     wav: np.ndarray,
     sr: int = TARGET_SR,

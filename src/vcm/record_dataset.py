@@ -47,6 +47,8 @@ NOISE_PHRASE = "__background_noise__"
 NOISE_PROMPT_HINT = "make some background noise (TV, fan, typing, talking, music...)"
 
 MIN_PEAK = 0.02  # takes quieter than this after trimming are assumed to be a miss
+MAX_TAKE_RETRIES = 3          # misses on one prompt before moving on
+MAX_CONSECUTIVE_MISSES = 6    # misses in a row before assuming the mic is muted / you left
 
 
 @dataclass(frozen=True)
@@ -168,6 +170,8 @@ def prepare_clip(wav: np.ndarray, row: PhraseRow) -> np.ndarray | None:
         return wav
     if row.phrase == NOISE_PHRASE:
         return wav if float(np.max(np.abs(wav))) >= MIN_PEAK else None
+    if not audio.speech_level_ok(wav):
+        return None
     trimmed = audio.trim_to_speech(wav)
     if trimmed is None or float(np.max(np.abs(trimmed))) < MIN_PEAK:
         return None
@@ -247,6 +251,8 @@ def run_session(
     saved: list[dict] = []
     saved_at: list[int] = []  # task index each saved take belongs to, for redo
     i = 0
+    misses = 0  # on the current prompt
+    streak = 0  # consecutive, across prompts
     try:
         while i < len(tasks):
             task = tasks[i]
@@ -260,6 +266,7 @@ def run_session(
                 break
             if choice == "s":
                 i += 1
+                misses = 0
                 continue
             if choice == "r":
                 if saved:
@@ -271,8 +278,21 @@ def run_session(
             wav = recorder.record(audio.CLIP_SECONDS)
             clip = prepare_clip(wav, task.row)
             if clip is None:
-                say("  didn't catch that (too quiet / no speech), try again")
+                misses += 1
+                streak += 1
+                if streak >= MAX_CONSECUTIVE_MISSES:
+                    say(f"  {streak} misses in a row -- is the mic muted, or did you step away? stopping "
+                        "(re-run to resume)")
+                    break
+                if misses >= MAX_TAKE_RETRIES:
+                    say("  still nothing after 3 tries, skipping this one")
+                    i += 1
+                    misses = 0
+                else:
+                    say("  didn't catch that (too quiet / no speech), try again")
                 continue
+            misses = 0
+            streak = 0
             saved.append(save_take(clip, task.row, speaker, tag, out_root))
             saved_at.append(i)
             say(f"  saved ({len(clip) / audio.TARGET_SR:.2f}s, peak {np.max(np.abs(clip)):.2f})")

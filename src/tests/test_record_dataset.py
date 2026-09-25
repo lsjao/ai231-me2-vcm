@@ -191,3 +191,55 @@ def test_existing_counts_only_counts_matching_speaker_and_condition(tmp_path):
 
 def test_existing_counts_handles_missing_manifest(tmp_path):
     assert existing_counts(str(tmp_path / "nope.csv"), "josh", "quiet_near") == Counter()
+
+
+# -- silent-room protection ------------------------------------------------
+
+def room_noise(dbfs=-48.0, seconds=audio.CLIP_SECONDS, seed=3):
+    rng = np.random.default_rng(seed)
+    return (rng.standard_normal(int(SR * seconds)) * 10 ** (dbfs / 20)).astype(np.float32)
+
+
+def test_room_noise_is_not_mistaken_for_speech():
+    assert audio.speech_level_ok(room_noise()) is False
+    assert prepare_clip(room_noise(), ROWS[0]) is None
+
+
+def test_quiet_but_real_speech_still_passes():
+    wav = make_take(speech=True)
+    assert audio.speech_level_ok(wav) is True
+
+
+def test_silent_recorder_cannot_loop_forever(tmp_path):
+    tasks = build_tasks(ROWS[:1], Counter(), reps_per_slot=4, noise_reps=1)
+    recorder = FakeRecorder([room_noise()])
+    messages = []
+    saved = run_session(tasks, recorder, scripted([""] * 100), str(tmp_path), "josh", "quiet_near",
+                        say=messages.append)
+    assert saved == []
+    assert recorder.calls <= 6  # gave up instead of spinning
+    assert any("mic muted" in m for m in messages)
+
+
+def test_a_missed_prompt_is_skipped_after_three_tries_when_later_takes_work(tmp_path):
+    tasks = build_tasks(ROWS[:1], Counter(), reps_per_slot=2, noise_reps=1)  # 2 prompts
+    # 3 misses on the first prompt -> skipped; then the second prompt succeeds
+    recorder = FakeRecorder([room_noise(), room_noise(), room_noise(), make_take(True)])
+    messages = []
+    saved = run_session(tasks, recorder, scripted([""] * 10), str(tmp_path), "josh", "quiet_near",
+                        say=messages.append)
+    assert len(saved) == 1
+    assert any("skipping" in m for m in messages)
+
+
+def test_a_brief_click_in_a_quiet_room_is_not_speech():
+    wav = room_noise(-55.0)
+    wav[8000:8160] += 0.3  # 10 ms thump
+    assert audio.speech_level_ok(wav) is False
+
+
+def test_a_short_word_worth_of_sound_is_speech():
+    wav = room_noise(-55.0)
+    t = np.arange(int(SR * 0.3)) / SR
+    wav[8000 : 8000 + len(t)] += (0.2 * np.sin(2 * np.pi * 250 * t)).astype(np.float32)
+    assert audio.speech_level_ok(wav) is True
