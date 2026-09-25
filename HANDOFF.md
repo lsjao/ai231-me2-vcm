@@ -102,7 +102,9 @@ Creative additions, priority order if time allows: sleep timer (cross-intent w/ 
 - Artifacts: `models/vcm_crnn.tflite` (~596KB) and `.keras` are gitignored -- regenerate with `python -m vcm.train` from `src/`, or copy the `.tflite` + `labels.json` + `training_config.json` to the Pi.
 - **Real recordings are gitignored** (`data_real/`: bulky, and it's your voice). Back it up yourself (zip to Drive) -- git will not.
 
-### How to record (do this now, laptop mic; from `src/`)
+### How to record (do this now, laptop mic)
+
+**Windows gotcha:** this machine has several Pythons, and a bare `python` (or a VS Code terminal's active interpreter) can be one without the packages (`ModuleNotFoundError: soundfile`). From the repo root use the launcher `run.cmd`, which pins the right interpreter and runs from `src/`: `.un.cmd vcm.record_dataset --speaker josh ...` -- i.e. wherever a command below says `python -m X ...`, type `.un.cmd X ...`.
 
 Install once: `pip install sounddevice`. Play_media first (graded), then everything else. `--auto` needs no Enter: it shows the phrase, pauses 1 s, plays a beep, then records -- **speak right after the beep**; `Ctrl+C` stops safely and re-running resumes.
 
