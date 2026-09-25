@@ -14,6 +14,7 @@ notably ONSET_MARGIN_DB against the dual-fan noise floor.
 from __future__ import annotations
 
 from collections import deque
+from typing import Iterator
 
 import numpy as np
 
@@ -110,3 +111,27 @@ class Endpointer:
         if len(clip) < MIN_UTTERANCE_MS * audio.TARGET_SR // 1000:
             return None
         return clip[:MAX_UTTERANCE_SAMPLES].astype(np.float32)
+
+
+def iter_frames(wav: np.ndarray) -> Iterator[np.ndarray]:
+    n = -(-len(wav) // FRAME_SAMPLES) * FRAME_SAMPLES
+    padded = np.pad(wav, (0, n - len(wav)))
+    for i in range(0, n, FRAME_SAMPLES):
+        yield padded[i : i + FRAME_SAMPLES]
+
+
+def segment_utterances(wav: np.ndarray) -> list[tuple[np.ndarray, float]]:
+    """Split a long recording into (clip, end_time_s) utterances. Leave ~1 s
+    of silence at the start of the recording: the floor is calibrated on the
+    first ~300 ms."""
+    ep = Endpointer()
+    out: list[tuple[np.ndarray, float]] = []
+    n_frames = 0
+    for n_frames, frame in enumerate(iter_frames(wav), start=1):
+        clip = ep.process(frame)
+        if clip is not None:
+            out.append((clip, n_frames * FRAME_MS / 1000.0))
+    tail = ep.flush()
+    if tail is not None:
+        out.append((tail, n_frames * FRAME_MS / 1000.0))
+    return out

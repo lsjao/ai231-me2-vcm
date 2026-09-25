@@ -28,7 +28,7 @@ import argparse
 import queue
 import time
 from dataclasses import dataclass
-from typing import Callable, Iterator
+from typing import Callable
 
 import numpy as np
 
@@ -37,7 +37,7 @@ from . import audio, labels
 from .ambient_volume import FRAME_MS, FRAME_SAMPLES, AmbientAutoVolume
 from .dispatch import Dispatcher
 from .play_music_state_machine import PlaybackState
-from .vad import Endpointer
+from .vad import Endpointer, iter_frames
 
 VOLUME_COMMANDS = {"media_control/volume_up", "media_control/volume_down"}
 
@@ -202,13 +202,6 @@ def load_stream_wav(path: str) -> np.ndarray:
     if sr != audio.TARGET_SR:
         wav = audio.resample(wav, sr, audio.TARGET_SR)
     return wav
-
-
-def iter_frames(wav: np.ndarray) -> Iterator[np.ndarray]:
-    n = -(-len(wav) // FRAME_SAMPLES) * FRAME_SAMPLES
-    padded = np.pad(wav, (0, n - len(wav)))
-    for i in range(0, n, FRAME_SAMPLES):
-        yield padded[i : i + FRAME_SAMPLES]
 
 
 def run_wav(pipeline: Pipeline, wav: np.ndarray, realtime: bool = False) -> list[dict]:

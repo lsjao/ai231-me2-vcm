@@ -82,6 +82,7 @@ Creative additions, priority order if time allows: sleep timer (cross-intent w/ 
 | `src/vcm/train.py` | Trains on command labels, `--extra-data <dir>` merges real/pooled data roots, exports Keras + TFLite (plain builtin ops) + `labels.json`/`training_config.json`, per-command + per-intent report. |
 | `src/vcm/classifier.py` | TFLite wrapper (`ai_edge_litert` -> `tflite_runtime` -> `tensorflow` fallback chain), warms up at load. Shared by harness and pipeline. |
 | `src/vcm/record_dataset.py` | Guided real-voice recording: passes over `phrase_list.csv`, auto-trims each take, resume-safe, redo/skip/quit. Writes to `data_real/` (gitignored). |
+| `src/vcm/import_recording.py` | Imports long phone/friend recordings: prints a numbered script, splits the memo with the live VAD, labels takes by order, refuses on count mismatch. |
 | `src/vcm/dispatch.py` | Routes a command label to the state machine or a handler: ask_time, set_timer (real background timer), set_temperature/lights (simulated devices), TTS via espeak-ng (`PrintSpeaker` fallback). |
 | `src/vcm/player.py` | Plays `music/<playlist>/*.mp3, wav, ogg, flac` (+ `music/easter/`) via sounddevice with software-gain volume; playlists with no files fall back to a distinct tone per stub title so transport/volume/ducking are testable with no music. |
 | `src/vcm/vad.py` | Streaming energy endpointer (adaptive floor frozen during speech, hysteresis, pre-roll/tail matching the training-clip trim). Constants are placeholders until tuned on the real mic. |
@@ -118,7 +119,18 @@ python -m vcm.record_dataset --speaker <you> --condition tv    --distance near -
 python -m vcm.record_dataset --speaker <you> --condition quiet --distance far  --reps-per-slot 3  --auto     # 2-3 ft
 ```
 
-For the `reject` silence/noise prompts: stay silent, or make TV/fan/typing noise as prompted. Then retrain: `.un.cmd vcm.train` (paths default to the project root; `data_real/` is merged in automatically). Do a short top-up run with the USB mic on Sunday using the same commands with `--condition usbmic`.
+For the `reject` silence/noise prompts: stay silent, or make TV/fan/typing noise as prompted. Then retrain: `.
+un.cmd vcm.train` (paths default to the project root; `data_real/` is merged in automatically). Do a short top-up run with the USB mic on Sunday using the same commands with `--condition usbmic`.
+
+### Recording with a phone (yours, or a friend's)
+
+Good for mic diversity and for getting *other people's* voices without them touching Python. Formats: m4a/aac (needs `pip install av`, already installed here), mp3, wav, flac, ogg -- no conversion needed. Per block of ~20 phrases:
+
+1. Print the script: `.un.cmd vcm.import_recording --speaker <name> --condition phone --distance near --intents media_control,play_music --block-size 20` (add `--script-file script.txt` to write it to a file you can send a friend).
+2. Record ONE voice memo reading it: ~1 s of silence first, each phrase once, ~1.5 s pause between phrases, no pauses inside a phrase, in order.
+3. Import: `.un.cmd vcm.import_recording --file "C:\path	o\memo.m4a"`. Then repeat step 1 for the next block.
+
+It refuses (saving nothing) if it hears a different number of utterances than the script has, and prints what it heard next to what was expected -- one miscount would mislabel every take after it. Silence/noise prompts aren't in phone scripts; record those with `record_dataset` on the laptop. Use different `--speaker` names per person. Friends recorded for training must not also be your benchmark evaluators.
 
 ### Pi bring-up (needs only Pi + speaker; mic Sunday)
 

@@ -4,3 +4,4 @@ soundfile>=0.13
 sounddevice>=0.5
 numpy>=2.0
 scikit-learn>=1.5
+av>=12  # optional: decoding m4a/aac phone recordings in import_recording
