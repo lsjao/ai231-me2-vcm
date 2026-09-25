@@ -1,5 +1,6 @@
-# Pi-side only -- not installed/tested on this dev machine (no Pi, no mic here).
-# requirements.txt (training-side deps) still applies for anything that
-# needs vcm.audio's feature extraction (e.g. benchmark_harness.py replay mode).
-tflite-runtime
+# Pi-side deps (install via scripts/pi_setup.sh, which also installs the TFLite
+# runtime: ai-edge-litert, falling back to tflite-runtime). Deliberately no
+# tensorflow, librosa, or numba -- audio features are plain numpy.
+numpy
+soundfile
 sounddevice

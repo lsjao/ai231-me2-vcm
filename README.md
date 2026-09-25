@@ -1,7 +1,7 @@
 # VCM Dataset Scaffold
 
 ## What's in here
-- `phrase_list.csv` — 69 locked phrases across 7 intents + reject class, with slot labels
+- `phrase_list.csv` — 70 phrases (69 locked + the `wake/hey_pi` wake phrase) across 7 intents + reject class, with slot labels
 - `dataset/` — folder structure `intent=X/slot=Y/`, pre-populated with 201 synthetic TTS WAV files (3 espeak-ng voices per phrase, ~14MB)
 - `manifest.csv` — one row per audio file: filepath, intent, slot, phrase, speaker, condition, source
 
@@ -25,9 +25,9 @@ Not balanced yet on purpose, media_control has more sub-classes so it needed mor
 - Easter egg songs — `good_morning` and `stage_fright` phrases are the *trigger commands*, you still need the actual Good Morning / No songs as local MP3 files for playback, that's separate from this dataset
 
 ## How to add real recordings
-1. Record following the team's recording protocol
-2. Drop the WAV into the matching `dataset/intent=X/slot=Y/` folder
-3. Add one row to `manifest.csv`: filepath, intent, slot, phrase, speaker name, condition (quiet/noisy/etc), source=`real`
+Real recordings are kept out of `dataset/` and out of git (bulky, personal voice). Use the guided tool from `src/`:
+`python -m vcm.record_dataset --speaker <name> --condition quiet --distance near --auto` -- it writes to `data_real/`
+with its own `manifest.csv`. Train with `--extra-data ../data_real`. See HANDOFF.md for the full recording plan.
 
 ## Next steps
 - Record real silence + noise clips for the reject class (5 min effort, just record an empty room and a TV-on room)

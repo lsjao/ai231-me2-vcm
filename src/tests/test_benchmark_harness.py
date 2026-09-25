@@ -143,7 +143,7 @@ class FakeClassifier:
 def test_run_session_writes_expected_csv_rows(tmp_path):
     manifest_path, data_root = _make_tiny_dataset(tmp_path)
     prompts = [Prompt(intent="ask_time", slot="none", phrase="what time is it")]
-    classifier = FakeClassifier([("ask_time", 0.9, 1.0), ("set_timer", 0.4, 2.0)])
+    classifier = FakeClassifier([("ask_time/none", 0.9, 1.0), ("set_timer/none", 0.4, 2.0)])
     output_csv = tmp_path / "results.csv"
 
     rows = run_session(
@@ -164,11 +164,53 @@ def test_run_session_writes_expected_csv_rows(tmp_path):
     assert rows[1]["predicted_intent"] == "set_timer"
     assert rows[1]["correct"] is False
     assert rows[0]["source"] == "synthetic_replay"
+    assert rows[0]["expected_command"] == "ask_time/none"
+    assert rows[0]["predicted_command"] == "ask_time/none"
+    assert rows[1]["predicted_command"] == "set_timer/none"
+    assert rows[0]["intent_correct"] is True
+    assert rows[1]["intent_correct"] is False
 
     with open(output_csv, newline="", encoding="utf-8") as f:
         written = list(csv.DictReader(f))
     assert len(written) == 2
     assert written[0]["expected_intent"] == "ask_time"
+
+
+def test_right_intent_wrong_slot_is_wrong_command_but_right_intent(tmp_path):
+    manifest_path, data_root = _make_tiny_dataset(tmp_path)
+    prompts = [Prompt(intent="ask_time", slot="none", phrase="what time is it")]
+    rows = run_session(
+        evaluator="tester",
+        prompts=prompts,
+        reps=1,
+        mode="replay",
+        classifier=FakeClassifier([("ask_time/other_slot", 0.8, 1.0)]),
+        output_csv=str(tmp_path / "results.csv"),
+        audio_out_dir=None,
+        manifest_path=manifest_path,
+        data_root=data_root,
+    )
+    assert rows[0]["correct"] is False
+    assert rows[0]["intent_correct"] is True
+
+
+def test_replay_source_reports_which_commands_have_clips(tmp_path):
+    manifest_path, data_root = _make_tiny_dataset(tmp_path)
+    source = ReplaySource(manifest_path, data_root)
+    assert source.available(Prompt("ask_time", "none", "x"))
+    assert not source.available(Prompt("ask_time", "some_other_slot", "x"))
+    assert not source.available(Prompt("wake", "hey_pi", "hey pi"))
+
+
+def test_summarize_reports_intent_accuracy_separately_from_command_accuracy():
+    rows = [
+        {**_row("a", "media_control", "next", 1, False), "intent_correct": True},
+        {**_row("a", "media_control", "pause", 1, True), "intent_correct": True},
+        {**_row("a", "set_timer", "5min", 1, False), "intent_correct": False},
+    ]
+    summary = summarize(rows)
+    assert summary["accuracy"] == pytest.approx(1 / 3)
+    assert summary["intent_accuracy"] == pytest.approx(2 / 3)
 
 
 def test_run_session_appends_without_duplicating_header(tmp_path):
@@ -181,7 +223,7 @@ def test_run_session_appends_without_duplicating_header(tmp_path):
         prompts=prompts,
         reps=1,
         mode="replay",
-        classifier=FakeClassifier([("ask_time", 0.9, 1.0)]),
+        classifier=FakeClassifier([("ask_time/none", 0.9, 1.0)]),
         output_csv=str(output_csv),
         audio_out_dir=None,
         manifest_path=manifest_path,
@@ -192,7 +234,7 @@ def test_run_session_appends_without_duplicating_header(tmp_path):
         prompts=prompts,
         reps=1,
         mode="replay",
-        classifier=FakeClassifier([("ask_time", 0.9, 1.0)]),
+        classifier=FakeClassifier([("ask_time/none", 0.9, 1.0)]),
         output_csv=str(output_csv),
         audio_out_dir=None,
         manifest_path=manifest_path,

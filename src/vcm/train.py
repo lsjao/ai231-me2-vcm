@@ -1,13 +1,18 @@
-"""Train the from-scratch CRNN intent classifier and export for the Pi.
+"""Train the from-scratch CRNN command classifier and export for the Pi.
 
-Usage:
-    python -m vcm.train --data-root . --manifest manifest.csv --output-dir ../models
+Usage (from src/):
+    python -m vcm.train --data-root .. --manifest manifest.csv --output-dir ../models \
+        --extra-data ../data_real
+
+--extra-data (repeatable) adds another root with its own manifest.csv, e.g.
+real recordings from record_dataset.py or a pooled classmate dataset.
 
 Writes to output-dir:
     vcm_crnn.keras            -- full Keras model
     vcm_crnn.tflite           -- dynamic-range quantized TFLite export
-    labels.json               -- index -> intent label
+    labels.json               -- index -> command label ("intent/slot", or "reject")
     training_config.json      -- feature extraction params, must match Pi-side capture
+    eval_report.txt           -- per-command report, per-intent rollup, confusion matrix
 """
 
 from __future__ import annotations
@@ -20,13 +25,15 @@ import numpy as np
 import tensorflow as tf
 from sklearn.metrics import classification_report, confusion_matrix
 
-from . import audio, data, model as model_lib
+from . import audio, data, labels as label_utils, model as model_lib
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--data-root", default=".", help="root dir manifest filepaths are relative to")
     p.add_argument("--manifest", default="manifest.csv")
+    p.add_argument("--extra-data", action="append", default=[],
+                   help="extra data root containing manifest.csv (repeatable)")
     p.add_argument("--output-dir", default="models")
     p.add_argument("--epochs", type=int, default=60)
     p.add_argument("--batch-size", type=int, default=16)
@@ -35,14 +42,40 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+def intent_rollup(y_true: list[int], y_pred: list[int], idx_to_label: dict[int, str]) -> str:
+    """Per-intent accuracy where a prediction counts if it names the right
+    *intent*, even with the wrong slot -- separates 'heard media_control but
+    picked the wrong action' from 'didn't recognize a command at all'."""
+    stats: dict[str, list[int]] = {}
+    for t, p in zip(y_true, y_pred):
+        intent = label_utils.intent_of(idx_to_label[t])
+        s = stats.setdefault(intent, [0, 0, 0])  # n, command-correct, intent-correct
+        s[0] += 1
+        s[1] += int(t == p)
+        s[2] += int(label_utils.intent_of(idx_to_label[p]) == intent)
+    lines = ["per-intent rollup (val): intent  n  command_acc  intent_acc"]
+    for intent in sorted(stats):
+        n, cmd_ok, int_ok = stats[intent]
+        lines.append(f"  {intent:<16} {n:>4}  {cmd_ok / n:.2f}  {int_ok / n:.2f}")
+    total = len(y_true)
+    if total:
+        cmd = sum(t == p for t, p in zip(y_true, y_pred)) / total
+        lines.append(f"  overall command accuracy {cmd:.2f} over {total} val clips")
+    return "\n".join(lines) + "\n"
+
+
 def main() -> None:
     args = parse_args()
     np.random.seed(args.seed)
     tf.random.set_seed(args.seed)
 
     manifest_path = os.path.join(args.data_root, args.manifest)
-    rows = data.read_manifest(manifest_path, args.data_root)
-    labels = data.build_label_list(rows)
+    rows = label_utils.read_manifest(manifest_path, args.data_root)
+    for extra_root in args.extra_data:
+        extra = label_utils.read_manifest(os.path.join(extra_root, "manifest.csv"), extra_root)
+        print(f"extra data {extra_root}: {len(extra)} clips")
+        rows.extend(extra)
+    labels = label_utils.build_label_list(rows)
     label_to_idx = {label: i for i, label in enumerate(labels)}
     idx_to_label = {i: label for label, i in label_to_idx.items()}
 
@@ -92,11 +125,13 @@ def main() -> None:
         y_pred.extend(np.argmax(probs, axis=1).tolist())
         y_true.extend(lbls.numpy().tolist())
 
-    target_names = [idx_to_label[i] for i in range(len(labels))]
+    all_idx = list(range(len(labels)))
+    target_names = [idx_to_label[i] for i in all_idx]
     report = classification_report(
-        y_true, y_pred, target_names=target_names, zero_division=0
+        y_true, y_pred, labels=all_idx, target_names=target_names, zero_division=0
     )
-    cm = confusion_matrix(y_true, y_pred).tolist()
+    cm = confusion_matrix(y_true, y_pred, labels=all_idx).tolist()
+    report += "\n" + intent_rollup(y_true, y_pred, idx_to_label)
     print(report)
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -130,7 +165,7 @@ def main() -> None:
     with open(os.path.join(args.output_dir, "eval_report.txt"), "w") as f:
         f.write(report)
         f.write("\nconfusion_matrix (rows=true, cols=pred, label order matches labels.json):\n")
-        f.write(json.dumps(cm, indent=2))
+        f.write("\n".join(json.dumps(row) for row in cm))
 
     print(f"artifacts written to {args.output_dir}")
 

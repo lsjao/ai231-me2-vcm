@@ -8,4 +8,5 @@ handoff.txt
 models/*.keras
 models/*.tflite
 benchmark_logs/
+data_real/
 .pytest_cache/

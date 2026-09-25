@@ -42,22 +42,13 @@ import csv
 import json
 import os
 import random
-import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
 import numpy as np
 
-try:
-    # lean runtime this actually ships with on the Pi (requirements-pi.txt)
-    from tflite_runtime.interpreter import Interpreter
-except ImportError:
-    # dev machine: full tensorflow, no tflite_runtime installed
-    import tensorflow as tf
-
-    Interpreter = tf.lite.Interpreter
-
-from . import audio, data
+from . import audio, labels
+from .classifier import Classifier
 
 CSV_FIELDS = [
     "timestamp",
@@ -66,10 +57,13 @@ CSV_FIELDS = [
     "attempt_index",
     "expected_intent",
     "slot",
+    "expected_command",  # "intent/slot" (or "reject")
     "phrase",            # the "transcript" -- see module docstring
-    "predicted_intent",
+    "predicted_command",
+    "predicted_intent",  # derived from predicted_command
     "confidence",
-    "correct",
+    "correct",           # predicted_command == expected_command
+    "intent_correct",    # right intent, possibly wrong slot
     "latency_ms",
     "audio_filepath",
 ]
@@ -80,6 +74,10 @@ class Prompt:
     intent: str
     slot: str
     phrase: str
+
+    @property
+    def command(self) -> str:
+        return labels.command_label(self.intent, self.slot)
 
 
 def load_prompts(
@@ -120,36 +118,6 @@ def load_prompts(
     return prompts
 
 
-class Classifier:
-    """Thin wrapper around the trained TFLite model. Reuses vcm.audio's
-    feature extraction so preprocessing exactly matches training -- do not
-    duplicate that logic here."""
-
-    def __init__(self, model_dir: str):
-        with open(os.path.join(model_dir, "labels.json")) as f:
-            self.idx_to_label = {int(k): v for k, v in json.load(f).items()}
-        self.interpreter = Interpreter(
-            model_path=os.path.join(model_dir, "vcm_crnn.tflite")
-        )
-        self.interpreter.allocate_tensors()
-        self._input = self.interpreter.get_input_details()[0]
-        self._output = self.interpreter.get_output_details()[0]
-
-    def predict(self, wav: np.ndarray) -> tuple[str, float, float]:
-        """Returns (predicted_intent, confidence, latency_ms). Latency covers
-        feature extraction + inference, not audio capture."""
-        t0 = time.perf_counter()
-        feat = audio.waveform_to_features(wav)
-        x = feat[np.newaxis, ...].astype(np.float32)
-        self.interpreter.set_tensor(self._input["index"], x)
-        self.interpreter.invoke()
-        probs = self.interpreter.get_tensor(self._output["index"])[0]
-        latency_ms = (time.perf_counter() - t0) * 1000.0
-
-        idx = int(np.argmax(probs))
-        return self.idx_to_label[idx], float(probs[idx]), latency_ms
-
-
 class LiveMicSource:
     """Records `audio.CLIP_SECONDS` of audio from the default input device."""
 
@@ -173,25 +141,28 @@ class LiveMicSource:
 
 
 class ReplaySource:
-    """Cycles existing dataset WAVs per intent, for harness smoke-testing
+    """Cycles existing dataset WAVs per command, for harness smoke-testing
     without a mic. NOT a real evaluator -- see module docstring."""
 
     def __init__(self, manifest_path: str, data_root: str, seed: int = 0):
-        rows = data.read_manifest(manifest_path, data_root)
-        self._by_intent: dict[str, list[str]] = {}
+        rows = labels.read_manifest(manifest_path, data_root)
+        self._by_command: dict[str, list[str]] = {}
         for r in rows:
-            self._by_intent.setdefault(r.intent, []).append(r.filepath)
+            self._by_command.setdefault(r.label, []).append(r.filepath)
         self._rng = random.Random(seed)
-        for paths in self._by_intent.values():
+        for paths in self._by_command.values():
             self._rng.shuffle(paths)
-        self._cursor: dict[str, int] = {intent: 0 for intent in self._by_intent}
+        self._cursor: dict[str, int] = {label: 0 for label in self._by_command}
+
+    def available(self, prompt: Prompt) -> bool:
+        return bool(self._by_command.get(prompt.command))
 
     def capture(self, prompt: Prompt) -> tuple[np.ndarray, str]:
-        paths = self._by_intent.get(prompt.intent)
+        paths = self._by_command.get(prompt.command)
         if not paths:
-            raise KeyError(f"no replay clips available for intent {prompt.intent!r}")
-        i = self._cursor[prompt.intent] % len(paths)
-        self._cursor[prompt.intent] += 1
+            raise KeyError(f"no replay clips available for command {prompt.command!r}")
+        i = self._cursor[prompt.command] % len(paths)
+        self._cursor[prompt.command] += 1
         path = paths[i]
         return audio.load_waveform(path), path
 
@@ -237,8 +208,10 @@ def run_session(
                     wav, src_path = source.capture(prompt)
                     source_label = "synthetic_replay"
 
-                predicted_intent, confidence, latency_ms = classifier.predict(wav)
-                correct = predicted_intent == prompt.intent
+                predicted_command, confidence, latency_ms = classifier.predict(wav)
+                correct = predicted_command == prompt.command
+                predicted_intent = labels.intent_of(predicted_command)
+                intent_correct = predicted_intent == prompt.intent
 
                 audio_filepath = ""
                 if audio_out_dir:
@@ -256,10 +229,13 @@ def run_session(
                     "attempt_index": attempt_index,
                     "expected_intent": prompt.intent,
                     "slot": prompt.slot,
+                    "expected_command": prompt.command,
                     "phrase": prompt.phrase,
+                    "predicted_command": predicted_command,
                     "predicted_intent": predicted_intent,
                     "confidence": round(confidence, 4),
                     "correct": correct,
+                    "intent_correct": intent_correct,
                     "latency_ms": round(latency_ms, 2),
                     "audio_filepath": audio_filepath,
                 }
@@ -268,7 +244,7 @@ def run_session(
                 rows.append(row)
                 print(
                     f"[{prompt.intent}/{prompt.slot} #{attempt_index}] "
-                    f"said={prompt.phrase!r} pred={predicted_intent} "
+                    f"said={prompt.phrase!r} pred={predicted_command} "
                     f"conf={confidence:.2f} correct={correct} lat={latency_ms:.1f}ms"
                 )
 
@@ -292,6 +268,9 @@ def summarize(rows: list[dict]) -> dict:
     for intent, bucket in per_intent.items():
         bucket["accuracy"] = bucket["correct"] / bucket["n"]
 
+    intent_flags = [r["intent_correct"] for r in rows if "intent_correct" in r]
+    intent_accuracy = sum(intent_flags) / len(intent_flags) if intent_flags else None
+
     # retries-until-success: for each (evaluator, intent, slot) command,
     # how many attempts until the first correct prediction, if any
     commands: dict[tuple, list[dict]] = {}
@@ -311,7 +290,8 @@ def summarize(rows: list[dict]) -> dict:
 
     return {
         "n_attempts": n,
-        "accuracy": accuracy,
+        "accuracy": accuracy,  # command-level: right intent AND slot
+        "intent_accuracy": intent_accuracy,  # right intent, slot ignored
         "mean_confidence": mean_conf,
         "mean_latency_ms": mean_latency,
         "per_intent": per_intent,
@@ -357,6 +337,13 @@ def main() -> None:
     intents = set(args.intents.split(",")) if args.intents else None
     prompts = load_prompts(args.phrase_list, granularity=args.granularity, intents=intents)
     classifier = Classifier(args.model_dir)
+
+    if args.mode == "replay":
+        replay = ReplaySource(args.manifest, args.data_root)
+        skipped = [p for p in prompts if not replay.available(p)]
+        prompts = [p for p in prompts if replay.available(p)]
+        for p in skipped:
+            print(f"replay: no clips for {p.command!r}, skipping")
 
     rows = run_session(
         evaluator=args.evaluator,

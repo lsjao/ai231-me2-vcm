@@ -1,61 +1,46 @@
 """Manifest loading, train/val split, and tf.data pipeline with augmentation.
 
-Dataset is tiny (a couple hundred synthetic clips) and entirely TTS so far --
-augmentation here is a partial stand-in for the real-voice gap called out in
-HANDOFF.md, not a fix for it. Retrain once real recordings land in dataset/.
+Labels are command labels ("intent/slot"), defined in labels.py. The
+synthetic set is small and TTS-only; real recordings live in a separate
+root (see record_dataset.py) and are merged in at train time.
 """
 
 from __future__ import annotations
 
-import csv
-import os
-from dataclasses import dataclass
+import random
+from collections import defaultdict
 
 import numpy as np
 import tensorflow as tf
-from sklearn.model_selection import train_test_split
 
 from . import audio
+from .labels import ManifestRow
 
 AUGMENT_NOISE_STD = 0.01
 AUGMENT_MAX_SHIFT_FRAC = 0.1
 AUGMENT_GAIN_DB_RANGE = 6.0
 
 
-@dataclass
-class ManifestRow:
-    filepath: str
-    intent: str
-
-
-def read_manifest(manifest_path: str, data_root: str) -> list[ManifestRow]:
-    rows: list[ManifestRow] = []
-    with open(manifest_path, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for r in reader:
-            rows.append(
-                ManifestRow(
-                    filepath=os.path.join(data_root, r["filepath"]),
-                    intent=r["intent"],
-                )
-            )
-    return rows
-
-
-def build_label_list(rows: list[ManifestRow]) -> list[str]:
-    return sorted({r.intent for r in rows})
-
-
 def split_rows(
     rows: list[ManifestRow], val_fraction: float = 0.2, seed: int = 1337
 ) -> tuple[list[ManifestRow], list[ManifestRow]]:
-    labels = [r.intent for r in rows]
-    train_rows, val_rows = train_test_split(
-        rows,
-        test_size=val_fraction,
-        random_state=seed,
-        stratify=labels,
-    )
+    """Per-label split: each label with >=2 clips gets at least one val clip;
+    labels with a single clip stay in train. (sklearn's stratified split
+    refuses when there are more labels than val slots, which is the normal
+    case with ~35 command labels and a small dataset.)"""
+    by_label: dict[str, list[ManifestRow]] = defaultdict(list)
+    for r in rows:
+        by_label[r.label].append(r)
+
+    rng = random.Random(seed)
+    train_rows: list[ManifestRow] = []
+    val_rows: list[ManifestRow] = []
+    for label in sorted(by_label):
+        group = list(by_label[label])
+        rng.shuffle(group)
+        n_val = max(1, round(len(group) * val_fraction)) if len(group) >= 2 else 0
+        val_rows.extend(group[:n_val])
+        train_rows.extend(group[n_val:])
     return train_rows, val_rows
 
 
@@ -93,7 +78,7 @@ def make_dataset(
     shuffle: bool,
 ) -> tf.data.Dataset:
     filepaths = [r.filepath for r in rows]
-    labels = [label_to_idx[r.intent] for r in rows]
+    labels = [label_to_idx[r.label] for r in rows]
 
     ds = tf.data.Dataset.from_tensor_slices((filepaths, labels))
     if shuffle:
@@ -119,7 +104,7 @@ def make_dataset(
 def class_weights(rows: list[ManifestRow], label_to_idx: dict[str, int]) -> dict[int, float]:
     counts = np.zeros(len(label_to_idx), dtype=np.float64)
     for r in rows:
-        counts[label_to_idx[r.intent]] += 1
+        counts[label_to_idx[r.label]] += 1
     total = counts.sum()
     n_classes = len(label_to_idx)
     weights = total / (n_classes * np.maximum(counts, 1))
