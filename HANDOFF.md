@@ -2,7 +2,7 @@
 
 Project: ME2 Voice Command Model, individual topic = `play_media` (play_music + media_control combined per assignment's explicit "No. 1 can fold into No. 8")
 
-Single source of truth for this project. Lives in the repo root, not duplicated into a separate chat document.
+Single source of truth for this project. Lives in the repo root, not duplicated into a separate chat document. For the chronological story of what happened and how problems were diagnosed/fixed (useful for the assignment's process writeup), see `daily_log_report.md` -- this file is current state and the plan, that one is the log.
 
 ## Correction vs. earlier handoff draft (2026-09-25)
 
