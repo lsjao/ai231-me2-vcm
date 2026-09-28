@@ -83,14 +83,18 @@ class SoundDeviceRecorder:
         return record_seconds(seconds, self._device)
 
 
-def beep() -> None:
-    """Short cue that recording starts now, so the first word isn't clipped."""
+def beep(device: int | str | None = None) -> None:
+    """Short cue that recording starts now, so the first word isn't clipped.
+    `device=None` relies on the OS "default" output, which has proven
+    unreliable in practice (e.g. plugging in a USB mic that also exposes a
+    fake playback endpoint can silently steal the default) -- pass an
+    explicit --device-out when in doubt rather than trusting the default."""
     import sounddevice as sd
 
     sr = 22050
-    t = np.arange(int(0.12 * sr)) / sr
-    tone = (0.2 * np.sin(2 * np.pi * 1000 * t) * np.hanning(len(t))).astype(np.float32)
-    sd.play(tone, sr)
+    t = np.arange(int(0.35 * sr)) / sr
+    tone = (0.6 * np.sin(2 * np.pi * 1000 * t) * np.hanning(len(t))).astype(np.float32)
+    sd.play(tone, sr, device=device)
     sd.wait()
 
 
@@ -313,6 +317,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--phrase-list", default=root_path("phrase_list.csv"))
     p.add_argument("--out-root", default=root_path("data_real"))
     p.add_argument("--device", default=None, help="sounddevice input device index/name")
+    p.add_argument("--device-out", default=None,
+                   help="sounddevice output device index/name for the --auto beep "
+                   "(don't rely on the OS default -- pass this explicitly if the beep "
+                   "goes unheard, e.g. after plugging in a new audio device)")
     p.add_argument("--auto", action="store_true", help="no Enter needed: prompt, short pause, beep, then it records -- speak right after the beep")
     p.add_argument("--lead-in", type=float, default=1.0, help="seconds between the prompt and the beep in --auto")
     p.add_argument("--no-beep", action="store_true", help="--auto without the start-of-recording beep")
@@ -338,7 +346,11 @@ def main() -> None:
         print("nothing left to record for these settings")
         return
 
-    device = int(args.device) if args.device and args.device.isdigit() else args.device
+    def parse_device(raw):
+        return int(raw) if raw and raw.isdigit() else raw
+
+    device = parse_device(args.device)
+    device_out = parse_device(args.device_out)
     recorder = SoundDeviceRecorder(device)
 
     if args.auto:
@@ -346,7 +358,7 @@ def main() -> None:
             print(prompt)
             time.sleep(args.lead_in)
             if not args.no_beep:
-                beep()
+                beep(device_out)
                 time.sleep(0.1)  # let the beep die out before the mic opens
             return ""
     else:
