@@ -271,3 +271,77 @@ creative play_media features first. Also: a new electronic component kit (breadb
 RGB LED, resistors, ~₱403) was sourced for real GPIO-driven `light_on_off`/`light_dim_color`
 actuation, deliberately not a smart bulb (avoids a vendor cloud API dependency that would
 conflict with the no-cloud constraint). Not yet in hand.
+
+---
+
+## 2026-09-29 — external data merge: 1,746 real clips for the 6 non-play_media intents
+
+### The big discovery, restated for the record
+Yesterday's capacity-wall finding (33 classes at ~5 examples/class is a genuine from-scratch
+learning limit, confirmed via controlled ablations, not a code bug) directly collided with
+today's scope expansion to all 7 intents. Tonight's work is the response to that collision:
+instead of cutting scope, find enough real data to actually clear the wall.
+
+### Two external sources merged, after a missing-file blocker and real bugs found mid-import
+A fresh Claude conversation had planned a merge of two raw data sources (Mark's classmate
+dataset — 150 speakers, real recordings; Snips SLU — a public smart-lighting speech corpus)
+and handed over a detailed spec to execute. Two real blockers surfaced immediately:
+- **The spec referenced a "canonical phrase_list.csv" that never actually arrived in the
+  paste** — cut straight from "replace with the version below" to describing a diff, no file
+  content. Flagged rather than fabricated; turned out not to matter for this pass (see below).
+- **Mark's dataset's own manifest.csv had real transcripts per file** (e.g. "Wake me up at
+  8 AM"), contradicting the spec's assumption that none existed — used the real transcripts
+  instead of approximating with our canonical phrasing, confirmed with the user first.
+
+Before writing anything, caught two consequential design issues the spec hadn't accounted
+for and raised them rather than proceeding blind:
+- **Repo-size risk**: the spec said copy into git-tracked `dataset/`; the actual available
+  volume (Mark alone: 18,375 matching rows, ~590/slot) would have added an estimated 1GB+ to
+  a git repository. Redirected to a new gitignored `external_data/` root, mirroring the
+  existing `data_real/` pattern and reusing the same `--extra-data` training mechanism —
+  confirmed with the user rather than assumed.
+- **Data volume vs. benefit**: ~590 real examples per slot is far more than needed and would
+  meaningfully slow every training epoch (18,375 examples at batch_size 16 is ~1,150 steps/
+  epoch instead of ~24) for no clear benefit over a smaller sample. Subsampled to 60/slot with
+  the user's confirmation — still 12-24x the prior per-class data.
+
+Real bugs hit and fixed during the actual import, not just planning:
+- **`shutil.copy2` crashed with `WinError 3`** partway through Source A. Root cause: Mark's
+  own manifest references ~5,643 rows (the entire `ALARM`/`WEATHER`/`CALL`/`MESSAGE`/
+  `CREATE_REMINDER`/`LIST_REMINDERS` categories intended as reject-class hard negatives) whose
+  audio was never actually included in the shared `OptionB` folder — his README's "844
+  excluded/flagged" note undersold the real gap. Confirmed by checking `os.path.exists` on the
+  specific failing path before assuming a code bug. Made the importer skip-and-count missing
+  source files instead of crashing, rather than silently catching everything broadly.
+- **Snips' `datasets.Audio` auto-decode required `torchcodec`**, a new and fairly heavy
+  dependency. Avoided adding it: cast the column to `decode=False`, confirmed the raw bytes
+  were plain WAV (`RIFF...WAVE` header), and read them directly with `soundfile` (already a
+  project dependency) instead.
+- **A shell diagnostic (`cut -d,`) produced garbled-looking counts** right after the Snips
+  import, which looked like real data corruption at first glance. Root cause: `cut` doesn't
+  respect CSV quoting, and some phrase text contains commas. Re-verified with Python's `csv`
+  module before concluding anything was wrong — it wasn't.
+
+Snips required keyword classification (its rows have no pre-built intent/slot labels, only
+free text). Spot-checked actual matched phrases before trusting the classifier — quality was
+good overall; found one real, minor false-positive class ("...to fifty. on the patio" matched
+the "on" keyword despite being a brightness command, not on/off) and accepted it as a known,
+small-scale limitation of keyword matching rather than a blocker.
+
+### Result
+1,746 real clips added across the 6 non-play_media intents (`light_dim_color` 726,
+`media_control` 360, `light_on_off` 240, `set_temperature`/`set_timer` 180 each, `ask_time`
+60), 115MB, gitignored. Per-slot counts now 60-120, versus ~5 before — a 12-24x increase for
+exactly the intents hit hardest by the capacity wall. **Confirmed training needs none of the
+still-missing canonical `phrase_list.csv`** — `train.py` derives labels from manifest data,
+not that file, so a retrain against this expanded dataset can happen immediately; the
+canonical file is still needed for the phrase-overlap audit and to keep `record_dataset.py`'s
+prompts in sync with the new slots, but isn't blocking the one experiment that actually
+matters most right now: does this much real data clear the capacity wall or not.
+
+**Not yet done**: the retrain against this new data (next), the phrase-overlap audit, GPIO
+code, wake-word (`kuya jukebox`) real recordings (still zero), and reject-class data now that
+Mark's out-of-scope negatives turned out to be unavailable -- worth noting Snips' 3,472
+unmatched rows (didn't match any of our keyword rules) are themselves naturally-occurring
+smart-home-adjacent speech that isn't one of our commands, a plausible substitute source for
+reject-class negatives, not yet acted on.

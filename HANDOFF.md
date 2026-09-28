@@ -165,7 +165,60 @@ It refuses (saving nothing) if it hears a different number of utterances than th
 
 Quick reference now that it's set up: `ssh rpi` (key-based, passwordless sudo already configured). To push updated code/model: `git archive --format=tar HEAD -- src | ssh rpi "cd ~/vcm && tar -x"` then `scp models/vcm_crnn.tflite models/labels.json models/training_config.json rpi:~/vcm/models/`. Run on the Pi: `cd ~/vcm/src && source ../.venv/bin/activate && python -m vcm.pi_check` (add `--mic --seconds N` for the mic/fan-noise test, still not done -- see risk above). Live: `python -m vcm.pipeline --source mic` (`--no-wake` to skip the wake window while debugging).
 
-## 8-day critical path (day 1 = Fri Sep 25; demo Sat Oct 3)
+## Plan from here to the demo (revised Sep 29 evening, supersedes the "8-day critical path" below it)
+
+Everything up to tonight (classifier pipeline, Pi bring-up, 267 real play_media clips, the
+33-class capacity-wall finding, the 7-intent scope change, and tonight's 1,746-clip external
+data merge) is done and logged in `daily_log_report.md` -- this section is what's left,
+day by day, to the Oct 3 demo.
+
+### Tonight (Sep 29) -- the decision gate
+- [ ] **Retrain with `external_data/` + `data_real/` merged** (`python -m vcm.train`, both
+  auto-merge). This is the test that actually matters: does 1,746 extra real clips (12-24x
+  the prior per-class volume for the 6 non-play_media intents) clear the capacity wall found
+  last night? Check `models/eval_report.txt`'s per-command accuracy and the wake-confusion
+  report.
+- [ ] Based on that result, confirm tomorrow's plan below still holds, or fall back toward
+  play_media + `light_on_off` + `ask_time` per the Sep 28 fallback decision if it doesn't.
+
+### Sep 30 (Wed) -- lock scope, close the remaining real data gaps
+- [ ] Lock in final intent scope for the demo based on tonight's retrain result.
+- [ ] **Record `wake/kuya_jukebox` for real** -- currently zero real examples anywhere, the
+  wake word literally cannot work yet. Laptop mic session, same tool: `.\run.cmd
+  vcm.record_dataset --speaker <you> --intents wake --reps-per-slot 25 --auto`.
+- [ ] **Reject-class data**: Mark's planned out-of-scope negatives turned out to be
+  unavailable (see last night's log). Candidate fix: import Snips' 3,472 keyword-unmatched
+  rows as reject negatives (new script, same `external_data/` pattern) -- real, naturally-
+  occurring smart-home-adjacent speech that isn't one of our commands. Plus a laptop session
+  for our own near-miss phrases.
+- [ ] Get the canonical `phrase_list.csv` from the other planning thread, do the replace +
+  phrase-overlap audit that was blocked on it.
+- [ ] Build the GPIO control path for `light_on_off`/`light_dim_color` in `dispatch.py`
+  (hardware-absent fallback, same pattern as `player.py`'s tone fallback), ready for whenever
+  the LED kit arrives -- don't wait for the hardware to write this.
+
+### Oct 1 (Thu) -- Pi + evaluators
+- [ ] Push the retrained model to the Pi, run `pi_check` + a real `pipeline --source mic`
+  session with the new model.
+- [ ] Tune `--min-confidence`, VAD margins, ambient constants against real predictions (now
+  finally possible with a model that isn't at chance level).
+- [ ] Fan-on noise comparison on the Pi (idle vs. fans running) -- still unconfirmed.
+- [ ] Wire up the GPIO code for real if the LED kit is in hand by now.
+- [ ] Recruit 2-3 evaluators (people other than you) and run
+  `python -m vcm.benchmark_harness --mode live --evaluator "<name>" --evaluator-plan`.
+- [ ] Source the easter-egg songs ("Good Morning", "No"/stage-fright) and 5+ playlist tracks
+  as local files into `music/` (copyrighted, must be sourced by you personally).
+
+### Oct 2 (Fri) -- rehearsal buffer, don't skip
+- [ ] Fix whatever the evaluator sessions turned up.
+- [ ] Full rehearsal run-throughs, more than once.
+- [ ] Creative addition (sleep timer first) only if everything above is actually solid --
+  do not trade core reliability for this.
+
+### Oct 3 (Sat) -- demo day
+- [ ] Final morning sanity check, then demo.
+
+## 8-day critical path (original, day 1 = Fri Sep 25; kept for the report's process narrative)
 
 - [x] Classifier pipeline, state machine, ambient auto-volume, evaluator harness (built + tested)
 - [x] Command-level relabel (closes intent->slot gap), wake-word class, recording tool, dispatcher, player, VAD, live pipeline, Pi setup/diagnostic (built + tested Sep 25-26)
@@ -173,15 +226,9 @@ Quick reference now that it's set up: `ssh rpi` (key-based, passwordless sudo al
 - [x] Record real play_media voice data on the USB mic (267 clips, 246/246 targets hit), verified clean
 - [x] Pi bring-up: SSH access, `pi_setup.sh`, `pi_check --mic` all passing on real hardware (Sep 28) -- see Pi bring-up section above for the two real bugs found and fixed (PipeWire routing, USB mic 48kHz-only)
 - [x] Retrain with real data -- **result: 33-class capacity wall found, root-caused via controlled ablations, not fixable by tuning** (see Honest current status)
-- [ ] **Scope now 7 intents, not just play_media (Sep 28 decision) -- record the rest in fallback-priority order**: `light_on_off` next (simple, hardware-relevant), then `ask_time` (simple, no hardware), then `light_dim_color`/`set_timer`/`set_temperature` (lower priority, first to cut)
-- [ ] Build GPIO control path for `light_on_off`/`light_dim_color` in `dispatch.py` (hardware-absent fallback, same pattern as `player.py`), ready for when the LED kit arrives
-- [ ] Ask classmate group chat for pooled dataset repo access (SLURP/FSC/Snips: FSC has real voices for lights, volume, heat); merge via `--extra-data` -- **now more urgent** given the capacity wall, this is real data for classes we can't record enough of ourselves in time
-- [ ] Fan-on noise comparison (case fans' actual state unconfirmed), live pipeline test on the Pi with real data (`python -m vcm.pipeline --source mic`); tune `--min-confidence`, VAD margins, ambient constants against real audio
-- [ ] Source easter-egg songs ("Good Morning", "No"/stage-fright) and 5+ playlist tracks as local files into `music/` (copyrighted -- must be sourced by you; see `player.py` docstring for layout)
-- [ ] **Day-5 fallback checkpoint (Tue Sep 29 -- tomorrow)**: revised per the scope change above -- if the classifier isn't handling all 7 intents + reject reliably by then, cut down toward play_media + `light_on_off` + `ask_time` and document the rest as future work, not "cut creative features first"
-- [ ] Evaluator sessions, day 5-6 (Sep 29-30): 2-3 people other than you, `python -m vcm.benchmark_harness --mode live --evaluator "<name>" --evaluator-plan`
-- [ ] Creative addition, max 1-2, sleep timer first -- only if the day-5 checkpoint passes
-- [ ] Rehearsal buffer, Oct 1-2, don't skip
+- [x] Scope expanded to 7 intents (Sep 28 decision)
+- [x] External data merge: 1,746 real clips across the 6 non-play_media intents (Sep 29) -- see daily_log_report.md
+- [ ] Everything else -- see the day-by-day plan above, which is now the live source of truth for what's left.
 
 ## Open, non-blocking
 

@@ -11,3 +11,4 @@ benchmark_logs/
 data_real/
 .pytest_cache/
 *.log
+external_data/
