@@ -53,7 +53,7 @@ Not yet done: fan-on noise comparison, live pipeline test on the Pi (`python -m 
 
 1. **Real voice is recorded now on the laptop mic**, then topped up with the USB mic when it arrives (Sun Sep 27) so the model sees the demo mic too.
 2. **One classifier over command labels** (`intent/slot`, e.g. `media_control/next`, `play_music/playlist_jazz`, `set_timer/5min`; every reject slot collapses to `reject`). Chosen over a two-stage intent-then-slot design: one model on the Pi, and the state machine gets its action straight from the label. Cost: 33+ classes, so per-command real reps matter.
-3. **Wake word is a trained class** in the same classifier (`wake/hey_pi`, phrase "hey pi" -- change it in `phrase_list.csv` if you want another). Commands are only acted on while a *wake window* is open (5 s); opening it ducks the music to ~5%, and the command (or the timeout) restores it.
+3. **Wake word is a trained class** in the same classifier (`wake/kuya_jukebox`, phrase "kuya jukebox" -- change it in `phrase_list.csv` if you want another). Commands are only acted on while a *wake window* is open (5 s); opening it ducks the music to ~5%, and the command (or the timeout) restores it.
 
 ## Intent scope (locked)
 
@@ -74,7 +74,7 @@ Creative additions, priority order if time allows: sleep timer (cross-intent w/ 
 ## Dataset status
 
 - Team collective: SLURP + FSC + Snips + classmates' synthetic pipelines, pooled via shared Drive/repo (a classmate's whisper.cpp-validated pooling repo exists for the class, ask in group chat for access if needed).
-- Personal dataset (`dataset/`, `phrase_list.csv`, `manifest.csv`): 70 phrases (69 across 7 intents + reject, plus `wake/hey_pi`), 201 synthetic WAVs (espeak-ng, 3 voices: us/gb/rp), 22050Hz mono PCM16, 0.6–2.9s duration. Almost entirely synthetic TTS, **zero real utterances** as of this repo snapshot (`personal_play_music/` 70-sample slice mentioned in the earlier draft does not exist in this repo).
+- Personal dataset (`dataset/`, `phrase_list.csv`, `manifest.csv`): 70 phrases (69 across 7 intents + reject, plus `wake/kuya_jukebox`), 201 synthetic WAVs (espeak-ng, 3 voices: us/gb/rp), 22050Hz mono PCM16, 0.6–2.9s duration. Almost entirely synthetic TTS, **zero real utterances** as of this repo snapshot (`personal_play_music/` 70-sample slice mentioned in the earlier draft does not exist in this repo).
 - Per-intent counts: media_control 48, play_music 30, set_timer 30, light_dim_color 24, light_on_off 24, set_temperature 18, ask_time 12, reject 15 (offvocab only — `reject/slot=silence` and `reject/slot=noise` still need real recordings, TTS can't produce them).
 - Confirmed by class data, not theoretical: synthetic-only training fails on real voices. One classmate: 73% word error rate training on synthetic, testing on real voice. **Real voice data is the single highest-priority gap.** Folder/manifest structure is built for real recordings to drop straight in (see `README.md`).
 

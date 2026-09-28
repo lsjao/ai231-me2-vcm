@@ -55,7 +55,7 @@ def test_volume_commands_change_state_machine_volume():
 def test_reject_and_wake_have_no_side_effects():
     d, speaker, sm = make()
     assert d.handle("reject")["kind"] == "reject"
-    assert d.handle("wake/hey_pi")["kind"] == "wake"
+    assert d.handle("wake/kuya_jukebox")["kind"] == "wake"
     assert speaker.said == [] and sm.state == PlaybackState.IDLE
 
 

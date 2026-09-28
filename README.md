@@ -1,7 +1,7 @@
 # VCM Dataset Scaffold
 
 ## What's in here
-- `phrase_list.csv` — 70 phrases (69 locked + the `wake/hey_pi` wake phrase) across 7 intents + reject class, with slot labels
+- `phrase_list.csv` — 70 phrases (69 locked + the `wake/kuya_jukebox` wake phrase) across 7 intents + reject class, with slot labels
 - `dataset/` — folder structure `intent=X/slot=Y/`, pre-populated with 201 synthetic TTS WAV files (3 espeak-ng voices per phrase, ~14MB)
 - `manifest.csv` — one row per audio file: filepath, intent, slot, phrase, speaker, condition, source
 

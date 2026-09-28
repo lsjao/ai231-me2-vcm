@@ -68,7 +68,7 @@ def types(events):
 
 
 def test_wake_then_command_ducks_then_restores_and_executes():
-    pipe, sm, _, _ = build([("wake/hey_pi", 0.9), ("media_control/pause", 0.9)])
+    pipe, sm, _, _ = build([("wake/kuya_jukebox", 0.9), ("media_control/pause", 0.9)])
     events = run_wav(pipe, session((0.5, 300), (0.5, 400)))
     assert types(events) == ["wake", "command"]
     assert sm.state == PlaybackState.PAUSED
@@ -76,7 +76,7 @@ def test_wake_then_command_ducks_then_restores_and_executes():
 
 
 def test_volume_is_ducked_while_the_window_is_open():
-    pipe, sm, _, _ = build([("wake/hey_pi", 0.9)])
+    pipe, sm, _, _ = build([("wake/kuya_jukebox", 0.9)])
     seen = []
     for frame in iter_frames(session((0.5, 300))):
         pipe.process_frame(frame)
@@ -100,7 +100,7 @@ def test_no_wake_mode_executes_directly():
 
 
 def test_unused_window_times_out_and_restores_volume():
-    pipe, sm, _, _ = build([("wake/hey_pi", 0.9)], config=PipelineConfig(wake_window_s=1.0))
+    pipe, sm, _, _ = build([("wake/kuya_jukebox", 0.9)], config=PipelineConfig(wake_window_s=1.0))
     wav = stream(noise(1.0), burst(0.5), noise(4.0, seed=1))
     events = run_wav(pipe, wav)
     assert types(events) == ["wake", "window_timeout"]
@@ -108,35 +108,35 @@ def test_unused_window_times_out_and_restores_volume():
 
 
 def test_volume_up_inside_window_is_not_overwritten_by_unduck():
-    pipe, sm, _, _ = build([("wake/hey_pi", 0.9), ("media_control/volume_up", 0.9)])
+    pipe, sm, _, _ = build([("wake/kuya_jukebox", 0.9), ("media_control/volume_up", 0.9)])
     run_wav(pipe, session((0.5, 300), (0.5, 400)))
     assert sm.volume == 60
 
 
 def test_low_confidence_is_treated_as_reject():
-    pipe, sm, _, _ = build([("wake/hey_pi", 0.2)])
+    pipe, sm, _, _ = build([("wake/kuya_jukebox", 0.2)])
     events = run_wav(pipe, session((0.5, 300)))
     assert types(events) == ["reject"]
-    assert events[0]["heard"] == "wake/hey_pi" and events[0]["label"] == "reject"
+    assert events[0]["heard"] == "wake/kuya_jukebox" and events[0]["label"] == "reject"
     assert not pipe.window_open
 
 
 def test_reject_class_does_nothing_even_inside_a_window():
-    pipe, sm, _, _ = build([("wake/hey_pi", 0.9), ("reject", 0.9)])
+    pipe, sm, _, _ = build([("wake/kuya_jukebox", 0.9), ("reject", 0.9)])
     events = run_wav(pipe, session((0.5, 300), (0.5, 400)))
     assert types(events) == ["wake", "reject"]
     assert pipe.window_open  # still open, waiting for a real command
 
 
 def test_non_media_command_speaks_through_the_dispatcher():
-    pipe, _, speaker, _ = build([("wake/hey_pi", 0.9), ("set_temperature/70", 0.9)], playing=False)
+    pipe, _, speaker, _ = build([("wake/kuya_jukebox", 0.9), ("set_temperature/70", 0.9)], playing=False)
     run_wav(pipe, session((0.5, 300), (0.5, 400)))
     assert speaker.said == ["Setting the temperature to 70 degrees"]
 
 
 def test_player_is_synced_on_wake_and_command_and_auto_advances():
     player = FakePlayer()
-    pipe, sm, _, _ = build([("wake/hey_pi", 0.9), ("media_control/next", 0.9)], player=player)
+    pipe, sm, _, _ = build([("wake/kuya_jukebox", 0.9), ("media_control/next", 0.9)], player=player)
     events = run_wav(pipe, session((0.5, 300), (0.5, 400)))
     assert player.syncs >= 3  # duck, unduck, command
     track_before = sm.now_playing.track

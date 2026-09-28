@@ -231,6 +231,8 @@ def prompt_text(row: PhraseRow) -> str:
         return "stay SILENT (room tone only)"
     if row.phrase == NOISE_PHRASE:
         return NOISE_PROMPT_HINT
+    if row.intent == "wake":
+        return f'say: "{row.phrase}"  (one flowing phrase, no pause in the middle)'
     return f'say: "{row.phrase}"'
 
 

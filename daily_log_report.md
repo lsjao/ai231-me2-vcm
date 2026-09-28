@@ -68,7 +68,7 @@ Discovered while building the state machine: an intent-only classifier (`media_c
 classifier. One model, and the state machine gets the exact action straight from the label.
 
 ### Decision: wake word as a trained class
-Added `wake/hey_pi` as another label in the same classifier, rather than a separate wake-word
+Added `wake/kuya_jukebox` as another label in the same classifier, rather than a separate wake-word
 detector. Commands only act while a wake window is open (5s); opening it ducks the music to ~5%
 (a classmate-sourced fix for music-degrades-recognition), matching the state machine's existing
 `duck()`/`unduck()` hooks.

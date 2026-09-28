@@ -199,7 +199,7 @@ def test_replay_source_reports_which_commands_have_clips(tmp_path):
     source = ReplaySource(manifest_path, data_root)
     assert source.available(Prompt("ask_time", "none", "x"))
     assert not source.available(Prompt("ask_time", "some_other_slot", "x"))
-    assert not source.available(Prompt("wake", "hey_pi", "hey pi"))
+    assert not source.available(Prompt("wake", "kuya_jukebox", "kuya jukebox"))
 
 
 def test_summarize_reports_intent_accuracy_separately_from_command_accuracy():

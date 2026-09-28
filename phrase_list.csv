@@ -61,7 +61,7 @@ play_music,whats_playing,what's playing
 play_music,whats_playing,what song is this
 play_music,easter_good_morning,good morning
 play_music,easter_stage_fright,do you have stage fright
-wake,hey_pi,hey pi
+wake,kuya_jukebox,kuya jukebox
 reject,silence,__silence__
 reject,noise,__background_noise__
 reject,offvocab,i think i left my keys somewhere

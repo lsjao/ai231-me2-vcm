@@ -64,6 +64,46 @@ def intent_rollup(y_true: list[int], y_pred: list[int], idx_to_label: dict[int, 
     return "\n".join(lines) + "\n"
 
 
+# commands most likely to be confused with the wake phrase if it's not
+# phonetically distinct enough, or if the wake window logic has a bug
+WAKE_WATCH_LABELS = [
+    "media_control/stop",
+    "media_control/volume_down",
+    "media_control/next",
+    "ask_time/none",
+    "reject",
+]
+
+
+def wake_confusion_report(y_true: list[int], y_pred: list[int], idx_to_label: dict[int, str]) -> str:
+    """Wake-class precision/recall, plus specific confusion counts against
+    the commands most likely to be mixed up with it (see WAKE_WATCH_LABELS)."""
+    label_to_idx = {v: k for k, v in idx_to_label.items()}
+    wake_label = next((lbl for lbl in label_to_idx if label_utils.intent_of(lbl) == "wake"), None)
+    if wake_label is None:
+        return "(no wake label in this label set)\n"
+    wi = label_to_idx[wake_label]
+
+    tp = sum(1 for t, p in zip(y_true, y_pred) if t == wi and p == wi)
+    fn = sum(1 for t, p in zip(y_true, y_pred) if t == wi and p != wi)
+    fp = sum(1 for t, p in zip(y_true, y_pred) if t != wi and p == wi)
+    n_wake = tp + fn
+    precision = tp / (tp + fp) if (tp + fp) else float("nan")
+    recall = tp / n_wake if n_wake else float("nan")
+
+    lines = [f"wake-class report ({wake_label}): n={n_wake} precision={precision:.2f} recall={recall:.2f}"]
+    for watch in WAKE_WATCH_LABELS:
+        wi2 = label_to_idx.get(watch)
+        if wi2 is None:
+            continue
+        wake_as_watch = sum(1 for t, p in zip(y_true, y_pred) if t == wi and p == wi2)
+        watch_as_wake = sum(1 for t, p in zip(y_true, y_pred) if t == wi2 and p == wi)
+        lines.append(
+            f"  {wake_label} -> {watch}: {wake_as_watch}   |   {watch} -> {wake_label}: {watch_as_wake}"
+        )
+    return "\n".join(lines) + "\n"
+
+
 def main() -> None:
     args = parse_args()
     np.random.seed(args.seed)
@@ -136,6 +176,7 @@ def main() -> None:
     )
     cm = confusion_matrix(y_true, y_pred, labels=all_idx).tolist()
     report += "\n" + intent_rollup(y_true, y_pred, idx_to_label)
+    report += "\n" + wake_confusion_report(y_true, y_pred, idx_to_label)
     print(report)
 
     os.makedirs(args.output_dir, exist_ok=True)

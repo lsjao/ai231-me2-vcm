@@ -14,6 +14,7 @@ from vcm.record_dataset import (
     delete_take,
     existing_counts,
     prepare_clip,
+    prompt_text,
     run_session,
     save_take,
     slugify,
@@ -108,6 +109,16 @@ def test_build_tasks_resumes_from_existing_counts():
 
 
 # -- prepare_clip --------------------------------------------------------
+
+def test_prompt_text_reminds_wake_phrase_to_be_said_as_one_flowing_unit():
+    text = prompt_text(PhraseRow("wake", "kuya_jukebox", "kuya jukebox"))
+    assert "kuya jukebox" in text and "no pause" in text
+
+
+def test_prompt_text_ordinary_phrase_has_no_extra_hint():
+    text = prompt_text(ROWS[0])
+    assert text == 'say: "pause"'
+
 
 def test_prepare_clip_trims_speech_and_rejects_silent_takes():
     speech_row = ROWS[0]
