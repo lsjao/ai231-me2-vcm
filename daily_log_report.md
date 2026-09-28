@@ -193,3 +193,81 @@ voice, only synthetic TTS. The point of this test was proving the plumbing works
 **Still open at end of day:** dual-fan noise comparison unconfirmed (no software fan control
 detected at all — case fans, if wired, appear to be simple always-on units), real voice
 recording + retraining not yet done on this hardware, no evaluators run yet.
+
+---
+
+## 2026-09-28, continued — real recording, a real bug, and a capacity wall
+
+### The recording session: three real bugs found, none of them the mic
+Moved the USB mic from the Pi to the laptop (simpler interactive recording UX than over SSH)
+and hit a chain of real, reproducible bugs before it worked:
+1. **`beep()` used sounddevice's "default" output device**, which plugging in the USB mic
+   (it exposes a fake playback endpoint) silently changed out from under Windows — a loud,
+   long test tone confirmed the *device* routing worked, but that didn't prove the actual
+   short/quiet beep was audible, and it wasn't. Fixed by making the device explicit
+   (`--device-out`) and by making the beep itself louder/longer, verified by the user
+   directly confirming *that exact* beep, not a proxy tone.
+2. **Python's stdout was buffered**, so when a long-running `--auto` session got moved to
+   this tool's background execution (120s foreground timeout), the prompt text stopped
+   updating live even though the process kept running and beeping — same class of bug as
+   the pipeline test earlier. Fixed by always using `-u` (unbuffered) for interactive runs,
+   and by having the user run long sessions in their own independent terminal window instead
+   of through this tool, sidestepping the 120s live-view cutoff entirely.
+3. **`mv` silently failed with a Windows file-lock "Permission denied"** while trying to set
+   up a synthetic-only control run — the background task didn't surface the failure clearly,
+   and a "control" run accidentally trained on the full merged dataset instead. Caught by
+   checking the run's own `total=` log line rather than trusting the setup steps succeeded.
+
+Once fixed: recorded 267 real play_media takes (246 on the USB mic hitting all 246/246
+per-slot targets exactly, plus 21 earlier laptop-mic takes). Verified clean: no clipping,
+no suspiciously-quiet takes, peak levels well-distributed (median 0.15).
+
+### Retrain: accuracy got worse, not better — a real investigation, not just "needs more data"
+Retraining with the real data merged in gave ~2-3% val accuracy — worse than the prior
+synthetic-only run, with `media_control`/`play_music` (the categories with the *most* real
+data) at 0% while tiny synthetic-only categories showed noisy partial success. That pattern
+(large-data classes failing, tiny classes not) doesn't fit "just needs more data," so it got
+investigated properly rather than accepted as expected:
+- Checked training's own trajectory: loss stuck near `ln(33)` (pure-guessing level) for the
+  *entire* run, even on the training set — a 43K-parameter model failing to fit even 160-374
+  examples is not normal; something was actively preventing learning, not just limiting it.
+- Ruled out, one at a time, via clean controlled ablations (each verified by checking the
+  run's own `total=`/`extra data` log line, after the `mv`-failure lesson above):
+  - **Real-vs-synthetic data mismatch** (duration/padding differences) — ruled out: a
+    genuinely synthetic-only run (empty `--extra-data` manifest, not a moved directory)
+    showed the *identical* stuck-at-chance pattern.
+  - **class_weight instability** (33 uneven classes -> up to 11.5x weight ratio) — tested
+    removing it entirely: marginal improvement only, not the cause.
+  - **Learning rate / vanishing gradients through the unrolled 301-step GRU** — tested
+    lower LR + gradient clipping: no meaningful change.
+  - **Label/feature misalignment in the tf.data pipeline** — directly verified by comparing
+    each batch's labels against their source rows in an unshuffled dataset: correctly
+    aligned, not a bug.
+  - **EarlyStopping firing too early** — was real (monitoring `val_accuracy` on a 94-clip val
+    set is too coarse, ~1%/sample), fixed (switched to `val_loss`, more patience), but alone
+    didn't fix the core problem either.
+- **Decisive test**: retrained the identical architecture and data, but with the *original*
+  8-way intent labels instead of 33-way commands. Clean, healthy learning — accuracy climbing
+  steadily to ~30-36% (well above chance), loss dropping meaningfully. Same model, same data,
+  only the label granularity changed.
+- **Conclusion**: not a code bug anywhere. 33 classes at ~5 examples/class on average (many
+  as low as 2-3) is a genuine from-scratch learning capacity wall for this model size and
+  data volume — 8 classes at ~20 examples/class is learnable, 33 at ~5 isn't. This took real
+  investigation to establish rather than assume, since the alternative (silently accepting a
+  bad number as "expected, small dataset") would have hidden a real fixable bug if one had
+  existed, and conversely would have wasted remaining days chasing hyperparameters if it were
+  purely a data problem, which it turned out to be.
+
+### Scope change: all 7 intents now in individual scope, not just play_media
+After reviewing the class group chat, learned classmates are building single models covering
+the full intent list rather than specializing in one — the professor's "respond to any
+person" quote refers to the full list, not a specialty subset. This **directly conflicts**
+with the capacity-wall finding above: more intents now need real data right as the ceiling on
+how many classes this approach can learn well got confirmed. Revised the day-5/6 fallback
+accordingly: if the full 7-intent + reject classifier isn't reliable by the checkpoint
+(tomorrow, Sep 29), cut down toward play_media + the simplest 1-2 other intents
+(`light_on_off`, `ask_time`) and document the rest as future work, rather than cutting
+creative play_media features first. Also: a new electronic component kit (breadboard, LEDs,
+RGB LED, resistors, ~₱403) was sourced for real GPIO-driven `light_on_off`/`light_dim_color`
+actuation, deliberately not a smart bulb (avoids a vendor cloud API dependency that would
+conflict with the no-cloud constraint). Not yet in hand.

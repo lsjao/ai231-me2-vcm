@@ -31,8 +31,9 @@ in `git status` and are easy to lose track of silently, exactly what happened he
 ## Hardware status
 
 - Bought: Pi 4 (4GB confirmed), Okdo PSU, 64GB SD, dual-fan aluminum case, HDMI cable, OS pre-installed. ₱8,000.
-- Speaker bought (Sep 25). **USB mic arrives Sun Sep 27** -- until then the laptop's built-in mic is used for recording (see Decisions). Professor confirmed a generic mic/speaker is fine.
+- **Speaker + USB mic bought and fully working (Sep 28)** — Pi bring-up complete, see below. (An earlier scope note said these were "not yet bought" — that was stale, from before Sep 28; this line is the current truth.)
 - ReSpeaker HAT rejected, not worth the premium given current scope.
+- **New (Sep 28): electronic component kit bought/orderable** for real `light_on_off`/`light_dim_color` actuation — 830-point breadboard, single-color LEDs (on/off) + 1 RGB LED (PWM dim/color) + full resistor range incl. LED-safe 220R/330R, from a vetted Shopee listing (~₱403). Covers both light intents with one kit, no second kit needed. Deliberately GPIO-driven, not a smart bulb — a smart bulb would actuate through a vendor cloud API (Tuya/Xiaomi/etc.), which conflicts with the no-cloud constraint; raw GPIO stays fully local. Not yet in hand — code should build the GPIO control path now with a hardware-absent fallback (same pattern as `player.py`'s tone fallback when no music files exist), ready to wire up real pins once the kit arrives.
 - Untested risk: dual-fan noise near the mic. No PWM fan control detected in sysfs and nothing in config.txt, so this case's fans (if wired at all yet) are likely simple always-on units wired straight to power, not something controllable/queryable from software -- whether they're actually spinning has to be confirmed by looking/listening at the case, not by a command. Baseline quiet-room reading taken (see Pi bring-up below); fan-on comparison still needed.
 
 ## Pi bring-up (Sep 28, done)
@@ -55,9 +56,24 @@ Not yet done: fan-on noise comparison, live pipeline test on the Pi (`python -m 
 2. **One classifier over command labels** (`intent/slot`, e.g. `media_control/next`, `play_music/playlist_jazz`, `set_timer/5min`; every reject slot collapses to `reject`). Chosen over a two-stage intent-then-slot design: one model on the Pi, and the state machine gets its action straight from the label. Cost: 33+ classes, so per-command real reps matter.
 3. **Wake word is a trained class** in the same classifier (`wake/kuya_jukebox`, phrase "kuya jukebox" -- change it in `phrase_list.csv` if you want another). Commands are only acted on while a *wake window* is open (5 s); opening it ducks the music to ~5%, and the command (or the timeout) restores it.
 
-## Intent scope (locked)
+## Intent scope
 
-7 core intents + reject class: `light_on_off`, `light_dim_color`, `set_timer`, `set_temperature`, `ask_time`, `media_control`, `play_music` (individual specialty). Cut: ask_weather, reminders, call_contact, compound queries, chart-ranking music.
+**Scope change (Sep 28), supersedes "play_media only" framing:** all 7 core intents + reject are now in scope for the **individual** model, not just play_media. Earlier drafts described play_media as the individual deliverable with the other 6 intents being classmates' specialties within a shared team project; after reviewing the class group chat, classmates are building single models covering the full intent list, not specializing — and the professor's "respond to any person" quote refers to the full list. Treat every instruction elsewhere in this file as applying across all 7 intents unless explicitly scoped to play_media.
+
+The 7 intents + reject, explicitly:
+- `light_on_off` — real GPIO-driven LED (hardware bought, not yet in hand — see Hardware status)
+- `light_dim_color` — real GPIO PWM + RGB LED (same kit)
+- `set_timer` — spoken/logged confirmation only, no physical hardware (already how `dispatch.py`'s `TimerManager` works)
+- `set_temperature` — spoken/logged confirmation only, **simulated, no real sensor** — don't build real temperature sensing
+- `ask_time` — spoken/logged system-clock output (already built)
+- `media_control` / `play_music` — the `play_media` grouping, still gets priority polish (most-recorded, most-built: state machine, ducking, easter eggs)
+- `reject` — silence/noise/off-vocabulary, applies across all 7 intents now, not just play_media's near-misses
+
+Cut (unchanged): ask_weather, reminders, call_contact, compound queries, chart-ranking music.
+
+**Revised day-5/6 fallback priority, if the checkpoint shows the classifier isn't handling all 7 intents + reject reliably**: cut down toward `play_media` + the 1-2 simplest others (`light_on_off`, `ask_time`) and document the rest as future work in the report, rather than cutting creative play_media features first. This is a real, load-bearing decision point, not a formality — see the 33-class capacity finding below, which makes this fallback more likely to actually get invoked.
+
+**Tension with the 33-class capacity finding (see Honest current status)**: this scope expansion means *more* classes need real data, right when we've just confirmed the model can't learn 33 classes well even with moderate per-class data. Recording priority order should follow the fallback list above: play_media (done) → `light_on_off` (simple, now hardware-relevant) → `ask_time` (simple, single slot) → `light_dim_color`/`set_timer`/`set_temperature` (more classes each, lower priority, first to cut).
 
 `play_media` feature stack, priority order:
 
@@ -108,13 +124,15 @@ Creative additions, priority order if time allows: sleep timer (cross-intent w/ 
 | `src/vcm/benchmark_harness.py` | Built this session — evaluator-logging CLI, CSV per attempt (timestamp/evaluator/phrase/predicted_intent/confidence/correct/latency_ms/audio_filepath), plus a summary with accuracy, per-intent breakdown, and retries-to-success (mean attempts until first correct prediction per command, commands that never succeeded within `reps` — the addendum's requested metric). Two modes: `live` (real mic via `sounddevice`, needs the Pi's mic) and `replay` (existing dataset WAVs, for smoke-testing the harness itself, not a real benchmark). `--evaluator-plan` runs the addendum's exact plan (every play_media command, one prompt per slot, 3x each). scores at command level (right intent AND slot; also logs intent-only correctness), replay picks clips per command; 19 tests in `src/tests/test_benchmark_harness.py`, all passing; also run end-to-end against the real trained model in replay mode, including with `--evaluator-plan` (45 attempts across 15 play_media commands, consistent with the classifier's known weakness, not a harness bug). |
 | `phrase_list.csv`, `dataset/`, `manifest.csv` | Synthetic scaffolding, tracked in git. Real recordings do NOT go here -- `record_dataset.py` writes them to the gitignored `data_real/` (own manifest), merged at train time with `--extra-data`. |
 
-## Honest current status
+## Honest current status (updated Sep 28, evening)
 
-**Software is feature-complete end to end; the remaining gaps are all data and hardware.** 128 tests pass, pyflakes clean. Verified for real (not just unit tests): laptop mic capture through the recording tool, real speaker playback through the player (play/pause/next/duck/stop), the stitched-WAV pipeline run with the real TFLite model (4 clips -> 4 utterances -> classified -> dispatched), and `pi_check` on the laptop (model latency ~4 ms mean; laptop mic room floor p50 -48 dBFS, close to the -50 "quiet" placeholder in `ambient_volume.py`).
+**Software is feature-complete end to end. Hardware/Pi bring-up is done. The real blocker is now a data-capacity wall, not a missing piece.**
 
-- **Classifier is still untrained for real**: the current `models/` artifacts are a 33-command-label model trained on 201 synthetic clips (~5 per command) -- ~5% val accuracy, confidence ~0.03. It exists to prove the pipeline/export, not to demo. Real recordings + retrain is the next step and needs no code changes.
-- **Not yet done**: nothing has touched the Pi; no real wake-word/command audio exists; no real music files (tones stand in); VAD margins, ambient constants, and the wake/reject confidence threshold (`--min-confidence`, default 0.5) are all untuned guesses until the USB mic + real data exist; no evaluator has been run.
-- Artifacts: `models/vcm_crnn.tflite` (~596KB) and `.keras` are gitignored -- regenerate with `python -m vcm.train` from `src/`, or copy the `.tflite` + `labels.json` + `training_config.json` to the Pi.
+- **267 real recordings exist** (246 USB-mic play_media takes, all 246/246 targets hit exactly + 21 earlier laptop-mic takes), verified clean: no clipping, no suspiciously-quiet takes, healthy peak distribution. See "How to record" below for the tool, already proven working end to end on real hardware.
+- **Major finding (Sep 28): 33 command classes is too many for the data volume achievable in this timeframe.** Retraining with the real data merged in still gave ~2-3% val accuracy (worse than hoped), with training loss stuck near `ln(33)` (pure-guessing level) for 40+ epochs even on train data. Root-caused via controlled ablations (see `daily_log_report.md` for the full investigation): ruled out class_weight, learning rate, gradient clipping, and a label/feature alignment bug one by one. **Confirmed root cause**: the exact same model/pipeline trained cleanly on the original 8-way intent labels (steady climb to ~30% val accuracy, well above chance) using the identical synthetic data -- it's not a code bug, it's that 33 classes at ~5 examples/class average (many classes as low as 2-3) is a genuine from-scratch-learning capacity wall, not something more epochs or tuning fixes.
+- **Scope just expanded to all 7 intents + reject** (see Intent scope above) right as this capacity wall was found -- these two facts are in tension, see the note in Intent scope. Recording priority order matters more than ever now.
+- VAD margins, ambient constants, and confidence threshold (`--min-confidence`, default 0.5) are still untuned guesses pending more real data breadth. No evaluator has been run yet.
+- Artifacts: `models/vcm_crnn.tflite`/`.keras` are gitignored -- regenerate with `python -m vcm.train` from `src/` (auto-merges `data_real/`), or copy `.tflite`+`labels.json`+`training_config.json` to the Pi.
 - **Real recordings are gitignored** (`data_real/`: bulky, and it's your voice). Back it up yourself (zip to Drive) -- git will not.
 
 ### How to record (do this now, laptop mic)
@@ -143,24 +161,24 @@ Good for mic diversity and for getting *other people's* voices without them touc
 
 It refuses (saving nothing) if it hears a different number of utterances than the script has, and prints what it heard next to what was expected -- one miscount would mislabel every take after it. Silence/noise prompts aren't in phone scripts; record those with `record_dataset` on the laptop. Use different `--speaker` names per person. Friends recorded for training must not also be your benchmark evaluators.
 
-### Pi bring-up (needs only Pi + speaker; mic Sunday)
+### Pi bring-up -- DONE (Sep 28), see the "Pi bring-up" section above for what actually happened
 
-1. Copy the repo (incl. `models/vcm_crnn.tflite`, `labels.json`, `training_config.json`) to the Pi. `bash scripts/pi_setup.sh`.
-2. `cd src && python -m vcm.pi_check` -- confirms speaker tone, espeak TTS, model loads and classifies fast (budget 500 ms). **If the model fails to load on the Pi's TFLite runtime, paste the error back**; the fix is a runtime/converter version match.
-3. Sunday, mic plugged in: `python -m vcm.pi_check --mic --seconds 10` with fans idle, then with fans running -- compare the `p50` lines; that is the dual-fan noise test and the calibration data for `ambient_volume.py`/`vad.py`.
-4. Live: `python -m vcm.pipeline --source mic` (add `--no-wake` to skip the wake window while debugging).
+Quick reference now that it's set up: `ssh rpi` (key-based, passwordless sudo already configured). To push updated code/model: `git archive --format=tar HEAD -- src | ssh rpi "cd ~/vcm && tar -x"` then `scp models/vcm_crnn.tflite models/labels.json models/training_config.json rpi:~/vcm/models/`. Run on the Pi: `cd ~/vcm/src && source ../.venv/bin/activate && python -m vcm.pi_check` (add `--mic --seconds N` for the mic/fan-noise test, still not done -- see risk above). Live: `python -m vcm.pipeline --source mic` (`--no-wake` to skip the wake window while debugging).
 
 ## 8-day critical path (day 1 = Fri Sep 25; demo Sat Oct 3)
 
 - [x] Classifier pipeline, state machine, ambient auto-volume, evaluator harness (built + tested)
 - [x] Command-level relabel (closes intent->slot gap), wake-word class, recording tool, dispatcher, player, VAD, live pipeline, Pi setup/diagnostic (built + tested Sep 25-26)
 - [x] Mic + speaker + Pi all in hand (Sep 28)
-- [ ] **Record real voice on laptop mic** (commands above), back up `data_real/`, retrain, look at `models/eval_report.txt` per-command results
-- [ ] Ask classmate group chat for pooled dataset repo access (SLURP/FSC/Snips: FSC has real voices for lights, volume, heat); merge via `--extra-data`
+- [x] Record real play_media voice data on the USB mic (267 clips, 246/246 targets hit), verified clean
 - [x] Pi bring-up: SSH access, `pi_setup.sh`, `pi_check --mic` all passing on real hardware (Sep 28) -- see Pi bring-up section above for the two real bugs found and fixed (PipeWire routing, USB mic 48kHz-only)
-- [ ] Fan-on noise comparison (case fans' actual state unconfirmed), USB-mic top-up recording, retrain, live pipeline test (`python -m vcm.pipeline --source mic`) on the Pi; tune `--min-confidence`, VAD margins, ambient constants against real audio
+- [x] Retrain with real data -- **result: 33-class capacity wall found, root-caused via controlled ablations, not fixable by tuning** (see Honest current status)
+- [ ] **Scope now 7 intents, not just play_media (Sep 28 decision) -- record the rest in fallback-priority order**: `light_on_off` next (simple, hardware-relevant), then `ask_time` (simple, no hardware), then `light_dim_color`/`set_timer`/`set_temperature` (lower priority, first to cut)
+- [ ] Build GPIO control path for `light_on_off`/`light_dim_color` in `dispatch.py` (hardware-absent fallback, same pattern as `player.py`), ready for when the LED kit arrives
+- [ ] Ask classmate group chat for pooled dataset repo access (SLURP/FSC/Snips: FSC has real voices for lights, volume, heat); merge via `--extra-data` -- **now more urgent** given the capacity wall, this is real data for classes we can't record enough of ourselves in time
+- [ ] Fan-on noise comparison (case fans' actual state unconfirmed), live pipeline test on the Pi with real data (`python -m vcm.pipeline --source mic`); tune `--min-confidence`, VAD margins, ambient constants against real audio
 - [ ] Source easter-egg songs ("Good Morning", "No"/stage-fright) and 5+ playlist tracks as local files into `music/` (copyrighted -- must be sourced by you; see `player.py` docstring for layout)
-- [ ] **Day-5 fallback checkpoint (Tue Sep 29)**: if the real classifier isn't trained and running on the Pi end-to-end, cut every creative addition and put all remaining time into core play_media + reject-class reliability
+- [ ] **Day-5 fallback checkpoint (Tue Sep 29 -- tomorrow)**: revised per the scope change above -- if the classifier isn't handling all 7 intents + reject reliably by then, cut down toward play_media + `light_on_off` + `ask_time` and document the rest as future work, not "cut creative features first"
 - [ ] Evaluator sessions, day 5-6 (Sep 29-30): 2-3 people other than you, `python -m vcm.benchmark_harness --mode live --evaluator "<name>" --evaluator-plan`
 - [ ] Creative addition, max 1-2, sleep timer first -- only if the day-5 checkpoint passes
 - [ ] Rehearsal buffer, Oct 1-2, don't skip

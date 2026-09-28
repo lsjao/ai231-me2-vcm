@@ -35,7 +35,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--extra-data", action="append", default=[],
                    help="extra data root containing manifest.csv (repeatable)")
     p.add_argument("--output-dir", default=root_path("models"))
-    p.add_argument("--epochs", type=int, default=60)
+    p.add_argument("--epochs", type=int, default=150)
     p.add_argument("--batch-size", type=int, default=16)
     p.add_argument("--val-fraction", type=float, default=0.2)
     p.add_argument("--seed", type=int, default=1337)
@@ -145,11 +145,15 @@ def main() -> None:
     model.summary()
 
     callbacks = [
+        # val_accuracy is too coarse to use as the stopping signal once the
+        # val set is this small (94 clips -> ~1% per correct/incorrect
+        # prediction) -- it was plateauing on an early fluke while train
+        # loss was still visibly improving. val_loss is smoother.
         tf.keras.callbacks.EarlyStopping(
-            monitor="val_accuracy", patience=15, restore_best_weights=True
+            monitor="val_loss", patience=25, restore_best_weights=True
         ),
         tf.keras.callbacks.ReduceLROnPlateau(
-            monitor="val_loss", factor=0.5, patience=6, min_lr=1e-5
+            monitor="val_loss", factor=0.5, patience=10, min_lr=1e-5
         ),
     ]
 
