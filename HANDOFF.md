@@ -33,7 +33,21 @@ in `git status` and are easy to lose track of silently, exactly what happened he
 - Bought: Pi 4 (4GB confirmed), Okdo PSU, 64GB SD, dual-fan aluminum case, HDMI cable, OS pre-installed. ₱8,000.
 - Speaker bought (Sep 25). **USB mic arrives Sun Sep 27** -- until then the laptop's built-in mic is used for recording (see Decisions). Professor confirmed a generic mic/speaker is fine.
 - ReSpeaker HAT rejected, not worth the premium given current scope.
-- Untested risk: dual-fan noise near the mic. Test the moment mic + Pi are together, before building noise-floor calibration around it.
+- Untested risk: dual-fan noise near the mic. No PWM fan control detected in sysfs and nothing in config.txt, so this case's fans (if wired at all yet) are likely simple always-on units wired straight to power, not something controllable/queryable from software -- whether they're actually spinning has to be confirmed by looking/listening at the case, not by a command. Baseline quiet-room reading taken (see Pi bring-up below); fan-on comparison still needed.
+
+## Pi bring-up (Sep 28, done)
+
+SSH access set up and working: key-based login (`ssh rpi`, alias in `~/.ssh/config` on the dev laptop), passwordless sudo. Host: `rpi-jao` / `jaolacuata@192.168.86.4`. Repo copied via `git archive | ssh ... tar -x` (tracked files only) plus `models/*.tflite`/`labels.json`/`training_config.json` via `scp` (gitignored, not in git archive). `scripts/pi_setup.sh` ran clean on Debian 13 (trixie) / Python 3.13 / aarch64 -- `ai-edge-litert` had a prebuilt wheel for this exact combo, no fallback needed. `python -m vcm.pi_check --mic` now passes every check on real hardware:
+
+- Model load 0.14s (incl. warmup), classify latency mean 17.5ms / p95 17.6ms (budget 500ms) -- comfortably real-time on a Pi 4.
+- Speaker + espeak-ng TTS confirmed audible.
+- Mic capture confirmed working, peak 0.054, room level dBFS p10 -44.8 / p50 -42.9 / p90 -39.4 (quiet room, fan state unconfirmed -- see risk above). Reasonably close to the -50 "quiet" placeholder in `ambient_volume.py`; not yet worth recalibrating off one reading, revisit once the fan-on comparison exists too.
+
+**Two real hardware problems found and fixed, not hypothetical:**
+1. **PipeWire, not raw ALSA, owns audio routing on this OS image.** `~/.asoundrc` is silently ignored. The USB mic's card was the default *sink* (wrong -- it has no real speaker), which is why the 3.5mm-jack speaker (confirmed working via `speaker-test`) produced no sound through code that used the "default" device. Fixed with `wpctl set-default <sink-id>` pointed at the 3.5mm jack (`Built-in Audio Stereo`). **This is a runtime setting, not a config file — if it doesn't survive a reboot, re-run `wpctl status` to find the sink id and `wpctl set-default <id>`.**
+2. **The USB mic only supports 48000 Hz capture, not the model's 16000 Hz** (confirmed via `sd.check_input_settings` probing every common rate -- only 48000 succeeded). Fixed properly in code, not worked around: `src/vcm/capture.py` + `audio.resample_integer_ratio()` (dependency-free windowed-sinc decimator, since the Pi deliberately has no scipy/librosa) -- picks the model's rate directly when a mic supports it (e.g. the laptop's mic, unaffected), otherwise captures at the mic's native rate and downsamples. Wired into every capture site (`pi_check`, `record_dataset`, `benchmark_harness` live mode, `pipeline`'s streaming mic loop). Caught and fixed a real bug in the decimator itself during testing (wrong center-tap value distorted the filter) -- verified against `librosa.resample` and an above-Nyquist attenuation test before trusting it. **Moral: this class of "device doesn't support the rate we assumed" bug is real and would have silently broken the live demo on the actual hardware if `pi_check` hadn't been run before demo day.**
+
+Not yet done: fan-on noise comparison, live pipeline test on the Pi (`python -m vcm.pipeline --source mic`), copying/using real recorded data on the Pi (training still happens on the laptop; only inference artifacts belong on the Pi).
 
 ## Decisions (Sep 25-26, confirmed with the user)
 
@@ -140,11 +154,11 @@ It refuses (saving nothing) if it hears a different number of utterances than th
 
 - [x] Classifier pipeline, state machine, ambient auto-volume, evaluator harness (built + tested)
 - [x] Command-level relabel (closes intent->slot gap), wake-word class, recording tool, dispatcher, player, VAD, live pipeline, Pi setup/diagnostic (built + tested Sep 25-26)
-- [ ] **Buy mic** (arrives Sun Sep 27) -- speaker + Pi in hand
+- [x] Mic + speaker + Pi all in hand (Sep 28)
 - [ ] **Record real voice on laptop mic** (commands above), back up `data_real/`, retrain, look at `models/eval_report.txt` per-command results
 - [ ] Ask classmate group chat for pooled dataset repo access (SLURP/FSC/Snips: FSC has real voices for lights, volume, heat); merge via `--extra-data`
-- [ ] Pi bring-up: `pi_setup.sh`, `pi_check` (speaker/TTS/model latency)
-- [ ] Sun Sep 27: mic on Pi -- fan-noise test, USB-mic top-up recording, retrain, live pipeline test; tune `--min-confidence`, VAD margins, ambient constants against real audio
+- [x] Pi bring-up: SSH access, `pi_setup.sh`, `pi_check --mic` all passing on real hardware (Sep 28) -- see Pi bring-up section above for the two real bugs found and fixed (PipeWire routing, USB mic 48kHz-only)
+- [ ] Fan-on noise comparison (case fans' actual state unconfirmed), USB-mic top-up recording, retrain, live pipeline test (`python -m vcm.pipeline --source mic`) on the Pi; tune `--min-confidence`, VAD margins, ambient constants against real audio
 - [ ] Source easter-egg songs ("Good Morning", "No"/stage-fright) and 5+ playlist tracks as local files into `music/` (copyrighted -- must be sourced by you; see `player.py` docstring for layout)
 - [ ] **Day-5 fallback checkpoint (Tue Sep 29)**: if the real classifier isn't trained and running on the Pi end-to-end, cut every creative addition and put all remaining time into core play_media + reject-class reliability
 - [ ] Evaluator sessions, day 5-6 (Sep 29-30): 2-3 people other than you, `python -m vcm.benchmark_harness --mode live --evaluator "<name>" --evaluator-plan`
