@@ -37,6 +37,31 @@ def load_waveform(path: str, target_sr: int = TARGET_SR) -> np.ndarray:
     return fix_length(wav, CLIP_SAMPLES)
 
 
+def resample_integer_ratio(wav: np.ndarray, orig_sr: int, target_sr: int) -> np.ndarray:
+    """Downsample by an exact integer ratio (e.g. 48000 -> 16000) with a
+    windowed-sinc low-pass filter before decimating, no scipy/librosa needed
+    -- for the Pi, which deliberately has neither. Many cheap USB mics only
+    support 44100/48000 Hz capture even though the model wants 16000; this
+    covers the 48000 case (and any other exact multiple) without pulling in
+    a heavy dependency just for a 3:1 decimation.
+    """
+    if orig_sr == target_sr:
+        return wav.astype(np.float32)
+    if orig_sr % target_sr != 0:
+        raise ValueError(
+            f"{orig_sr} -> {target_sr} Hz isn't an integer ratio; use resample() (needs librosa)"
+        )
+    factor = orig_sr // target_sr
+    numtaps = 24 * factor + 1  # odd length, zero-phase (symmetric) filter
+    n = np.arange(numtaps) - (numtaps - 1) / 2
+    with np.errstate(invalid="ignore"):
+        h = np.where(n == 0, 1.0 / factor, np.sin(np.pi * n / factor) / (np.pi * n))
+    h *= np.hamming(numtaps)
+    h /= h.sum()  # renormalize passband gain to exactly 1 after windowing
+    filtered = np.convolve(wav.astype(np.float32), h.astype(np.float32), mode="same")
+    return filtered[::factor].astype(np.float32)
+
+
 def resample(wav: np.ndarray, orig_sr: int, target_sr: int) -> np.ndarray:
     try:
         import librosa

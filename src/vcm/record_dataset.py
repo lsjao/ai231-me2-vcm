@@ -71,20 +71,16 @@ class Recorder(Protocol):
 
 class SoundDeviceRecorder:
     def __init__(self, device: int | str | None = None):
-        try:
-            import sounddevice as sd
-        except ImportError as e:
-            raise RuntimeError("recording needs `pip install sounddevice`") from e
-        self._sd = sd
+        import importlib.util
+
+        if importlib.util.find_spec("sounddevice") is None:
+            raise RuntimeError("recording needs `pip install sounddevice`")
         self._device = device
 
     def record(self, seconds: float) -> np.ndarray:
-        n = int(audio.TARGET_SR * seconds)
-        rec = self._sd.rec(
-            n, samplerate=audio.TARGET_SR, channels=1, dtype="float32", device=self._device
-        )
-        self._sd.wait()
-        return rec[:, 0]
+        from .capture import record_seconds
+
+        return record_seconds(seconds, self._device)
 
 
 def beep() -> None:

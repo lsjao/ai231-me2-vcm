@@ -217,16 +217,25 @@ def run_wav(pipeline: Pipeline, wav: np.ndarray, realtime: bool = False) -> list
 def run_mic(pipeline: Pipeline, device: int | str | None = None) -> None:
     import sounddevice as sd
 
+    from .capture import pick_capture_rate
+
+    rate = pick_capture_rate(device)
+    if rate.resample:
+        factor = rate.device_sr // audio.TARGET_SR
+        print(f"mic only supports {rate.device_sr} Hz -- capturing at that rate, "
+              f"downsampling {factor}:1 to {audio.TARGET_SR} Hz")
+    block = FRAME_SAMPLES * (rate.device_sr // audio.TARGET_SR) if rate.resample else FRAME_SAMPLES
+
     frames: queue.Queue = queue.Queue()
 
     def callback(indata, _frames, _time, status):
         if status:
             print(f"[mic] {status}")
-        frames.put(indata[:, 0].copy())
+        frames.put(rate.to_target(indata[:, 0]))
 
     print("listening... Ctrl+C to stop")
-    with sd.InputStream(samplerate=audio.TARGET_SR, channels=1, dtype="float32",
-                        blocksize=FRAME_SAMPLES, device=device, callback=callback):
+    with sd.InputStream(samplerate=rate.device_sr, channels=1, dtype="float32",
+                        blocksize=block, device=device, callback=callback):
         try:
             while True:
                 events = pipeline.process_frame(frames.get())

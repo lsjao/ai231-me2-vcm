@@ -123,22 +123,20 @@ class LiveMicSource:
     """Records `audio.CLIP_SECONDS` of audio from the default input device."""
 
     def __init__(self):
-        try:
-            import sounddevice as sd
-        except ImportError as e:
+        import importlib.util
+
+        if importlib.util.find_spec("sounddevice") is None:
             raise RuntimeError(
                 "live mode needs the 'sounddevice' package (pip install sounddevice), "
                 "plus a working mic -- not available on this dev machine, "
                 "use --mode replay to smoke-test the harness instead"
-            ) from e
-        self._sd = sd
+            )
 
     def capture(self, prompt: Prompt) -> np.ndarray:
+        from .capture import record_seconds
+
         input(f'Say: "{prompt.phrase}"  (press Enter, then speak)')
-        n_samples = int(audio.TARGET_SR * audio.CLIP_SECONDS)
-        rec = self._sd.rec(n_samples, samplerate=audio.TARGET_SR, channels=1, dtype="float32")
-        self._sd.wait()
-        return rec[:, 0]
+        return record_seconds(audio.CLIP_SECONDS)
 
 
 class ReplaySource:

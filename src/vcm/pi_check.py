@@ -116,17 +116,15 @@ def check_model(model_dir: str, runs: int = 50) -> bool:
 
 
 def check_mic(seconds: float, device: int | str | None) -> bool:
-    import sounddevice as sd
+    from .capture import record_seconds
 
     try:
         print(f"recording {seconds:.0f}s of room tone -- stay quiet...")
-        rec = sd.rec(int(seconds * audio.TARGET_SR), samplerate=audio.TARGET_SR, channels=1,
-                     dtype="float32", device=device)
-        sd.wait()
+        wav = record_seconds(seconds, device)
     except Exception as e:
         return check("mic capture", False, str(e))
 
-    s = level_stats(rec[:, 0])
+    s = level_stats(wav)
     check("mic capture", s["peak"] > 0.0, f"peak {s['peak']:.3f}")
     print(f"      room level dBFS: p10 {s['p10']:.1f}  p50 {s['p50']:.1f}  p90 {s['p90']:.1f}")
     print(f"      ambient_volume placeholders: quiet {NOISE_FLOOR_QUIET_DBFS:.0f} / loud {NOISE_FLOOR_LOUD_DBFS:.0f} dBFS")
