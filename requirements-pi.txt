@@ -4,3 +4,8 @@
 numpy
 soundfile
 sounddevice
+gpiozero  # real light_on_off/light_dim_color actuation; dispatch.py falls back
+          # to a print-only controller if this or the GPIO hardware is absent
+lgpio     # gpiozero's Pi 4/5 PWM backend -- without this, gpiozero falls back to
+          # its NativeFactory, which can't do PWM, so PWMLED() fails and
+          # dispatch.py silently uses the print fallback even when GPIO works fine

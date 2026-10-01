@@ -99,6 +99,19 @@ def test_temperature_and_light_handlers_update_simulated_devices():
     assert len(speaker.said) == 4
 
 
+def test_light_dim_color_handles_color_and_brightness_other_slots():
+    d, _, _ = make()
+    r = d.handle("light_dim_color/color_red")
+    assert r["ok"] and d.devices.color == "red" and d.devices.lights_on is True
+
+    before = d.devices.brightness
+    r = d.handle("light_dim_color/brightness_other")
+    assert r["ok"] and d.devices.brightness == before  # kept, not guessed
+
+    r = d.handle("light_dim_color/not_a_real_slot")
+    assert not r["ok"]
+
+
 def test_bad_slots_and_unknown_intents_fail_cleanly():
     d, _, _ = make()
     assert d.handle("set_timer/soon")["ok"] is False

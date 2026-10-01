@@ -31,7 +31,7 @@ Usage:
         --data-root .. --manifest ../manifest.csv --reps 1
 
     # real evaluator session on the Pi, once a mic exists -- addendum's
-    # plan: every play_media command, 3x each (see HANDOFF.md)
+    # plan: every real command across all intents, 3x each (see HANDOFF.md)
     python -m vcm.benchmark_harness --mode live --evaluator "Jane Doe" --evaluator-plan
 """
 
@@ -93,9 +93,13 @@ def load_prompts(
     once. "phrase": every row, including repeated phrasings of the same
     slot. `intents`, if given, restricts to those intents first.
 
-    The addendum's evaluator plan ("each evaluator says every play_media
-    command 3 times") is `granularity="slot", intents={"media_control",
-    "play_music"}` -- see HANDOFF.md and the CLI --evaluator-plan flag.
+    The evaluator plan ("each evaluator says every real command 3 times",
+    per the assignment addendum) is `granularity="slot",
+    intents=all_command_intents(phrase_list_path)` -- see HANDOFF.md and the
+    CLI --evaluator-plan flag. `intents` is computed from the current
+    `phrase_list.csv` rather than hardcoded, so it can't go stale again the
+    way the original play_media-only version did after the Sep 28 scope
+    expansion to all 7 intents (caught and fixed Sep 30).
     """
     if granularity not in ("intent", "slot", "phrase"):
         raise ValueError(f"unknown granularity: {granularity!r}")
@@ -117,6 +121,15 @@ def load_prompts(
             seen_keys.add(key)
             prompts.append(Prompt(intent=intent, slot=slot, phrase=row["phrase"]))
     return prompts
+
+
+def all_command_intents(phrase_list_path: str) -> set[str]:
+    """Every intent with real phrases in `phrase_list.csv` except `reject`
+    (not a "command" evaluators are asked to say correctly) -- computed
+    fresh each call so `--evaluator-plan` covers whatever the current scope
+    actually is, including `wake`."""
+    with open(phrase_list_path, newline="", encoding="utf-8") as f:
+        return {row["intent"] for row in csv.DictReader(f)} - {labels.REJECT}
 
 
 class LiveMicSource:
@@ -315,8 +328,10 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "--evaluator-plan", action="store_true",
-        help="shortcut for the addendum's plan: every play_media command, "
-        "3x each (equivalent to --granularity slot --intents media_control,play_music --reps 3)",
+        help="shortcut for the addendum's plan: every real command (all intents "
+        "except reject) 3x each, computed from --phrase-list so it stays correct "
+        "as scope changes (equivalent to --granularity slot --reps 3 with "
+        "--intents defaulted to every non-reject intent)",
     )
     p.add_argument("--model-dir", default=root_path("models"))
     p.add_argument("--output-csv", default=root_path("benchmark_logs", "results.csv"))
@@ -330,8 +345,9 @@ def main() -> None:
     args = parse_args()
     if args.evaluator_plan:
         args.granularity = "slot"
-        args.intents = "media_control,play_music"
         args.reps = 3
+        if args.intents is None:
+            args.intents = ",".join(sorted(all_command_intents(args.phrase_list)))
 
     intents = set(args.intents.split(",")) if args.intents else None
     prompts = load_prompts(args.phrase_list, granularity=args.granularity, intents=intents)

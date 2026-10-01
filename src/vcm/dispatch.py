@@ -6,10 +6,12 @@
     ask_time/none                  -> speaks the current time
     set_timer/<N>min               -> background timer, speaks when it expires
     set_temperature/<N>            -> simulated thermostat
-    light_on_off/on|off, light_dim_color/brightness_<N> -> simulated lights
+    light_on_off/on|off,
+    light_dim_color/brightness_<N>|brightness_other|color_<name> -> lights, real via GPIO
+        on the Pi when the LED kit is wired up, else simulated (state + spoken
+        confirmation only) -- see LightController below.
 
-The non-media devices are simulated (state + spoken confirmation, no real
-hardware) -- the assignment grades voice control, not smart-home drivers.
+`set_temperature` stays simulated either way (no actuator planned for it).
 Every handler returns {"ok", "kind", "message", "speak"?, ...}; `speak` is
 what should be said aloud, absent when the action should stay quiet (e.g. a
 "next" skip shouldn't talk over the music).
@@ -60,10 +62,86 @@ def default_speaker() -> Speaker:
         return PrintSpeaker()
 
 
+# Approximate RGB (0-1 per channel) for every color word the Snips import's
+# keyword classifier can produce (see scripts/import_snips_dataset.py's
+# COLOR_WORDS) plus our own red/blue/green/yellow. "warm"/"cool" have no
+# literal RGB meaning -- approximated as warm-white / cool-white.
+COLOR_MAP: dict[str, tuple[float, float, float]] = {
+    "red": (1.0, 0.0, 0.0),
+    "green": (0.0, 1.0, 0.0),
+    "blue": (0.0, 0.0, 1.0),
+    "yellow": (1.0, 1.0, 0.0),
+    "white": (1.0, 1.0, 1.0),
+    "orange": (1.0, 0.5, 0.0),
+    "purple": (0.5, 0.0, 1.0),
+    "pink": (1.0, 0.4, 0.7),
+    "warm": (1.0, 0.6, 0.3),
+    "cool": (0.7, 0.85, 1.0),
+}
+
+
+class LightController(Protocol):
+    def set_state(self, on: bool, brightness: int, color: str | None) -> None: ...
+
+
+class PrintLightController:
+    """Hardware-absent fallback -- prints what the lights would do. Used
+    automatically whenever gpiozero isn't installed or no Pi GPIO is
+    present (e.g. the dev laptop, or the Pi before the LED kit is wired)."""
+
+    def set_state(self, on: bool, brightness: int, color: str | None) -> None:
+        state = "off" if not on else f"on, {brightness}% brightness, color={color or 'white'}"
+        print(f"[lights] {state}")
+
+
+class GPIOLightController:
+    """Real actuation for the breadboard LED kit: one single-color LED for
+    on/off, one RGB LED (PWM) for brightness/color -- covers both light
+    intents with the one kit described in HANDOFF.md. BCM pin numbers below
+    are provisional; update them to match the actual wiring once the kit is
+    wired up (still not in hand as of this writing).
+    """
+
+    ON_OFF_PIN = 17
+    RED_PIN = 22
+    GREEN_PIN = 23
+    BLUE_PIN = 24
+
+    def __init__(self) -> None:
+        from gpiozero import LED, PWMLED  # Pi-only; raises ImportError elsewhere
+
+        self._on_off = LED(self.ON_OFF_PIN)
+        self._red = PWMLED(self.RED_PIN)
+        self._green = PWMLED(self.GREEN_PIN)
+        self._blue = PWMLED(self.BLUE_PIN)
+
+    def set_state(self, on: bool, brightness: int, color: str | None) -> None:
+        if not on:
+            self._on_off.off()
+            self._red.off()
+            self._green.off()
+            self._blue.off()
+            return
+        self._on_off.on()
+        r, g, b = COLOR_MAP.get(color, (1.0, 1.0, 1.0))
+        scale = max(0, min(100, brightness)) / 100.0
+        self._red.value = r * scale
+        self._green.value = g * scale
+        self._blue.value = b * scale
+
+
+def default_light_controller() -> LightController:
+    try:
+        return GPIOLightController()
+    except Exception:  # gpiozero missing, or no GPIO hardware (ImportError/RuntimeError/etc.)
+        return PrintLightController()
+
+
 @dataclass
 class Devices:
     lights_on: bool = False
     brightness: int = 100
+    color: str | None = None
     temperature: int = 70
 
 
@@ -96,11 +174,13 @@ class Dispatcher:
         self,
         state_machine: PlayMusicStateMachine | None = None,
         speaker: Speaker | None = None,
+        lights: LightController | None = None,
         now: Callable[[], datetime] = datetime.now,
         seconds_per_minute: float = 60.0,
     ):
         self.state_machine = state_machine or PlayMusicStateMachine()
         self.speaker = speaker or default_speaker()
+        self.lights = lights or default_light_controller()
         self.devices = Devices()
         self._now = now
         self.timers = TimerManager(self._timer_expired, seconds_per_minute)
@@ -168,19 +248,30 @@ class Dispatcher:
         if slot not in ("on", "off"):
             return {"ok": False, "kind": "light", "message": f"bad light slot {slot!r}"}
         self.devices.lights_on = slot == "on"
+        self.lights.set_state(self.devices.lights_on, self.devices.brightness, self.devices.color)
         text = f"Turning the lights {slot}"
         return {"ok": True, "kind": "light", "message": text, "speak": text,
                 "lights_on": self.devices.lights_on}
 
     def _light_dim(self, slot: str) -> dict:
-        prefix = "brightness_"
-        if not (slot.startswith(prefix) and slot[len(prefix):].isdigit()):
-            return {"ok": False, "kind": "light", "message": f"bad brightness slot {slot!r}"}
+        brightness_prefix = "brightness_"
+        color_prefix = "color_"
+        if slot.startswith(brightness_prefix) and slot[len(brightness_prefix):].isdigit():
+            self.devices.brightness = int(slot[len(brightness_prefix):])
+            text = f"Setting brightness to {self.devices.brightness} percent"
+        elif slot == "brightness_other":
+            # No specific percentage was recognized (e.g. "dim it a bit") --
+            # keep the current level rather than guessing a number.
+            text = "Adjusting the brightness"
+        elif slot.startswith(color_prefix):
+            self.devices.color = slot[len(color_prefix):]
+            text = f"Setting the light color to {self.devices.color}"
+        else:
+            return {"ok": False, "kind": "light", "message": f"bad light_dim_color slot {slot!r}"}
         self.devices.lights_on = True
-        self.devices.brightness = int(slot[len(prefix):])
-        text = f"Setting brightness to {self.devices.brightness} percent"
+        self.lights.set_state(self.devices.lights_on, self.devices.brightness, self.devices.color)
         return {"ok": True, "kind": "light", "message": text, "speak": text,
-                "brightness": self.devices.brightness}
+                "brightness": self.devices.brightness, "color": self.devices.color}
 
     def _finish(self, result: dict) -> dict:
         speak = result.get("speak")

@@ -42,6 +42,32 @@ from .vad import Endpointer, iter_frames
 VOLUME_COMMANDS = {"media_control/volume_up", "media_control/volume_down"}
 
 
+def make_wake_cue(speaker) -> Callable[[], None]:
+    """Audio cue that the wake word was heard -- there's no screen on demo
+    day, so this is the only feedback the wake window actually opened.
+
+    Deliberately reuses the existing TTS speaker (espeak-ng via subprocess)
+    rather than opening a second concurrent sounddevice output stream: this
+    hardware's USB mic + the Player's own OutputStream already contend
+    heavily for the sound card, and a third ad-hoc stream (tried first, see
+    git history) reliably wedged ALSA and crashed the whole pipeline. TTS
+    goes through a completely different OS audio path and has been stable
+    in every other use in this project. Runs in a background thread so it
+    doesn't stall the real-time mic capture loop while espeak-ng runs."""
+    import threading
+
+    def cue() -> None:
+        try:
+            speaker.say("mm-hmm")
+        except Exception as e:
+            print(f"[wake cue] failed, continuing without it: {e}")
+
+    def wake_cue() -> None:
+        threading.Thread(target=cue, daemon=True).start()
+
+    return wake_cue
+
+
 @dataclass
 class PipelineConfig:
     min_confidence: float = 0.5
@@ -60,6 +86,7 @@ class Pipeline:
         endpointer: Endpointer | None = None,
         config: PipelineConfig | None = None,
         log: Callable[[str], None] = print,
+        wake_cue: Callable[[], None] | None = None,
     ):
         self.classifier = classifier
         self.dispatcher = dispatcher
@@ -69,6 +96,7 @@ class Pipeline:
         self.endpointer = endpointer or Endpointer()
         self.config = config or PipelineConfig()
         self._log = log
+        self._wake_cue = wake_cue
         self.t = 0.0
         self._window_until: float | None = None
         self._ambient_hold_until = 0.0
@@ -141,6 +169,8 @@ class Pipeline:
     def _open_window(self) -> None:
         if not self.window_open:
             self.sm.duck()
+            if self._wake_cue is not None:
+                self._wake_cue()
         self._window_until = self.t + self.config.wake_window_s
         self._sync()
 
@@ -183,7 +213,10 @@ class Pipeline:
     def _format(e: dict) -> str:
         parts = [f"[{e['t']:6.2f}s] {e['type']}"]
         if "label" in e:
-            parts.append(f"{e['label']} ({e['confidence']:.2f}, {e['latency_ms']}ms)")
+            shown = e["label"]
+            if e.get("heard") and e["heard"] != e["label"]:
+                shown = f"{shown} (raw guess: {e['heard']})"  # confidence cutoff hid this
+            parts.append(f"{shown} ({e['confidence']:.2f}, {e['latency_ms']}ms)")
         if "result" in e:
             parts.append(f"-> {e['result'].get('message')}")
         return " ".join(parts)
@@ -263,6 +296,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--no-wake", action="store_true", help="act on commands without a wake word")
     p.add_argument("--no-ambient", action="store_true")
     p.add_argument("--device", default=None, help="mic device index/name")
+    p.add_argument("--no-beep", action="store_true", help="no audio cue when wake word is heard")
     return p.parse_args()
 
 
@@ -284,7 +318,10 @@ def main() -> None:
         wake_window_s=args.wake_window,
         require_wake=not args.no_wake,
     )
-    pipeline = Pipeline(Classifier(args.model_dir), dispatcher, player, ambient, config=config)
+    wake_cue = None if args.no_beep else make_wake_cue(speaker)
+    pipeline = Pipeline(
+        Classifier(args.model_dir), dispatcher, player, ambient, config=config, wake_cue=wake_cue
+    )
 
     try:
         if args.source == "file":

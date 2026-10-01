@@ -7,30 +7,42 @@ light_on_off,off,turn off the lights
 light_on_off,off,lights off
 light_on_off,off,switch the lights off
 light_on_off,off,turn the light off
-light_dim_color,brightness_25,dim the lights to twenty five percent
-light_dim_color,brightness_25,set brightness to twenty five percent
-light_dim_color,brightness_50,dim the lights to fifty percent
-light_dim_color,brightness_50,set brightness to fifty percent
-light_dim_color,brightness_75,dim the lights to seventy five percent
-light_dim_color,brightness_75,set brightness to seventy five percent
+light_dim_color,brightness_20,dim the lights to twenty percent
+light_dim_color,brightness_20,set brightness to twenty percent
+light_dim_color,brightness_60,dim the lights to sixty percent
+light_dim_color,brightness_60,set brightness to sixty percent
 light_dim_color,brightness_100,set lights to full brightness
 light_dim_color,brightness_100,brighten the lights all the way
+light_dim_color,brightness_other,dim the lights a little
+light_dim_color,brightness_other,make the lights a bit brighter
+light_dim_color,color_red,change the light color to red
+light_dim_color,color_red,make the lights red
+light_dim_color,color_blue,change the light color to blue
+light_dim_color,color_blue,make the lights blue
+light_dim_color,color_green,change the light color to green
+light_dim_color,color_green,make the lights green
+light_dim_color,color_yellow,change the light color to yellow
+light_dim_color,color_yellow,make the lights yellow
+light_dim_color,color_pink,change the light color to pink
+light_dim_color,color_pink,make the lights pink
+light_dim_color,color_white,change the light color to white
+light_dim_color,color_white,make the lights white
+light_dim_color,color_orange,change the light color to orange
+light_dim_color,color_purple,change the light color to purple
+light_dim_color,color_warm,set the lights to a warm white
+light_dim_color,color_cool,set the lights to a cool white
 set_timer,1min,set a timer for one minute
 set_timer,1min,start a one minute timer
-set_timer,5min,set a timer for five minutes
-set_timer,5min,start a five minute timer
-set_timer,10min,set a timer for ten minutes
-set_timer,10min,timer for ten minutes please
-set_timer,15min,set a timer for fifteen minutes
-set_timer,15min,start a fifteen minute timer
-set_timer,30min,set a timer for thirty minutes
-set_timer,30min,timer for thirty minutes please
-set_temperature,60,set the temperature to sixty degrees
-set_temperature,65,set the temperature to sixty five degrees
-set_temperature,70,set the temperature to seventy degrees
-set_temperature,70,make it seventy degrees
-set_temperature,75,set the temperature to seventy five degrees
-set_temperature,80,set the temperature to eighty degrees
+set_timer,10sec,set a timer for ten seconds
+set_timer,10sec,start a ten second timer
+set_timer,30sec,set a timer for thirty seconds
+set_timer,30sec,start a thirty second timer
+set_temperature,18,set the temperature to eighteen degrees
+set_temperature,18,make it eighteen degrees
+set_temperature,22,set the temperature to twenty two degrees
+set_temperature,22,make it twenty two degrees
+set_temperature,26,set the temperature to twenty six degrees
+set_temperature,26,make it twenty six degrees
 media_control,play,play
 media_control,pause,pause
 media_control,pause,pause the music

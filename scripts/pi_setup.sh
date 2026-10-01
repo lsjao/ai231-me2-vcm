@@ -4,7 +4,9 @@
 set -euo pipefail
 
 sudo apt update
-sudo apt install -y python3-venv python3-pip libportaudio2 libsndfile1 espeak-ng alsa-utils
+sudo apt install -y python3-venv python3-pip libportaudio2 libsndfile1 espeak-ng alsa-utils \
+    swig liblgpio-dev  # needed to build the lgpio package (requirements-pi.txt) from source --
+                       # no prebuilt wheel for this platform/Python combo as of this writing
 
 python3 -m venv .venv
 # shellcheck disable=SC1091

@@ -33,16 +33,26 @@ in `git status` and are easy to lose track of silently, exactly what happened he
 - Bought: Pi 4 (4GB confirmed), Okdo PSU, 64GB SD, dual-fan aluminum case, HDMI cable, OS pre-installed. ₱8,000.
 - **Speaker + USB mic bought and fully working (Sep 28)** — Pi bring-up complete, see below. (An earlier scope note said these were "not yet bought" — that was stale, from before Sep 28; this line is the current truth.)
 - ReSpeaker HAT rejected, not worth the premium given current scope.
-- **New (Sep 28): electronic component kit bought/orderable** for real `light_on_off`/`light_dim_color` actuation — 830-point breadboard, single-color LEDs (on/off) + 1 RGB LED (PWM dim/color) + full resistor range incl. LED-safe 220R/330R, from a vetted Shopee listing (~₱403). Covers both light intents with one kit, no second kit needed. Deliberately GPIO-driven, not a smart bulb — a smart bulb would actuate through a vendor cloud API (Tuya/Xiaomi/etc.), which conflicts with the no-cloud constraint; raw GPIO stays fully local. Not yet in hand — code should build the GPIO control path now with a hardware-absent fallback (same pattern as `player.py`'s tone fallback when no music files exist), ready to wire up real pins once the kit arrives.
-- Untested risk: dual-fan noise near the mic. No PWM fan control detected in sysfs and nothing in config.txt, so this case's fans (if wired at all yet) are likely simple always-on units wired straight to power, not something controllable/queryable from software -- whether they're actually spinning has to be confirmed by looking/listening at the case, not by a command. Baseline quiet-room reading taken (see Pi bring-up below); fan-on comparison still needed.
+- **Breadboard/LED kit: arrived Sep 30** — 830-point breadboard, single-color LEDs (on/off) + 1 RGB LED (PWM dim/color) + full resistor range incl. LED-safe 220R/330R, for real `light_on_off`/`light_dim_color` actuation, ~₱403. Covers both light intents with one kit, no second kit needed. Deliberately GPIO-driven, not a smart bulb — a smart bulb would actuate through a vendor cloud API (Tuya/Xiaomi/etc.), which conflicts with the no-cloud constraint; raw GPIO stays fully local. Wiring guide at `GPIO_WIRING.md` (pin numbers match `dispatch.py`'s `GPIOLightController`); once wired, `python -m vcm.gpio_smoke_test` on the Pi cycles every state for a visual check — needs the Pi powered but not network-reachable, so it's not blocked by today's WiFi issue.
+- **Confirmed via classmate group chat (Sep 29, 3pm)**: a simulated UI/state for lights and
+  temperature is an explicitly acceptable fallback if real hardware isn't ready in time, and
+  breadboard + jumper cables (no soldering) is a valid way to wire the LED kit. Matches what's
+  already built: `dispatch.py`'s `PrintLightController` fallback covers the "simulate it" case,
+  and the kit itself is breadboard-based, not solder-based -- no scope or code change needed,
+  just removes a risk (soldering skill/time) that wasn't actually required.
+- **Fan noise: checked Oct 1, not a problem.** Fans confirmed always-on (can't be toggled), so there's no true "fans off" baseline, but the "fans on, otherwise quiet" reading is -50 to -51 dBFS -- matches the existing "quiet" placeholder (-50 dBFS) almost exactly. No recalibration needed.
 
 ## Pi bring-up (Sep 28, done)
 
-SSH access set up and working: key-based login (`ssh rpi`, alias in `~/.ssh/config` on the dev laptop), passwordless sudo. Host: `rpi-jao` / `jaolacuata@192.168.86.4`. Repo copied via `git archive | ssh ... tar -x` (tracked files only) plus `models/*.tflite`/`labels.json`/`training_config.json` via `scp` (gitignored, not in git archive). `scripts/pi_setup.sh` ran clean on Debian 13 (trixie) / Python 3.13 / aarch64 -- `ai-edge-litert` had a prebuilt wheel for this exact combo, no fallback needed. `python -m vcm.pi_check --mic` now passes every check on real hardware:
+SSH access set up and working: key-based login (`ssh rpi`, alias in `~/.ssh/config` on the dev laptop), passwordless sudo. Host: `rpi-jao` / `jaolacuata@192.168.88.12` (**IP changed Oct 1** after a physical move + WiFi network change + a full reflash -- see `daily_log_report.md` 2026-10-01 for the two-day saga and root cause: a missing cloud-init module silently never created a working NetworkManager WiFi profile despite reporting success). Repo copied via plain `tar` over SSH (not `git archive`, which only grabs committed snapshots -- a lot of working-tree changes weren't committed yet) plus `models/*.tflite`/`labels.json`/`training_config.json` via `scp`. `scripts/pi_setup.sh` now also needs `swig`+`liblgpio-dev` (added) to build the `lgpio` package (gpiozero's PWM backend) from source. `python -m vcm.pi_check --mic` passes every check on real hardware:
 
-- Model load 0.14s (incl. warmup), classify latency mean 17.5ms / p95 17.6ms (budget 500ms) -- comfortably real-time on a Pi 4.
+- Model load 0.14s (incl. warmup), classify latency mean 18ms (budget 500ms) -- comfortably real-time on a Pi 4.
 - Speaker + espeak-ng TTS confirmed audible.
-- Mic capture confirmed working, peak 0.054, room level dBFS p10 -44.8 / p50 -42.9 / p90 -39.4 (quiet room, fan state unconfirmed -- see risk above). Reasonably close to the -50 "quiet" placeholder in `ambient_volume.py`; not yet worth recalibrating off one reading, revisit once the fan-on comparison exists too.
+- Mic capture confirmed working, USB mic detected correctly.
+- **First real live `vcm.pipeline --source mic` test, Oct 1** -- see `daily_log_report.md` for
+  full findings. Working: `--min-confidence 0.15`, most intents recognized reasonably. Real
+  open risk: wake-word live reliability only ~18% in testing (worse than the 69-75% offline
+  eval suggested) -- the single biggest risk to the demo right now.
 
 **Two real hardware problems found and fixed, not hypothetical:**
 1. **PipeWire, not raw ALSA, owns audio routing on this OS image.** `~/.asoundrc` is silently ignored. The USB mic's card was the default *sink* (wrong -- it has no real speaker), which is why the 3.5mm-jack speaker (confirmed working via `speaker-test`) produced no sound through code that used the "default" device. Fixed with `wpctl set-default <sink-id>` pointed at the 3.5mm jack (`Built-in Audio Stereo`). **This is a runtime setting, not a config file — if it doesn't survive a reboot, re-run `wpctl status` to find the sink id and `wpctl set-default <id>`.**
@@ -163,7 +173,7 @@ It refuses (saving nothing) if it hears a different number of utterances than th
 
 ### Pi bring-up -- DONE (Sep 28), see the "Pi bring-up" section above for what actually happened
 
-Quick reference now that it's set up: `ssh rpi` (key-based, passwordless sudo already configured). To push updated code/model: `git archive --format=tar HEAD -- src | ssh rpi "cd ~/vcm && tar -x"` then `scp models/vcm_crnn.tflite models/labels.json models/training_config.json rpi:~/vcm/models/`. Run on the Pi: `cd ~/vcm/src && source ../.venv/bin/activate && python -m vcm.pi_check` (add `--mic --seconds N` for the mic/fan-noise test, still not done -- see risk above). Live: `python -m vcm.pipeline --source mic` (`--no-wake` to skip the wake window while debugging).
+Quick reference (current as of Oct 1): `ssh rpi` (key-based, passwordless sudo, IP `192.168.88.12` -- see above if it stops resolving again). To push updated code/model: `tar -cf - --exclude='__pycache__' --exclude='.pytest_cache' src requirements-pi.txt scripts/pi_setup.sh | ssh rpi "cd ~/vcm && tar -xf -"` (plain tar, not `git archive` -- see above) then `scp models/vcm_crnn.tflite models/labels.json models/training_config.json rpi:~/vcm/models/`. Run on the Pi: `cd ~/vcm/src && source ../.venv/bin/activate && python -m vcm.pi_check --mic --seconds 10`. Live: `python -u -m vcm.pipeline --source mic --min-confidence 0.15 2>&1 | tee ~/pipeline_test.log` (`-u` avoids Python output buffering when piped; `--no-wake` to skip the wake window while debugging).
 
 ## Plan from here to the demo (revised Sep 29 evening, supersedes the "8-day critical path" below it)
 
@@ -172,51 +182,91 @@ Everything up to tonight (classifier pipeline, Pi bring-up, 267 real play_media 
 data merge) is done and logged in `daily_log_report.md` -- this section is what's left,
 day by day, to the Oct 3 demo.
 
-### Tonight (Sep 29) -- the decision gate
-- [ ] **Retrain with `external_data/` + `data_real/` merged** (`python -m vcm.train`, both
-  auto-merge). This is the test that actually matters: does 1,746 extra real clips (12-24x
-  the prior per-class volume for the 6 non-play_media intents) clear the capacity wall found
-  last night? Check `models/eval_report.txt`'s per-command accuracy and the wake-confusion
-  report.
-- [ ] Based on that result, confirm tomorrow's plan below still holds, or fall back toward
-  play_media + `light_on_off` + `ask_time` per the Sep 28 fallback decision if it doesn't.
+### Tonight (Sep 29) -- the decision gate -- DONE, see daily_log_report.md
+- [x] Retrain with `external_data/` + `data_real/` merged -- capacity wall confirmed, did not
+  clear at 48 classes (5% overall accuracy).
+- [x] Root-caused and fixed rather than just working around it: 12 of the 48 labels were
+  leftover slots from before the Sep 25-26 schema change (old Fahrenheit temps, old brightness
+  %, old timer durations), never cleaned out of `manifest.csv`. Removed them for real (60 rows
+  + 60 WAV files deleted, confirmed with the user first). Curated-scope retrain: 27%. Final
+  retrain with wake + reject data also merged in: **38% overall, 37 classes, 2,479 clips.**
 
-### Sep 30 (Wed) -- lock scope, close the remaining real data gaps
-- [ ] Lock in final intent scope for the demo based on tonight's retrain result.
-- [ ] **Record `wake/kuya_jukebox` for real** -- currently zero real examples anywhere, the
-  wake word literally cannot work yet. Laptop mic session, same tool: `.\run.cmd
-  vcm.record_dataset --speaker <you> --intents wake --reps-per-slot 25 --auto`.
-- [ ] **Reject-class data**: Mark's planned out-of-scope negatives turned out to be
-  unavailable (see last night's log). Candidate fix: import Snips' 3,472 keyword-unmatched
-  rows as reject negatives (new script, same `external_data/` pattern) -- real, naturally-
-  occurring smart-home-adjacent speech that isn't one of our commands. Plus a laptop session
-  for our own near-miss phrases.
-- [ ] Get the canonical `phrase_list.csv` from the other planning thread, do the replace +
-  phrase-overlap audit that was blocked on it.
-- [ ] Build the GPIO control path for `light_on_off`/`light_dim_color` in `dispatch.py`
-  (hardware-absent fallback, same pattern as `player.py`'s tone fallback), ready for whenever
-  the LED kit arrives -- don't wait for the hardware to write this.
+### Scope decision (locked, Sep 29 daytime)
+Keeping all 7 intents for the demo -- no scope cut. 5 of 7 intents plus wake are working
+reasonably to well (`set_temperature` 97% intent-acc, `set_timer` 89%, `media_control` 73%,
+`play_music` 65%, `ask_time` 64%, `wake` 100% on a small sample). Two are weak
+(`light_on_off` 29% intent-acc despite adequate data; `reject` 2% recall, but root-caused to
+an unusually hard negative set, not necessarily representative of real background noise/chat)
+-- neither looks unfixable, and both are "how does this behave on real audio" questions that
+need a live Pi session to actually answer, not more offline dataset work. Cutting either now
+would trade assignment scope for a problem that live confidence-threshold/VAD tuning may
+resolve on its own. Revisit only if live testing shows they're still broken after tuning.
 
-### Oct 1 (Thu) -- Pi + evaluators
-- [ ] Push the retrained model to the Pi, run `pi_check` + a real `pipeline --source mic`
-  session with the new model.
-- [ ] Tune `--min-confidence`, VAD margins, ambient constants against real predictions (now
-  finally possible with a model that isn't at chance level).
-- [ ] Fan-on noise comparison on the Pi (idle vs. fans running) -- still unconfirmed.
-- [ ] Wire up the GPIO code for real if the LED kit is in hand by now.
-- [ ] Recruit 2-3 evaluators (people other than you) and run
-  `python -m vcm.benchmark_harness --mode live --evaluator "<name>" --evaluator-plan`.
-- [ ] Source the easter-egg songs ("Good Morning", "No"/stage-fright) and 5+ playlist tracks
-  as local files into `music/` (copyrighted, must be sourced by you personally).
+### Remaining before the demo
+- [x] **Record `wake/kuya_jukebox` for real** -- 25 clips, laptop mic, verified clean.
+- [x] **Reject-class data** -- `scripts/import_snips_reject.py`, 300 clips imported (see
+  scope decision above for how well it's actually working).
+- [x] `phrase_list.csv` -- the canonical version never arrived, fixed it directly instead:
+  dropped the same 12 stale slots removed from `manifest.csv`, added phrases for every slot
+  the Sep 28 scope expansion introduced (`brightness_20/60/other`, all 10 `color_*`,
+  `set_timer/10sec+30sec`, `set_temperature/18+22+26`). Ran the phrase-overlap audit this
+  unblocked: first pass caught that every new color phrase shared "turn ... the lights" with
+  `light_on_off`'s phrases (0.60 word-overlap) -- plausibly contributing to `light_on_off`'s
+  weak, scattered confusion in tonight's retrain. Reworded to "change the light color to X" /
+  "make the lights X"; audit re-run clean except two pre-existing, accepted design ambiguities
+  (`media_control/play` "play" vs `play_music/playlist_general` "play music").
+- [x] Build the GPIO control path for `light_on_off`/`light_dim_color` in `dispatch.py` --
+  `LightController`/`GPIOLightController`/`PrintLightController`, hardware-absent fallback,
+  same pattern as `player.py`'s tone fallback. Also fixed a pre-existing bug found while doing
+  this: `color_*`/`brightness_other` slots were silently falling through to "bad slot" since
+  the Sep 28 scope expansion added them but `_light_dim` was never updated to parse them.
 
-### Oct 2 (Fri) -- rehearsal buffer, don't skip
-- [ ] Fix whatever the evaluator sessions turned up.
-- [ ] Full rehearsal run-throughs, more than once.
+### Oct 1 (Thu) -- Pi + live testing, mostly done
+- [x] Push the retrained model to the Pi, run `pi_check` + a real `pipeline --source mic`
+  session. Unreachable Sep 29-30 (two days lost, see `daily_log_report.md` for the WiFi root
+  cause and fix), finally online Oct 1. First-ever live test done -- see findings logged above
+  and in the daily log. **`--min-confidence 0.15` settled on** after empirical testing.
+- [x] Fan-on noise comparison -- fans always-on, no toggle, but clean reading taken: -50 to
+  -51 dBFS, matches the "quiet" placeholder almost exactly. No action needed.
+- [x] Added a wake-word audio cue (beep -> fixed to TTS "mm-hmm" after the beep's second audio
+  stream crashed ALSA) since there's no screen on demo day.
+- [ ] **Wake-word live reliability is the single biggest open risk**: ~18% in tonight's
+  session, vs. 69-75% offline. More data (25->65 clips) helped some but didn't close the live
+  gap. Not yet resolved -- top priority for Oct 2.
+- [ ] VAD margins / ambient constants beyond `--min-confidence` -- not deeply tuned yet, lower
+  priority than wake reliability.
+- [ ] Wire up the GPIO code for real -- kit arrived Sep 30, still not physically wired.
+- [ ] Recruit 2-3 evaluators and run the benchmark session -- **not started at all**, and this
+  is a professor-quoted grading requirement, not optional polish. Start recruiting early on
+  Oct 2 since other people's availability isn't something you control.
+- [ ] Source the easter-egg songs + 5+ playlist tracks into `music/` -- still placeholder tones.
+- [ ] **Commit today's substantial uncommitted work to git** -- real risk sitting in the
+  working tree right now (GPIO code, benchmark harness fix, pipeline fixes, manifest/
+  phrase_list cleanup, the retrained model). Do this before anything else touches the repo.
+
+### Oct 2 (Fri) -- the real full work day, tight but doable
+- [ ] Commit everything first (5 min, pure risk mitigation).
+- [ ] One more wake-word data round: bigger, more deliberately varied (distance, pacing,
+  pitch) than the 65-clip batch, then retrain. Highest-leverage remaining lever on the biggest
+  open risk.
+- [ ] Recruit evaluators *early in the day* -- their schedule, not yours, is the constraint.
+- [ ] Wire the breadboard (independent of everything else, ~15-30 min, code/guide ready).
+- [ ] Source easter-egg/playlist music files (independent, whenever there's a spare moment).
+- [ ] Run the actual evaluator benchmark session once evaluators + a stable model are ready.
+- [ ] Fix whatever the evaluator session turns up.
+- [ ] At least one full rehearsal run-through -- not optional given how much changed Oct 1.
 - [ ] Creative addition (sleep timer first) only if everything above is actually solid --
   do not trade core reliability for this.
 
 ### Oct 3 (Sat) -- demo day
 - [ ] Final morning sanity check, then demo.
+- [ ] If wake word is still unreliable: coach the "just try 2-3 times" fallback rather than
+  betting the demo on first-attempt reliability -- realistic even for commercial assistants.
+
+### Honest progress assessment (Oct 1 night)
+~55-60% complete, not higher. A working model isn't a finished assignment: evaluator testing
+(required), breadboard wiring, real music files, rehearsal, and git hygiene are all
+not-started-at-all, not just in-progress, on top of the wake-word reliability risk.
 
 ## 8-day critical path (original, day 1 = Fri Sep 25; kept for the report's process narrative)
 

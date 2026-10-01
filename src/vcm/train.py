@@ -39,6 +39,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--batch-size", type=int, default=16)
     p.add_argument("--val-fraction", type=float, default=0.2)
     p.add_argument("--seed", type=int, default=1337)
+    p.add_argument("--drop-labels", action="append", default=[],
+                   help="command label to exclude from training (repeatable), e.g. "
+                        "stale schema slots left in manifest.csv from before a schema change")
     return p.parse_args()
 
 
@@ -119,6 +122,11 @@ def main() -> None:
         extra = label_utils.read_manifest(os.path.join(extra_root, "manifest.csv"), extra_root)
         print(f"extra data {extra_root}: {len(extra)} clips")
         rows.extend(extra)
+    if args.drop_labels:
+        drop = set(args.drop_labels)
+        before = len(rows)
+        rows = [r for r in rows if r.label not in drop]
+        print(f"dropped {before - len(rows)} clips across {len(drop)} excluded labels: {sorted(drop)}")
     labels = label_utils.build_label_list(rows)
     label_to_idx = {label: i for i, label in enumerate(labels)}
     idx_to_label = {i: label for label, i in label_to_idx.items()}

@@ -23,24 +23,6 @@ dataset/intent=light_on_off/slot=off/switch_the_lights_off__voice_rp.wav,light_o
 dataset/intent=light_on_off/slot=off/turn_the_light_off__voice_us.wav,light_on_off,off,turn the light off,voice_us,synthetic_clean,tts_espeak
 dataset/intent=light_on_off/slot=off/turn_the_light_off__voice_gb.wav,light_on_off,off,turn the light off,voice_gb,synthetic_clean,tts_espeak
 dataset/intent=light_on_off/slot=off/turn_the_light_off__voice_rp.wav,light_on_off,off,turn the light off,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_25/dim_the_lights_to_twenty_five_percent__voice_us.wav,light_dim_color,brightness_25,dim the lights to twenty five percent,voice_us,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_25/dim_the_lights_to_twenty_five_percent__voice_gb.wav,light_dim_color,brightness_25,dim the lights to twenty five percent,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_25/dim_the_lights_to_twenty_five_percent__voice_rp.wav,light_dim_color,brightness_25,dim the lights to twenty five percent,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_25/set_brightness_to_twenty_five_percent__voice_us.wav,light_dim_color,brightness_25,set brightness to twenty five percent,voice_us,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_25/set_brightness_to_twenty_five_percent__voice_gb.wav,light_dim_color,brightness_25,set brightness to twenty five percent,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_25/set_brightness_to_twenty_five_percent__voice_rp.wav,light_dim_color,brightness_25,set brightness to twenty five percent,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_50/dim_the_lights_to_fifty_percent__voice_us.wav,light_dim_color,brightness_50,dim the lights to fifty percent,voice_us,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_50/dim_the_lights_to_fifty_percent__voice_gb.wav,light_dim_color,brightness_50,dim the lights to fifty percent,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_50/dim_the_lights_to_fifty_percent__voice_rp.wav,light_dim_color,brightness_50,dim the lights to fifty percent,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_50/set_brightness_to_fifty_percent__voice_us.wav,light_dim_color,brightness_50,set brightness to fifty percent,voice_us,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_50/set_brightness_to_fifty_percent__voice_gb.wav,light_dim_color,brightness_50,set brightness to fifty percent,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_50/set_brightness_to_fifty_percent__voice_rp.wav,light_dim_color,brightness_50,set brightness to fifty percent,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_75/dim_the_lights_to_seventy_five_percent__voice_us.wav,light_dim_color,brightness_75,dim the lights to seventy five percent,voice_us,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_75/dim_the_lights_to_seventy_five_percent__voice_gb.wav,light_dim_color,brightness_75,dim the lights to seventy five percent,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_75/dim_the_lights_to_seventy_five_percent__voice_rp.wav,light_dim_color,brightness_75,dim the lights to seventy five percent,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_75/set_brightness_to_seventy_five_percent__voice_us.wav,light_dim_color,brightness_75,set brightness to seventy five percent,voice_us,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_75/set_brightness_to_seventy_five_percent__voice_gb.wav,light_dim_color,brightness_75,set brightness to seventy five percent,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=light_dim_color/slot=brightness_75/set_brightness_to_seventy_five_percent__voice_rp.wav,light_dim_color,brightness_75,set brightness to seventy five percent,voice_rp,synthetic_clean,tts_espeak
 dataset/intent=light_dim_color/slot=brightness_100/set_lights_to_full_brightness__voice_us.wav,light_dim_color,brightness_100,set lights to full brightness,voice_us,synthetic_clean,tts_espeak
 dataset/intent=light_dim_color/slot=brightness_100/set_lights_to_full_brightness__voice_gb.wav,light_dim_color,brightness_100,set lights to full brightness,voice_gb,synthetic_clean,tts_espeak
 dataset/intent=light_dim_color/slot=brightness_100/set_lights_to_full_brightness__voice_rp.wav,light_dim_color,brightness_100,set lights to full brightness,voice_rp,synthetic_clean,tts_espeak
@@ -53,48 +35,6 @@ dataset/intent=set_timer/slot=1min/set_a_timer_for_one_minute__voice_rp.wav,set_
 dataset/intent=set_timer/slot=1min/start_a_one_minute_timer__voice_us.wav,set_timer,1min,start a one minute timer,voice_us,synthetic_clean,tts_espeak
 dataset/intent=set_timer/slot=1min/start_a_one_minute_timer__voice_gb.wav,set_timer,1min,start a one minute timer,voice_gb,synthetic_clean,tts_espeak
 dataset/intent=set_timer/slot=1min/start_a_one_minute_timer__voice_rp.wav,set_timer,1min,start a one minute timer,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=5min/set_a_timer_for_five_minutes__voice_us.wav,set_timer,5min,set a timer for five minutes,voice_us,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=5min/set_a_timer_for_five_minutes__voice_gb.wav,set_timer,5min,set a timer for five minutes,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=5min/set_a_timer_for_five_minutes__voice_rp.wav,set_timer,5min,set a timer for five minutes,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=5min/start_a_five_minute_timer__voice_us.wav,set_timer,5min,start a five minute timer,voice_us,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=5min/start_a_five_minute_timer__voice_gb.wav,set_timer,5min,start a five minute timer,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=5min/start_a_five_minute_timer__voice_rp.wav,set_timer,5min,start a five minute timer,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=10min/set_a_timer_for_ten_minutes__voice_us.wav,set_timer,10min,set a timer for ten minutes,voice_us,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=10min/set_a_timer_for_ten_minutes__voice_gb.wav,set_timer,10min,set a timer for ten minutes,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=10min/set_a_timer_for_ten_minutes__voice_rp.wav,set_timer,10min,set a timer for ten minutes,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=10min/timer_for_ten_minutes_please__voice_us.wav,set_timer,10min,timer for ten minutes please,voice_us,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=10min/timer_for_ten_minutes_please__voice_gb.wav,set_timer,10min,timer for ten minutes please,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=10min/timer_for_ten_minutes_please__voice_rp.wav,set_timer,10min,timer for ten minutes please,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=15min/set_a_timer_for_fifteen_minutes__voice_us.wav,set_timer,15min,set a timer for fifteen minutes,voice_us,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=15min/set_a_timer_for_fifteen_minutes__voice_gb.wav,set_timer,15min,set a timer for fifteen minutes,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=15min/set_a_timer_for_fifteen_minutes__voice_rp.wav,set_timer,15min,set a timer for fifteen minutes,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=15min/start_a_fifteen_minute_timer__voice_us.wav,set_timer,15min,start a fifteen minute timer,voice_us,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=15min/start_a_fifteen_minute_timer__voice_gb.wav,set_timer,15min,start a fifteen minute timer,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=15min/start_a_fifteen_minute_timer__voice_rp.wav,set_timer,15min,start a fifteen minute timer,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=30min/set_a_timer_for_thirty_minutes__voice_us.wav,set_timer,30min,set a timer for thirty minutes,voice_us,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=30min/set_a_timer_for_thirty_minutes__voice_gb.wav,set_timer,30min,set a timer for thirty minutes,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=30min/set_a_timer_for_thirty_minutes__voice_rp.wav,set_timer,30min,set a timer for thirty minutes,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=30min/timer_for_thirty_minutes_please__voice_us.wav,set_timer,30min,timer for thirty minutes please,voice_us,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=30min/timer_for_thirty_minutes_please__voice_gb.wav,set_timer,30min,timer for thirty minutes please,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=set_timer/slot=30min/timer_for_thirty_minutes_please__voice_rp.wav,set_timer,30min,timer for thirty minutes please,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=60/set_the_temperature_to_sixty_degrees__voice_us.wav,set_temperature,60,set the temperature to sixty degrees,voice_us,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=60/set_the_temperature_to_sixty_degrees__voice_gb.wav,set_temperature,60,set the temperature to sixty degrees,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=60/set_the_temperature_to_sixty_degrees__voice_rp.wav,set_temperature,60,set the temperature to sixty degrees,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=65/set_the_temperature_to_sixty_five_degree__voice_us.wav,set_temperature,65,set the temperature to sixty five degrees,voice_us,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=65/set_the_temperature_to_sixty_five_degree__voice_gb.wav,set_temperature,65,set the temperature to sixty five degrees,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=65/set_the_temperature_to_sixty_five_degree__voice_rp.wav,set_temperature,65,set the temperature to sixty five degrees,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=70/set_the_temperature_to_seventy_degrees__voice_us.wav,set_temperature,70,set the temperature to seventy degrees,voice_us,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=70/set_the_temperature_to_seventy_degrees__voice_gb.wav,set_temperature,70,set the temperature to seventy degrees,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=70/set_the_temperature_to_seventy_degrees__voice_rp.wav,set_temperature,70,set the temperature to seventy degrees,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=70/make_it_seventy_degrees__voice_us.wav,set_temperature,70,make it seventy degrees,voice_us,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=70/make_it_seventy_degrees__voice_gb.wav,set_temperature,70,make it seventy degrees,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=70/make_it_seventy_degrees__voice_rp.wav,set_temperature,70,make it seventy degrees,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=75/set_the_temperature_to_seventy_five_degr__voice_us.wav,set_temperature,75,set the temperature to seventy five degrees,voice_us,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=75/set_the_temperature_to_seventy_five_degr__voice_gb.wav,set_temperature,75,set the temperature to seventy five degrees,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=75/set_the_temperature_to_seventy_five_degr__voice_rp.wav,set_temperature,75,set the temperature to seventy five degrees,voice_rp,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=80/set_the_temperature_to_eighty_degrees__voice_us.wav,set_temperature,80,set the temperature to eighty degrees,voice_us,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=80/set_the_temperature_to_eighty_degrees__voice_gb.wav,set_temperature,80,set the temperature to eighty degrees,voice_gb,synthetic_clean,tts_espeak
-dataset/intent=set_temperature/slot=80/set_the_temperature_to_eighty_degrees__voice_rp.wav,set_temperature,80,set the temperature to eighty degrees,voice_rp,synthetic_clean,tts_espeak
 dataset/intent=media_control/slot=play/play__voice_us.wav,media_control,play,play,voice_us,synthetic_clean,tts_espeak
 dataset/intent=media_control/slot=play/play__voice_gb.wav,media_control,play,play,voice_gb,synthetic_clean,tts_espeak
 dataset/intent=media_control/slot=play/play__voice_rp.wav,media_control,play,play,voice_rp,synthetic_clean,tts_espeak

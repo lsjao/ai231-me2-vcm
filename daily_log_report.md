@@ -345,3 +345,331 @@ Mark's out-of-scope negatives turned out to be unavailable -- worth noting Snips
 unmatched rows (didn't match any of our keyword rules) are themselves naturally-occurring
 smart-home-adjacent speech that isn't one of our commands, a plausible substitute source for
 reject-class negatives, not yet acted on.
+
+## 2026-09-29 (late night) — retrain result: capacity wall did not clear
+
+Ran `python -m vcm.train` with `data_real/` + `external_data/` merged in (2,214 clips total,
+48 command classes, 1,770 train / 444 val). This was the test that mattered: does 12-24x more
+real data per class (up from ~5/class to ~37/class average) clear the capacity wall found last
+night.
+
+### Result: no, not in aggregate
+Overall command accuracy: 5% (444 val clips), effectively unchanged from before the merge.
+But the failure is not uniform across intents, which rules out a few simpler explanations:
+
+- `light_dim_color` (726 real clips): 77% intent-level accuracy, 11% slot-level -- the model
+  finds the right intent reliably but can't separate its 13 slots.
+- `set_temperature` (180 real clips): 66% intent-level, 17% slot-level -- same pattern.
+- `ask_time`, `light_on_off`, `play_music`, `reject`, `set_timer`: 0% at both intent and slot
+  level -- total collapse.
+- `media_control` (267 real play_media clips from the earlier recording session + 360 more
+  from tonight's merge): only 17% intent-level, 1% slot-level -- **worse than play_media was
+  getting on its own before tonight's merge**, despite having more data now than before.
+
+### Why this changes the working theory
+The original capacity-wall finding (last night) was framed as a data-volume problem: ~5
+clips/class average couldn't separate 33 classes even though the same data separated 8
+intents cleanly. Going to ~37 clips/class average should have been a decisive test of that
+theory. It wasn't uniformly fixed -- and `media_control` getting worse with more data added is
+the clearest signal that this isn't purely about volume per class anymore. The more likely
+explanation now: a single flat classifier over 48 similar-sounding classes has larger, more
+data-rich intents (`light_dim_color` at 726 clips, `media_control` at 627) crowding out
+smaller ones in a shared decision boundary, independent of whether any individual class has
+"enough" data in isolation.
+
+This also invalidates the Sep 28 fallback plan (play_media + `light_on_off` + `ask_time`) --
+two of those three are exactly the intents that collapsed to 0% here.
+
+### Next step (in progress)
+Test whether a smaller, curated label set (drop thin synthetic-only slots, collapse
+near-duplicate slots) does better than raw data volume did, as a fast, cheap experiment before
+considering a bigger architecture change (e.g. two-stage intent-then-slot classification,
+which was explicitly ruled out as a design choice on Sep 25-26 but may need revisiting if this
+doesn't work either).
+
+## 2026-09-29 (daytime) — curated-scope experiment confirms it, root cause found and fixed
+
+Added `--drop-labels` to `train.py` (repeatable, excludes a command label's rows before
+building the label list) and used it to test the curated-scope theory without touching
+tracked data yet. Dropped 12 labels: `light_dim_color/brightness_{25,50,75}`,
+`set_temperature/{60,65,70,75,80}`, `set_timer/{5,10,15,30}min` -- 48 classes down to 36,
+2,214 rows down to 2,154.
+
+**Result: 27% overall command accuracy, up from 5%.** `media_control` alone went from 17% to
+83% intent-accuracy. This confirmed the theory and, combined with root-causing *why* those 12
+labels existed, turned a "maybe try fewer classes" experiment into a real fix: those 12 slots
+are leftovers from *before* the Sep 25-26 schema change (old Fahrenheit temperatures, old
+brightness percentages, old timer durations) that the synthetic TTS manifest was never
+regenerated to drop. Nothing downstream (`dispatch.py`, `phrase_list.csv`, the real
+recordings) has used those values since Sep 26 -- they were pure label cruft, silently
+crowding out the 36 classes that actually matter, sitting undetected in `manifest.csv` for
+three days.
+
+Removed them for real (with explicit confirmation first, since deleting tracked WAV files is
+irreversible-ish): 60 rows dropped from `manifest.csv`, 60 WAV files + 12 now-empty slot
+directories deleted from `dataset/`. `--drop-labels` stays in `train.py` as a general-purpose
+option but is no longer needed for this specific cleanup.
+
+### Also done today (parallel to the above)
+- **Real `wake/kuya_jukebox` recordings**: 25 clips, laptop mic, `record_dataset.py --auto`.
+  Verified clean (no silence, no clipping, peak median 0.145) -- wake word had zero real
+  examples before this.
+- **GPIO control path** built in `dispatch.py`: `LightController` protocol, `GPIOLightController`
+  (gpiozero, one on/off LED + one RGB PWM LED, BCM pins provisional pending actual wiring) and
+  `PrintLightController` fallback (auto-selected when gpiozero/hardware isn't present), same
+  pattern as `player.py`'s tone fallback. Caught and fixed a real pre-existing bug while doing
+  this: `_light_dim` only ever parsed `brightness_<N>`, so every `color_*` slot added by
+  tonight's Snips/Mark merge (Sep 28 scope expansion) was silently falling through to "bad
+  slot" -- never caught because no test exercised a color slot until now. Added tests for
+  `color_red` and `brightness_other`; all 167 tests pass.
+- **Reject-class negatives**: new `scripts/import_snips_reject.py` imports Snips rows the
+  keyword classifier couldn't match (3,472 available) as `reject/near_domain`, capped at 300.
+- **Classmate group chat (3pm)** confirmed a simulated UI is an acceptable fallback for
+  light/temperature hardware, and breadboard + jumper cables (no soldering) is fine for the
+  LED kit -- matches what's already built, removes a false worry rather than changing scope.
+  Saved to memory (`project_hardware_fallback_acceptable`).
+
+### Final retrain of the day: manifest cleaned + wake + reject data all merged
+`total=2479 train=1982 val=497 classes=37`. **38% overall command accuracy**, up from 27%.
+
+- `wake/kuya_jukebox`: 100% precision/recall (n=5, small sample but zero confusion with the
+  watched labels)
+- Strong: `set_temperature` 97% intent-acc, `set_timer` 89%, `media_control` 73%, `play_music`
+  65%, `ask_time` 64% (up from 0% two retrains ago)
+- **`reject` collapsed to 2% recall** despite the 300 new clips. Investigated via the
+  confusion matrix rather than left as a number: not scattered -- roughly half of reject's 63
+  val clips are predicted as `light_dim_color`, another third as `light_on_off`. Root cause:
+  the 300 Snips clips are lighting-domain speech the keyword classifier couldn't cleanly match
+  (deliberately hard negatives, per the design intent noted when they were imported), so
+  they're acoustically/lexically close to real lighting commands. Working hypothesis (not yet
+  verified): this is a worst-case number specific to that negative set, and real background
+  speech/noise on demo day (not lighting-adjacent) will be rejected far more easily --
+  untested until there's a live mic session.
+- **`light_on_off` still weak** (29% intent-acc) despite having as much real data (240 clips)
+  as `set_temperature`/`set_timer`, which both did well. Its errors are scattered across many
+  unrelated classes rather than concentrated on one confusable neighbor. Working hypothesis
+  (not yet verified): "on"/"off" are short, low-information utterances carrying less
+  distinguishing acoustic signal for this architecture than longer phrase-specific commands.
+
+### Still open
+Both open items above are really "how does this behave on real, live audio" questions rather
+than confirmed training bugs -- decided the fastest way to get a real answer is a live Pi mic
+session (originally an Oct 1 task, pulled forward since the day is ahead of schedule) rather
+than more offline experimentation. Attempted this: the Pi was unreachable (SSH timeout to
+`192.168.86.4`), paused rather than debugged further per the user's call to skip it for now.
+
+## 2026-09-29 (daytime, continued) — phrase_list.csv fixed directly, phrase-overlap audit run
+
+The canonical `phrase_list.csv` promised from the other planning thread never arrived (flagged
+Sep 28-29, still true). Decided not to keep waiting on it -- fixed it directly instead, since
+the file only affects `record_dataset.py`'s prompts and future synthetic regeneration, not
+training (labels come from the manifest). Two real, mechanical staleness issues, symmetric
+with today's `manifest.csv` cleanup:
+- Removed the same 12 stale-schema slots (old Fahrenheit temps, old brightness %, old timer
+  durations) that were deleted from `manifest.csv` earlier today.
+- Added phrases for every slot the Sep 28 scope expansion introduced but never got prompts
+  for: `light_dim_color/brightness_20`, `brightness_60`, `brightness_other`, and all 10
+  `color_*` slots (`red/blue/green/yellow/pink/white/orange/purple/warm/cool`, matching
+  `dispatch.py`'s `COLOR_MAP`); `set_timer/10sec`, `30sec`; `set_temperature/18`, `22`, `26`
+  (Celsius).
+
+Then ran the phrase-overlap audit that was blocked on this file arriving -- wrote a quick
+word-Jaccard-similarity check across phrases from *different intents* (same-intent overlap is
+expected and fine; that's literally what a slot classifier is supposed to disambiguate).
+**First pass caught a real problem in the phrases just written**: every new `color_*` phrase
+used the template "turn the lights `<color>`", which shares "turn ... the lights" with
+`light_on_off`'s "turn on/off the lights" (0.60 word-overlap, the highest score found). This
+lines up exactly with tonight's retrain finding that `light_on_off` has scattered, hard-to-explain
+confusion -- shared carrier phrasing between two different intents is a concrete, fixable
+contributor to that, on top of the "short utterance" hypothesis from before. Reworded every
+color phrase to "change the light color to `<color>`" / "make the lights `<color>`" (drops
+below 0.4 overlap with `light_on_off` everywhere). Re-ran the audit clean: only two remaining
+cross-intent pairs, both pre-existing and both inherent design ambiguity rather than sloppy
+phrasing (`media_control/play` "play" vs `play_music/playlist_general` "play music"; "skip
+this song" vs "what song is this") -- not fixed, noted as accepted risk.
+
+All 167 tests still pass (test fixtures for `dispatch.py`/`benchmark_harness.py` use their own
+inline slot values, not `phrase_list.csv`, so they were unaffected by either cleanup).
+
+### Still open
+`phrase_list.csv` was fixed directly rather than waiting further -- no longer blocked on the
+other thread. Next real retrain, if any new real recordings are made against the reworded
+color phrases, should show whether the `light_on_off`/`light_dim_color` confusion improves.
+
+## 2026-09-30 (Sep 30 morning/daytime) -- WiFi move, breadboard prep, evaluator-plan gap fixed
+
+Physically moved locations; new WiFi meant the Pi (still on the old network's credentials)
+became unreachable. Reprovisioned via the SD card's cloud-init seed files
+(`network-config`/`meta-data`/`user-data` on the FAT32 boot partition, readable/writable
+straight from Windows, no reflash needed) -- edited the WiFi SSID/password and bumped
+`instance-id` so cloud-init treats it as a fresh boot and actually reapplies the network
+config. First attempt used the new network's 5GHz SSID; after ~9 minutes with no device
+appearing on the subnet, switched to the 2.4GHz variant (this hardware/regulatory-domain
+combo has a known history of being less reliable on 5GHz) -- still nothing after another ~4
+minutes, plus no HDMI signal on a monitor even on the correct port. Only real diagnostic
+available without a working monitor or Ethernet cable is the SD card's Linux partition
+(cloud-init logs), which needs a Linux-aware reader Windows doesn't have out of the box (WSL
+or similar) -- decided not to chase this further today; **paused, will retry this evening**,
+with a full SD card reflash as a fallback option (costs ~30-45 min, mostly unattended;
+project code/model aren't at risk either way since the Pi is a deployment target, not where
+the actual work lives).
+
+**Breadboard LED kit arrived.** Since wiring it and testing it don't need the Pi to be
+network-reachable (just powered), did this in parallel rather than wait on the WiFi issue:
+- `GPIO_WIRING.md`: exact pin-by-pin wiring instructions matching `dispatch.py`'s
+  `GPIOLightController` (BCM 17/22/23/24), written so the user can wire it independently
+  without a live session, including a troubleshooting note for common-anode vs common-cathode
+  RGB LEDs (a real gotcha: gpiozero does not auto-detect this, needs `active_high=False` in
+  code if the LED turns out to be common-anode -- caught and corrected an earlier draft of
+  this doc that incorrectly claimed it self-detects).
+- `src/vcm/gpio_smoke_test.py`: standalone script cycling every light state with printed
+  labels, for a fast visual wiring check independent of the classifier/pipeline.
+
+**Found and fixed a real staleness bug in `benchmark_harness.py`**: `--evaluator-plan`
+hardcoded `intents = "media_control,play_music"` from before the Sep 28 scope expansion to 7
+intents -- meaning if evaluators had been run as originally written, they'd have only tested
+a third of the actual demo scope, silently. Replaced the hardcoded list with a new
+`all_command_intents()` helper that reads the current `phrase_list.csv` and excludes only
+`reject` (not a "command"), so `--evaluator-plan` can't go stale the same way again as scope
+changes further. Verified it now returns all 8 real intents (7 command intents + `wake`).
+All 167 tests still pass.
+
+### Still open
+Pi WiFi/reachability (paused, evening retry planned), phrase_list-informed re-recording of
+`light_on_off`/color phrases (not started), evaluator recruitment, easter-egg song sourcing.
+
+## 2026-10-01 -- the WiFi saga resolved, Pi finally online, real live testing begins
+
+Physically moved locations Sep 29 night/Sep 30, onto a new WiFi network. Two full days lost to
+this before it resolved today. Root-caused, not worked around blindly:
+
+### Root cause, found via the SD card's actual logs
+Repeated manual edits to the cloud-init `network-config` seed file (new SSID/password, tried
+both 5GHz and 2.4GHz bands, bumped `instance-id` each time to force reapplication) never
+worked -- confirmed via the router's own admin panel (not just laptop-side ping/ARP, which
+turned out to be an insufficient check): zero devices ever associated on either band, across
+every attempt, including a full SD card reflash via Raspberry Pi Imager with a guaranteed-
+clean config.
+
+Installed DiskInternals Linux Reader (free, read-only ext4 browser) to pull `/var/log/
+cloud-init.log` and `/var/log/cloud-init-output.log` directly off the card without needing the
+Pi to cooperate at all. Found the real cause: `modules.py[WARNING]: Could not find module
+named cc_netplan_nm_patch` on every boot -- the cloud-init module responsible for translating
+the netplan-style `network-config` into an actual NetworkManager connection profile was
+missing from this image. Confirmed directly: `/etc/NetworkManager/system-connections/` was
+completely empty. Cloud-init reported success on every run (no errors, SSH got enabled fine)
+while silently never producing a working WiFi connection -- a broken translation step, not a
+credentials or hardware problem.
+
+### Fix
+Bypassed the broken translation instead of trying to fix it: added a `write_files` entry to
+`user-data` that writes a hand-authored `/etc/NetworkManager/system-connections/
+preconfigured.nmconnection` keyfile directly (plain-text NetworkManager format, no netplan
+involved), plus `runcmd` steps for `rfkill unblock wifi` and `raspi-config nonint
+do_wifi_country PH` (Raspberry Pi OS soft-blocks the WiFi radio until a regulatory domain is
+set -- the netplan path had been setting this as a side effect, so bypassing it dropped this
+too). Both edits done entirely through the FAT32 boot partition, no reflash needed for these.
+
+Even this didn't connect over SSH/network -- finally got a keyboard connected (monitor moved
+to the Pi's location, not the other way around, since the Pi is the portable part) and
+discovered NetworkManager's GUI applet was sitting there the whole time with an "authentication
+required" popup for the WiFi network, needing the password typed in through the GUI once. Did
+that -- connected immediately, IP `192.168.88.12`. The nmconnection/rfkill/country fixes likely
+weren't even the final blocker; the GUI wanting interactive confirmation might have been. Not
+fully certain which fix mattered -- didn't isolate it further given the time already spent, and
+it's moot now that it's working.
+
+**Total cost: two days.** Real lesson for the report: authoritative checks (router's own client
+table, the SD card's actual logs) found the truth in minutes once used; ping/ARP from the
+laptop and assumptions about cloud-init's behavior wasted far more time before that.
+
+### Pi bring-up redone (fresh reflash meant starting over)
+- Passwordless sudo: manual step, not part of the cloud-init image -- redone via a terminal
+  opened locally on the Pi (password typed there, never told to the assistant).
+- Code pushed via plain `tar` over SSH, not `git archive` -- a lot of the day's work (GPIO
+  code, benchmark harness fix, phrase_list/manifest cleanup, retrained model) was still
+  uncommitted, and `git archive HEAD` only grabs committed snapshots. (Also hit and fixed a
+  real bug pushing this way the first time: `2>&1` on the git-archive-to-ssh pipe merged
+  stderr text into the binary tar stream and corrupted it -- removed it, pushed clean.)
+- `pi_setup.sh` needed two new system packages not previously required: `swig` and
+  `liblgpio-dev`, both needed to build the `lgpio` Python package from source (no prebuilt
+  wheel for this platform/Python combo). Added to the script for next time.
+- `pi_check` (with and without `--mic`): all checks passed. Model loads in 0.14s, inference
+  18ms mean (budget was 500ms) -- first real proof of real-time capability on actual hardware.
+  Mic capture confirmed working once the USB mic was plugged back in.
+
+### First real live pipeline testing, ever, on this project
+Ran `vcm.pipeline --source mic` for the first time against real hardware. Several real
+findings, not assumptions:
+- **`--min-confidence` default (0.5) was too strict** -- most genuinely-correct top guesses on
+  live audio scored well under 0.5, so almost everything got force-mapped to reject. Fixed
+  `pipeline.py`'s `_format` to also show the raw pre-threshold guess (`heard`) when it differs
+  from the displayed label, so this was actually visible instead of guessed at. Settled on
+  `--min-confidence 0.15` as a working value after empirical testing at 0.5, 0.05, and 0.2.
+- **The wake window closing after exactly one command is by design**, not a bug -- several
+  rounds of "it's not responding" turned out to be forgetting to re-say the wake word before
+  every single command, confirmed by re-reading the actual logs rather than trusting
+  recollection of what was said.
+- **Real confusion found between our own newly-written color phrases and `light_on_off`**
+  wasn't retested live yet (no new recordings made against the reworded phrases) -- still open.
+- **Music played through the speaker corrupts wake-word recognition** -- wake worked reliably
+  before a `play_music` command was dispatched, then failed on every attempt afterward while
+  music kept playing. Consistent with the wake word never having been trained with music
+  playing behind it (all 65 clips are clean/quiet). Documented as a known limitation, not
+  something to re-engineer this close to the deadline: sequence demo commands around it, and
+  the pipeline already ducks music to ~5% the moment wake *is* detected -- the vulnerable
+  moment is specifically saying the wake word while music is still at full volume.
+- **Wake-word reliability is worse live than offline validation suggested**: offline eval
+  after the retrain below showed 69-75% precision/recall (n=13, still a small sample); a live
+  session of ~60 attempts (all intended as the wake phrase) registered as `wake` only ~18% of
+  the time. The model's top-1 guess for failed attempts repeatedly landed on the same few
+  classes (`play_music/easter_good_morning`, `media_control/volume_up`, `media_control/
+  previous`) rather than spreading randomly -- a real, reproducible confusion, not noise. This
+  is the single biggest open risk to the demo as of tonight.
+
+### Wake-word data: more recordings, one bad training run, one good one
+Root-caused (partially) the wake problem: the original 25 wake clips were recorded on the
+**laptop's built-in mic**, but live testing uses the **USB mic** -- a real train/test mic
+mismatch on top of thin data. Moved the USB mic to the laptop and recorded 35 more wake clips
+with it (65 total now), verified clean (no silence, no clipping).
+
+Retrained: **first attempt collapsed hard** -- overall accuracy fell to 12%, wake collapsed to
+0% (all 13 val clips misclassified as `media_control/next` specifically, not spread out).
+Treated this as a real finding to investigate, not something to just re-run past: re-ran with
+a different seed rather than assuming either "bad data" or "bad luck" -- the second run hit
+39% overall, wake at 75% precision / 69% recall. Concluded the first run was a genuinely bad/
+unlucky training run (its learning-rate schedule had already collapsed to a low LR by epoch
+50, while the good run was still improving at the initial LR at that point) -- not a real
+problem with the new recordings. Pushed the good model to the Pi.
+
+### Wake-word audio cue added, then had to fix it twice
+Added a beep-on-wake feature (`make_wake_cue` in `pipeline.py`) so there's feedback on demo
+day with no screen attached. First version used a second ad-hoc `sounddevice` output stream --
+crashed the whole pipeline with ALSA errors as soon as music was also playing (three
+concurrent audio streams -- mic input, Player's music output, beep's own output -- was too
+much for this hardware/driver stack to share). Wrapping it in try/except wasn't enough; the
+crash was in the mic/player streams' own contention, not something a try/except around the
+beep call could catch. Fixed properly by routing the cue through the *existing* espeak-ng TTS
+speaker instead (already proven stable everywhere else in this project, goes through a
+completely different OS audio path than the sounddevice streams), run in a background thread
+so it doesn't block the real-time capture loop. All 167 tests still pass both times.
+
+### Fan-noise / ambient check, finally done
+Fans can't be toggled (always-on, wired straight to power, confirmed earlier) so there's no
+true "fans off" baseline -- but got a clean "fans on, otherwise quiet" reading: -50 to -51
+dBFS, matching the existing `ambient_volume.py` "quiet" placeholder (-50 dBFS) almost exactly.
+No recalibration needed; fan noise alone isn't a problem for the mic.
+
+### Honest progress assessment (given to the user directly, logging it here too)
+~55-60% complete, not higher -- a working model is not a finished assignment. Solid: core
+pipeline, Pi bring-up, most intents at demo-usable quality, first real live end-to-end test.
+Real open risk: wake-word live reliability (~18% in tonight's session). Not started at all,
+not just in progress: evaluator testing (a professor-quoted grading requirement), breadboard
+wiring (kit in hand, not wired), real easter-egg/playlist audio files, rehearsal, and
+committing today's substantial uncommitted work to git.
+
+### Still open
+Committing today's work (many files uncommitted right now -- real risk), one more wake-word
+data round (bigger, more varied distances/pacing), breadboard wiring, evaluator recruitment
+and the actual benchmark session, easter-egg/playlist music files, full rehearsal. Two days
+left to the Oct 3 demo.
