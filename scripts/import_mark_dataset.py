@@ -38,6 +38,13 @@ SIMPLE_MAP = {
     "NEXT": ("media_control", "next"),
     "VOLUME_UP": ("media_control", "volume_up"),
     "VOLUME_DOWN": ("media_control", "volume_down"),
+    # 2026-10-02: promoted from OUT_OF_SCOPE_INTENTS to real intents -- the
+    # assignment brief ("pure VCM doing 1 to 10") requires weather, calls,
+    # and messaging as actual commands, not reject hard negatives.
+    "WEATHER": ("weather", "none"),
+    "CALL": ("call", "none"),
+    "MESSAGE": ("message", "none"),
+    "LIST_REMINDERS": ("list_reminders", "none"),
 }
 
 # (intent, slot_value) -> (our_intent, our_slot) -- current schema (brightness
@@ -56,11 +63,21 @@ SLOTTED_MAP = {
     ("TEMPERATURE", "18 degrees"): ("set_temperature", "18"),
     ("TEMPERATURE", "22 degrees"): ("set_temperature", "22"),
     ("TEMPERATURE", "26 degrees"): ("set_temperature", "26"),
+    # 2026-10-02: promoted from OUT_OF_SCOPE_INTENTS, see SIMPLE_MAP note above
+    ("ALARM", "6:00 am"): ("alarm", "6am"),
+    ("ALARM", "8:00 am"): ("alarm", "8am"),
+    ("ALARM", "9:00 pm"): ("alarm", "9pm"),
+    ("CREATE_REMINDER", "drink water"): ("create_reminder", "drink_water"),
+    ("CREATE_REMINDER", "study"): ("create_reminder", "study"),
+    ("CREATE_REMINDER", "exercise"): ("create_reminder", "exercise"),
 }
 
-# deliberate hard negatives, not discarded (covers REMINDER -> Mark's actual
-# CREATE_REMINDER/LIST_REMINDERS labels)
-OUT_OF_SCOPE_INTENTS = {"ALARM", "WEATHER", "CALL", "MESSAGE", "CREATE_REMINDER", "LIST_REMINDERS"}
+# Was {"ALARM", "WEATHER", "CALL", "MESSAGE", "CREATE_REMINDER", "LIST_REMINDERS"}
+# until 2026-10-02 -- all six are now real intents via SIMPLE_MAP/SLOTTED_MAP
+# above, which resolve() checks first, so this set is currently empty. Kept
+# as a named hook in case a future command needs routing to reject instead
+# of being dropped outright.
+OUT_OF_SCOPE_INTENTS: set[str] = set()
 
 MANIFEST_FIELDS = ["filepath", "intent", "slot", "phrase", "speaker", "condition", "source"]
 

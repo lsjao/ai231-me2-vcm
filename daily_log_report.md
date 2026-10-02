@@ -673,3 +673,87 @@ Committing today's work (many files uncommitted right now -- real risk), one mor
 data round (bigger, more varied distances/pacing), breadboard wiring, evaluator recruitment
 and the actual benchmark session, easter-egg/playlist music files, full rehearsal. Two days
 left to the Oct 3 demo.
+
+## 2026-10-02 -- class master dataset merged, a real class-weight bug found and fixed
+
+### Class-wide schema alignment
+The class agreed on a shared Option B 19-command schema and a collated master dataset
+(`airimonda/ai231-me2-voice-commands` on HuggingFace: train/test/holdout splits, speaker-
+disjoint, plus a separate `numerals` pool), replacing each student's own ad hoc sources.
+`scripts/import_hf_master_dataset.py` pulls the `train` split only (test/holdout are the
+class's fixed, shared evaluation set -- pulling them into our training pool would leak those
+speakers and defeat the point of a shared test set) and maps Option B's 19 commands onto our
+existing 7-intent schema, reusing `import_mark_dataset.py`'s `SIMPLE_MAP`/`SLOTTED_MAP`/
+`OUT_OF_SCOPE_INTENTS` as the single source of truth so the mapping can't drift between
+importers. This finally supplies real audio for the six hard-negative intents (`ALARM`/
+`WEATHER`/`CALL`/`MESSAGE`/`CREATE_REMINDER`/`LIST_REMINDERS`) that were unavailable on disk
+back on Sep 29 -- 1,380 new clips at a 60/slot cap (far more available, not yet pulled; see
+below).
+
+Also built `scripts/eval_hf_master_test.py`: evaluates a trained model against the class's
+actual fixed `test`/`holdout` splits instead of our own random internal val split, since the
+class agreed (2026-10-01 meeting) that this fixed set decides which model to use, not each
+student's own val numbers.
+
+Dropped `phrase_list.csv`'s `color_orange`/`color_purple`/`color_warm` -- found while auditing
+scope that these three "supported" phrases had zero training data in any root (not stale
+cruft, just never backed by data), a guaranteed misclassification if an evaluator used them.
+
+### Two bad retrains, then a real root cause (not bad luck)
+Retrained against the merged dataset (3,899 clips, 37 classes) twice, seed 1337 then seed 7:
+both collapsed wake-word to near-0% recall, all but one or two val clips landing on a single
+specific `media_control` slot each time -- the same signature as the Sep 29 "bad seed"
+incident. But reseeding alone didn't clear it this time (seed 7: 29% overall, wake 8% recall),
+so dug further instead of just reseeding again.
+
+Root cause: `class_weights()`'s plain inverse-frequency formula blew up to **84x** for a
+1-example class (`light_dim_color/color_cool`) and **28x** for a 3-example class
+(`color_white`) -- a far more extreme ratio than the ~11.5x already tested and dismissed on
+Sep 28, because the HF merge made the label distribution much more uneven. Worse: `reject`,
+now the single largest class (348 train clips), was being pulled down to **0.24x** -- actively
+telling the model reject matters *less* than everything else, despite a false accept being the
+worst failure mode for a demo. Fixed by clipping weights to `[1.0, 5.0]` in `data.py`.
+
+**Result, same data and seed, only the weight fix changed:**
+- Internal val accuracy: 29% -> 51%; `reject` internal accuracy: 2% -> 53%
+- Class test-set accuracy: 28.2% -> 54.2%; reject false-accept rate: 94.0% -> 49.6%
+- Class holdout-set accuracy: 59.9% (the smaller class-provided live-demo set; even
+  `light_on_off`, our weakest intent on `test`, looks fine here at 58%/83% -- more variance
+  given only 12 holdout clips though)
+
+Verified before trusting the new model: all 167 tests still pass, `labels.json`/
+`training_config.json` are byte-identical to what's already deployed (zero `dispatch.py`/Pi
+compatibility risk), and the evaluator benchmark harness runs end-to-end against it cleanly.
+Bad-run artifacts kept for reference in gitignored `models_archive/` rather than deleted.
+
+### Known remaining weaknesses (honest, not yet fixed)
+- `light_on_off` is the weakest intent on the (larger) test set: 31% command / 41% intent
+  accuracy. Root-caused, not just observed: ~1/4 of both `on` and `off` clips get misread as
+  `reject`, plus a genuine on/off polarity confusion. Likely structural -- "lights on/off" is
+  the shortest, most generic phrasing of any intent, so it overlaps acoustically/lexically with
+  reject's near-miss speech more than e.g. `set_temperature`'s distinctive numeric phrases
+  (94% intent accuracy). Training now shows a real train/val gap (59% vs 51%) for the first
+  time, so this isn't an undercapacity problem anymore -- more real phrase diversity (a
+  recording session) or a two-stage reject-gate architecture (flagged as worth revisiting back
+  on Sep 29) are the two real levers, not another reseed.
+- Reject false-accept rate is down massively (94%->50%) but still a coin flip. The HF import
+  only pulled 60/slot for reject despite 3,369 `out_of_scope` and 201 `nearmiss` clips being
+  available -- raising that cap and retraining is the next obvious experiment, not yet run.
+- Wake-word remains weak (15% internal-val recall) and the exact same `media_control` crowd-out
+  signature keeps appearing regardless of seed or the weight fix -- points at the 65-clip wake
+  set itself (data scarcity/acoustic similarity to specific media_control phrases), not a
+  training-recipe problem. More/varied real wake recordings is the real fix, needs a mic
+  session, not something fixable from the training script.
+- A classmate (D) independently hit and reported the exact same "no negative training ->
+  forces unseen phrases into known commands" symptom in the class group chat, and separately
+  warned that good held-out-speaker test results didn't carry over to live-mic performance for
+  them -- both are reasons not to over-trust these test/holdout numbers as a stand-in for the
+  actual Pi demo without a live check.
+
+### Still open
+Pushing the new model to the Pi -- blocked, away from the device right now (SSH to
+`192.168.88.12` times out, not refused, consistent with the Pi just being powered off/
+unreachable rather than a config problem). Also still open from before: evaluator recruitment
+and the actual benchmark session, breadboard wiring, easter-egg/playlist music files, full
+rehearsal, one more wake-word recording round. Raising the reject per-slot cap and retraining
+is a new, not-yet-done experiment worth running before the demo if time allows.

@@ -9,6 +9,7 @@ models/*.keras
 models/*.tflite
 benchmark_logs/
 data_real/
+data_real_pi_wake/
 .pytest_cache/
 *.log
 external_data/

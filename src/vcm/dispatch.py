@@ -10,6 +10,13 @@
     light_dim_color/brightness_<N>|brightness_other|color_<name> -> lights, real via GPIO
         on the Pi when the LED kit is wired up, else simulated (state + spoken
         confirmation only) -- see LightController below.
+    weather/none, call/none, message/none, alarm/<time>,
+    create_reminder/<task>, list_reminders/none -> predefined/canned
+        responses (fixed TTS line, or alarm time / reminder list echoed
+        back) -- no live weather API, no real telephony, per the
+        assignment's "don't complicate things" guidance. Added 2026-10-02
+        to cover the 10 required command categories; `reminders` state
+        lives on Devices.
 
 `set_temperature` stays simulated either way (no actuator planned for it).
 Every handler returns {"ok", "kind", "message", "speak"?, ...}; `speak` is
@@ -22,7 +29,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 import threading
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Callable, Protocol
 
@@ -30,7 +37,6 @@ from . import labels
 from .play_music_state_machine import PlayMusicStateMachine
 
 MEDIA_INTENTS = {"media_control", "play_music"}
-SPOKEN_MEDIA_COMMANDS = {"whats_playing"}
 
 
 class Speaker(Protocol):
@@ -43,16 +49,47 @@ class PrintSpeaker:
 
 
 class EspeakSpeaker:
-    """On-device TTS via espeak-ng (no cloud), blocking until it finishes."""
+    """On-device TTS via espeak-ng (no cloud), blocking until it finishes.
 
-    def __init__(self, voice: str = "en-us", words_per_minute: int = 165, exe: str = "espeak-ng"):
+    Piped through `aplay` targeting a named ALSA device explicitly, rather
+    than letting espeak-ng pick its own output -- on the demo Pi, espeak-ng's
+    own default audio backend exits 0 and produces genuinely nothing audible
+    (confirmed: `raspi-config do_audio` forcing the system ALSA default to
+    the headphone jack did NOT fix it, but explicit `aplay -D
+    plughw:Headphones,0` does), so letting it pick silently is not safe to
+    assume works. `alsa_device` names the device by its driver name
+    ("Headphones", i.e. the bcm2835 jack), not a card *number* -- numbers can
+    shift depending on what's plugged in at boot, the name shouldn't.
+    """
+
+    def __init__(
+        self,
+        voice: str = "en-us",
+        words_per_minute: int = 165,
+        amplitude: int = 150,  # espeak-ng default is 100; demo rooms are noisier than a dev desk
+        exe: str = "espeak-ng",
+        alsa_device: str = "plughw:Headphones,0",
+    ):
         path = shutil.which(exe)
         if path is None:
             raise RuntimeError(f"{exe} not found on PATH (sudo apt install espeak-ng)")
-        self._cmd = [path, "-v", voice, "-s", str(words_per_minute)]
+        aplay = shutil.which("aplay")
+        if aplay is None:
+            raise RuntimeError("aplay not found on PATH (sudo apt install alsa-utils)")
+        self._espeak_cmd = [path, "--stdout", "-v", voice, "-s", str(words_per_minute), "-a", str(amplitude)]
+        self._aplay_cmd = [aplay, "-D", alsa_device, "-q"]
 
     def say(self, text: str) -> None:
-        subprocess.run([*self._cmd, text], check=False)
+        espeak = subprocess.Popen([*self._espeak_cmd, text], stdout=subprocess.PIPE)
+        result = subprocess.run(self._aplay_cmd, stdin=espeak.stdout, capture_output=True)
+        if espeak.stdout:
+            espeak.stdout.close()
+        espeak.wait()
+        if result.returncode != 0:
+            # Surface it rather than fail silently -- that silence is exactly
+            # what cost real debugging time on 2026-10-03.
+            print(f"[EspeakSpeaker] aplay failed (rc={result.returncode}): "
+                  f"{result.stderr.decode(errors='replace').strip()}")
 
 
 def default_speaker() -> Speaker:
@@ -143,19 +180,22 @@ class Devices:
     brightness: int = 100
     color: str | None = None
     temperature: int = 70
+    reminders: list[str] = field(default_factory=list)
 
 
 class TimerManager:
-    """Fire-and-forget countdown timers. `seconds_per_minute` is only
-    overridden in tests."""
+    """Fire-and-forget countdown timers. `start` takes real-world seconds;
+    `seconds_per_minute` is an acceleration factor (overridden in tests to
+    make timers fire near-instantly) applied to any duration, not just
+    literal minutes."""
 
-    def __init__(self, on_expire: Callable[[int], None], seconds_per_minute: float = 60.0):
+    def __init__(self, on_expire: Callable[[int, str], None], seconds_per_minute: float = 60.0):
         self._on_expire = on_expire
-        self._spm = seconds_per_minute
+        self._scale = seconds_per_minute / 60.0
         self._timers: list[threading.Timer] = []
 
-    def start(self, minutes: int) -> None:
-        t = threading.Timer(minutes * self._spm, self._on_expire, args=(minutes,))
+    def start(self, seconds: int, label: str) -> None:
+        t = threading.Timer(seconds * self._scale, self._on_expire, args=(seconds, label))
         t.daemon = True
         t.start()
         self._timers.append(t)
@@ -201,6 +241,12 @@ class Dispatcher:
             "set_temperature": self._set_temperature,
             "light_on_off": self._light_on_off,
             "light_dim_color": self._light_dim,
+            "weather": self._weather,
+            "alarm": self._set_alarm,
+            "create_reminder": self._create_reminder,
+            "list_reminders": self._list_reminders,
+            "call": self._call,
+            "message": self._message,
         }.get(intent)
         if handler is None:
             return {"ok": False, "kind": "unknown", "message": f"no handler for {label!r}"}
@@ -209,10 +255,17 @@ class Dispatcher:
     # -- media ----------------------------------------------------------
 
     def _media(self, slot: str) -> dict:
+        # Used to stay quiet on successful transport commands (pause/stop/
+        # next/volume) to avoid talking over real playing music -- but
+        # volume_up/down have no failure case at all, so they could *never*
+        # speak, and with no real music loaded for most of a demo, a silent
+        # success looks identical to a silent failure. Found live on
+        # 2026-10-03: evaluators have no other way to tell these worked.
+        # Every other intent in this project always speaks its result;
+        # media is no longer the exception.
         result = dict(self.state_machine.handle_command(slot))
         result["kind"] = "media"
-        if slot in SPOKEN_MEDIA_COMMANDS or not result["ok"]:
-            result["speak"] = result["message"]
+        result["speak"] = result["message"]
         return self._finish(result)
 
     # -- simulated devices ------------------------------------------------
@@ -224,17 +277,29 @@ class Dispatcher:
         return {"ok": True, "kind": "time", "message": text, "speak": text}
 
     def _set_timer(self, slot: str) -> dict:
-        if not (slot.endswith("min") and slot[:-3].isdigit()):
-            return {"ok": False, "kind": "timer", "message": f"bad timer slot {slot!r}"}
-        minutes = int(slot[:-3])
-        self.timers.start(minutes)
-        unit = "minute" if minutes == 1 else "minutes"
-        text = f"Timer set for {minutes} {unit}"
-        return {"ok": True, "kind": "timer", "message": text, "speak": text, "minutes": minutes}
+        # "sec" checked first: a bug where only "min" was handled meant
+        # set_timer/10sec and set_timer/30sec (2 of the 3 required Option B
+        # timer values) silently failed at dispatch time -- found live on
+        # 2026-10-03 during Pi testing, the classifier got it right and the
+        # action still failed.
+        if slot.endswith("sec") and slot[:-3].isdigit():
+            seconds = int(slot[:-3])
+            unit = "second" if seconds == 1 else "seconds"
+            label = f"{seconds} {unit}"
+            self.timers.start(seconds, label)
+            text = f"Timer set for {label}"
+            return {"ok": True, "kind": "timer", "message": text, "speak": text, "seconds": seconds}
+        if slot.endswith("min") and slot[:-3].isdigit():
+            minutes = int(slot[:-3])
+            unit = "minute" if minutes == 1 else "minutes"
+            label = f"{minutes} {unit}"
+            self.timers.start(minutes * 60, label)
+            text = f"Timer set for {label}"
+            return {"ok": True, "kind": "timer", "message": text, "speak": text, "minutes": minutes}
+        return {"ok": False, "kind": "timer", "message": f"bad timer slot {slot!r}"}
 
-    def _timer_expired(self, minutes: int) -> None:
-        unit = "minute" if minutes == 1 else "minutes"
-        self.speaker.say(f"Your {minutes} {unit} timer is done")
+    def _timer_expired(self, _seconds: int, label: str) -> None:
+        self.speaker.say(f"Your {label} timer is done")
 
     def _set_temperature(self, slot: str) -> dict:
         if not slot.isdigit():
@@ -272,6 +337,48 @@ class Dispatcher:
         self.lights.set_state(self.devices.lights_on, self.devices.brightness, self.devices.color)
         return {"ok": True, "kind": "light", "message": text, "speak": text,
                 "brightness": self.devices.brightness, "color": self.devices.color}
+
+    # -- predefined-action commands (no live API / cloud / telephony, per
+    # the assignment's "don't complicate things" guidance: each command
+    # triggers a fixed, canned response rather than a real integration) ----
+
+    def _weather(self, _slot: str) -> dict:
+        text = "It's sunny and 28 degrees"
+        return {"ok": True, "kind": "weather", "message": text, "speak": text}
+
+    _ALARM_TIMES = {"6am": "6:00 AM", "8am": "8:00 AM", "9pm": "9:00 PM"}
+
+    def _set_alarm(self, slot: str) -> dict:
+        time_str = self._ALARM_TIMES.get(slot)
+        if time_str is None:
+            return {"ok": False, "kind": "alarm", "message": f"bad alarm slot {slot!r}"}
+        text = f"Alarm set for {time_str}"
+        return {"ok": True, "kind": "alarm", "message": text, "speak": text, "alarm_time": time_str}
+
+    _REMINDER_TASKS = {"drink_water": "Drink water", "study": "Study", "exercise": "Exercise"}
+
+    def _create_reminder(self, slot: str) -> dict:
+        task = self._REMINDER_TASKS.get(slot)
+        if task is None:
+            return {"ok": False, "kind": "reminder", "message": f"bad reminder slot {slot!r}"}
+        self.devices.reminders.append(task)
+        text = f"Reminder added: {task}"
+        return {"ok": True, "kind": "reminder", "message": text, "speak": text, "reminders": list(self.devices.reminders)}
+
+    def _list_reminders(self, _slot: str) -> dict:
+        if not self.devices.reminders:
+            text = "You have no reminders"
+        else:
+            text = "Your reminders: " + ", ".join(self.devices.reminders)
+        return {"ok": True, "kind": "reminder", "message": text, "speak": text, "reminders": list(self.devices.reminders)}
+
+    def _call(self, _slot: str) -> dict:
+        text = "Calling your emergency contact"
+        return {"ok": True, "kind": "call", "message": text, "speak": text}
+
+    def _message(self, _slot: str) -> dict:
+        text = "Message sent"
+        return {"ok": True, "kind": "message", "message": text, "speak": text}
 
     def _finish(self, result: dict) -> dict:
         speak = result.get("speak")

@@ -58,7 +58,10 @@ def make_wake_cue(speaker) -> Callable[[], None]:
 
     def cue() -> None:
         try:
-            speaker.say("mm-hmm")
+            # "mm-hmm" rendered as a quiet, easy-to-miss mumble through
+            # espeak-ng -- a clearly-enunciated word carries much better on
+            # demo day than a filler sound.
+            speaker.say("Yes?")
         except Exception as e:
             print(f"[wake cue] failed, continuing without it: {e}")
 

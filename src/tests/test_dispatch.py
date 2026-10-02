@@ -29,13 +29,18 @@ def test_media_commands_route_to_the_state_machine_by_slot():
     assert sm.state == PlaybackState.PAUSED
 
 
-def test_transport_commands_stay_quiet_but_whats_playing_speaks():
+def test_transport_commands_speak_their_result():
+    # Used to stay quiet on success (to avoid talking over real music) --
+    # changed 2026-10-03: with no real music loaded for most of a demo, a
+    # silent success is indistinguishable from a silent failure, and
+    # evaluators have no other way to tell a transport command worked.
     d, speaker, _ = make()
     d.handle("play_music/playlist_chill")
+    assert speaker.said[-1].startswith("Playing")
     d.handle("media_control/next")
-    assert speaker.said == []
+    assert speaker.said[-1].startswith("Skipping to")
     d.handle("play_music/whats_playing")
-    assert len(speaker.said) == 1 and speaker.said[0].startswith("Playing")
+    assert speaker.said[-1].startswith("Playing")
 
 
 def test_failed_media_command_is_spoken():
