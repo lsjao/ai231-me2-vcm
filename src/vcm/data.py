@@ -101,11 +101,28 @@ def make_dataset(
     return ds
 
 
+MIN_CLASS_WEIGHT = 1.0
+MAX_CLASS_WEIGHT = 5.0
+
+
 def class_weights(rows: list[ManifestRow], label_to_idx: dict[str, int]) -> dict[int, float]:
+    """Inverse-frequency weighting, clipped to [MIN_CLASS_WEIGHT, MAX_CLASS_WEIGHT].
+
+    Plain inverse-frequency blows up for near-singleton classes (a 1-example
+    class got weight 84x in practice, once the Oct 2 HF-master merge made the
+    label distribution far more uneven than the ~11.5x ratio already tested
+    and dismissed on Sep 28) -- that one example then dominates the gradient
+    in any batch it appears in. The floor also matters: `reject` being the
+    single largest class was pulling its own weight to 0.24, i.e. actively
+    telling the model reject matters *less* than everything else, despite it
+    being the most operationally important class (a false accept is a worse
+    demo failure than a false reject).
+    """
     counts = np.zeros(len(label_to_idx), dtype=np.float64)
     for r in rows:
         counts[label_to_idx[r.label]] += 1
     total = counts.sum()
     n_classes = len(label_to_idx)
     weights = total / (n_classes * np.maximum(counts, 1))
+    weights = np.clip(weights, MIN_CLASS_WEIGHT, MAX_CLASS_WEIGHT)
     return {i: float(w) for i, w in enumerate(weights)}

@@ -27,9 +27,6 @@ light_dim_color,color_pink,change the light color to pink
 light_dim_color,color_pink,make the lights pink
 light_dim_color,color_white,change the light color to white
 light_dim_color,color_white,make the lights white
-light_dim_color,color_orange,change the light color to orange
-light_dim_color,color_purple,change the light color to purple
-light_dim_color,color_warm,set the lights to a warm white
 light_dim_color,color_cool,set the lights to a cool white
 set_timer,1min,set a timer for one minute
 set_timer,1min,start a one minute timer

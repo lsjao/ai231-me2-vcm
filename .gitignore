@@ -12,3 +12,5 @@ data_real/
 .pytest_cache/
 *.log
 external_data/
+external_data_hf/
+models_archive/
