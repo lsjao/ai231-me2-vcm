@@ -1,0 +1,562 @@
+python.exe : 2026-10-03 03:58:29.762899: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point 
+round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+At line:1 char:1
++ & "C:\Users\Josh\AppData\Local\Programs\Python\Python313\python.exe"  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-10-03 03:5...ONEDNN_OPTS=0`.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/attr_value.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/tensor.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/resource_handle.proto. Please update the gencode to avoid compatibility violations in the next runtime 
+release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/tensor_shape.proto. Please update the gencode to avoid compatibility violations in the next runtime 
+release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/types.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/full_type.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/function.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/node_def.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/op_def.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/graph.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/graph_debug_info.proto. Please update the gencode to avoid compatibility violations in the next runtime 
+release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/versions.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/protobuf/config.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at xla/tsl/protobuf/coordination_config.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/cost_graph.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/step_stats.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/allocation_description.proto. Please update the gencode to avoid compatibility violations in the next 
+runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/framework/tensor_description.proto. Please update the gencode to avoid compatibility violations in the next runtime 
+release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/protobuf/cluster.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+C:\Users\Josh\AppData\Local\Programs\Python\Python313\Lib\site-packages\google\protobuf\runtime_version.py:98: UserWarning: Protobuf gencode version 5.28.3 is exactly one major 
+version older than the runtime version 6.31.1 at tensorflow/core/protobuf/debug.proto. Please update the gencode to avoid compatibility violations in the next runtime release.
+  warnings.warn(
+2026-10-03 03:58:36.121473: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off 
+errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-03 03:58:41.315206: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical 
+operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+extra data ../data_real: 332 clips
+extra data ../data_real_pi_wake: 30 clips
+extra data ../external_data: 2046 clips
+extra data ../external_data_hf: 5620 clips
+total=8169 train=6534 val=1635 classes=47
+Model: "vcm_crnn"
++--------------------------------------------------------------------------+
+| Layer (type)                    | Output Shape           |       Param # |
+|---------------------------------+------------------------+---------------|
+| logmel (InputLayer)             | (None, 40, 301, 1)     |             0 |
+|---------------------------------+------------------------+---------------|
+| conv2d (Conv2D)                 | (None, 40, 301, 16)    |           160 |
+|---------------------------------+------------------------+---------------|
+| batch_normalization             | (None, 40, 301, 16)    |            64 |
+| (BatchNormalization)            |                        |               |
+|---------------------------------+------------------------+---------------|
+| max_pooling2d (MaxPooling2D)    | (None, 20, 150, 16)    |             0 |
+|---------------------------------+------------------------+---------------|
+| dropout (Dropout)               | (None, 20, 150, 16)    |             0 |
+|---------------------------------+------------------------+---------------|
+| conv2d_1 (Conv2D)               | (None, 20, 150, 32)    |         4,640 |
+|---------------------------------+------------------------+---------------|
+| batch_normalization_1           | (None, 20, 150, 32)    |           128 |
+| (BatchNormalization)            |                        |               |
+|---------------------------------+------------------------+---------------|
+| max_pooling2d_1 (MaxPooling2D)  | (None, 10, 75, 32)     |             0 |
+|---------------------------------+------------------------+---------------|
+| dropout_1 (Dropout)             | (None, 10, 75, 32)     |             0 |
+|---------------------------------+------------------------+---------------|
+| conv2d_2 (Conv2D)               | (None, 10, 75, 32)     |         9,248 |
+|---------------------------------+------------------------+---------------|
+| batch_normalization_2           | (None, 10, 75, 32)     |           128 |
+| (BatchNormalization)            |                        |               |
+|---------------------------------+------------------------+---------------|
+| max_pooling2d_2 (MaxPooling2D)  | (None, 5, 75, 32)      |             0 |
+|---------------------------------+------------------------+---------------|
+| dropout_2 (Dropout)             | (None, 5, 75, 32)      |             0 |
+|---------------------------------+------------------------+---------------|
+| permute (Permute)               | (None, 75, 5, 32)      |             0 |
+|---------------------------------+------------------------+---------------|
+| reshape (Reshape)               | (None, 75, 160)        |             0 |
+|---------------------------------+------------------------+---------------|
+| bidirectional (Bidirectional)   | (None, 48)             |        26,784 |
+|---------------------------------+------------------------+---------------|
+| dropout_3 (Dropout)             | (None, 48)             |             0 |
+|---------------------------------+------------------------+---------------|
+| dense (Dense)                   | (None, 32)             |         1,568 |
+|---------------------------------+------------------------+---------------|
+| dropout_4 (Dropout)             | (None, 32)             |             0 |
+|---------------------------------+------------------------+---------------|
+| intent (Dense)                  | (None, 47)             |         1,551 |
++--------------------------------------------------------------------------+
+ Total params: 44,271 (172.93 KB)
+ Trainable params: 44,111 (172.31 KB)
+ Non-trainable params: 160 (640.00 B)
+Epoch 1/150
+409/409 - 122s - 299ms/step - accuracy: 0.1422 - loss: 4.7664 - val_accuracy: 0.1657 - val_loss: 3.5498 - learning_rate: 0.0010
+Epoch 2/150
+409/409 - 51s - 124ms/step - accuracy: 0.1811 - loss: 4.5846 - val_accuracy: 0.1896 - val_loss: 3.4618 - learning_rate: 0.0010
+Epoch 3/150
+409/409 - 49s - 121ms/step - accuracy: 0.1866 - loss: 4.5273 - val_accuracy: 0.1896 - val_loss: 3.4406 - learning_rate: 0.0010
+Epoch 4/150
+409/409 - 50s - 122ms/step - accuracy: 0.1887 - loss: 4.4879 - val_accuracy: 0.1902 - val_loss: 3.3699 - learning_rate: 0.0010
+Epoch 5/150
+409/409 - 82s - 201ms/step - accuracy: 0.1887 - loss: 4.4553 - val_accuracy: 0.1902 - val_loss: 3.3575 - learning_rate: 0.0010
+Epoch 6/150
+409/409 - 80s - 196ms/step - accuracy: 0.1922 - loss: 4.3767 - val_accuracy: 0.2098 - val_loss: 3.1943 - learning_rate: 0.0010
+Epoch 7/150
+409/409 - 63s - 155ms/step - accuracy: 0.2032 - loss: 4.1984 - val_accuracy: 0.2006 - val_loss: 3.0064 - learning_rate: 0.0010
+Epoch 8/150
+409/409 - 59s - 144ms/step - accuracy: 0.2129 - loss: 4.0059 - val_accuracy: 0.2251 - val_loss: 3.1967 - learning_rate: 0.0010
+Epoch 9/150
+409/409 - 59s - 145ms/step - accuracy: 0.2207 - loss: 3.8003 - val_accuracy: 0.2850 - val_loss: 2.5769 - learning_rate: 0.0010
+Epoch 10/150
+409/409 - 58s - 142ms/step - accuracy: 0.2395 - loss: 3.6575 - val_accuracy: 0.2581 - val_loss: 2.6159 - learning_rate: 0.0010
+Epoch 11/150
+409/409 - 73s - 178ms/step - accuracy: 0.2570 - loss: 3.5015 - val_accuracy: 0.2795 - val_loss: 2.5059 - learning_rate: 0.0010
+Epoch 12/150
+409/409 - 60s - 146ms/step - accuracy: 0.2758 - loss: 3.3231 - val_accuracy: 0.3028 - val_loss: 2.3996 - learning_rate: 0.0010
+Epoch 13/150
+409/409 - 66s - 161ms/step - accuracy: 0.2805 - loss: 3.2169 - val_accuracy: 0.2685 - val_loss: 2.4425 - learning_rate: 0.0010
+Epoch 14/150
+409/409 - 63s - 153ms/step - accuracy: 0.2981 - loss: 3.1474 - val_accuracy: 0.3070 - val_loss: 2.2918 - learning_rate: 0.0010
+Epoch 15/150
+409/409 - 57s - 139ms/step - accuracy: 0.3211 - loss: 3.0086 - val_accuracy: 0.3211 - val_loss: 2.1670 - learning_rate: 0.0010
+Epoch 16/150
+409/409 - 60s - 147ms/step - accuracy: 0.3280 - loss: 2.9706 - val_accuracy: 0.3376 - val_loss: 2.1260 - learning_rate: 0.0010
+Epoch 17/150
+409/409 - 70s - 171ms/step - accuracy: 0.3393 - loss: 2.8557 - val_accuracy: 0.3865 - val_loss: 2.0654 - learning_rate: 0.0010
+Epoch 18/150
+409/409 - 60s - 147ms/step - accuracy: 0.3545 - loss: 2.7771 - val_accuracy: 0.3939 - val_loss: 1.9218 - learning_rate: 0.0010
+Epoch 19/150
+409/409 - 81s - 197ms/step - accuracy: 0.3636 - loss: 2.6955 - val_accuracy: 0.3951 - val_loss: 1.9240 - learning_rate: 0.0010
+Epoch 20/150
+409/409 - 46s - 111ms/step - accuracy: 0.3742 - loss: 2.6518 - val_accuracy: 0.3939 - val_loss: 1.9244 - learning_rate: 0.0010
+Epoch 21/150
+409/409 - 56s - 136ms/step - accuracy: 0.3837 - loss: 2.5889 - val_accuracy: 0.3994 - val_loss: 1.9154 - learning_rate: 0.0010
+Epoch 22/150
+409/409 - 51s - 126ms/step - accuracy: 0.3874 - loss: 2.5449 - val_accuracy: 0.4404 - val_loss: 1.8020 - learning_rate: 0.0010
+Epoch 23/150
+409/409 - 80s - 196ms/step - accuracy: 0.4037 - loss: 2.4781 - val_accuracy: 0.3969 - val_loss: 1.9213 - learning_rate: 0.0010
+Epoch 24/150
+409/409 - 50s - 123ms/step - accuracy: 0.3903 - loss: 2.4559 - val_accuracy: 0.4801 - val_loss: 1.6974 - learning_rate: 0.0010
+Epoch 25/150
+409/409 - 49s - 120ms/step - accuracy: 0.4086 - loss: 2.3912 - val_accuracy: 0.4343 - val_loss: 1.7735 - learning_rate: 0.0010
+Epoch 26/150
+409/409 - 49s - 120ms/step - accuracy: 0.4138 - loss: 2.3505 - val_accuracy: 0.4281 - val_loss: 1.8373 - learning_rate: 0.0010
+Epoch 27/150
+409/409 - 84s - 205ms/step - accuracy: 0.4316 - loss: 2.2746 - val_accuracy: 0.5107 - val_loss: 1.6043 - learning_rate: 0.0010
+Epoch 28/150
+409/409 - 51s - 125ms/step - accuracy: 0.4389 - loss: 2.2842 - val_accuracy: 0.4844 - val_loss: 1.6396 - learning_rate: 0.0010
+Epoch 29/150
+409/409 - 53s - 129ms/step - accuracy: 0.4443 - loss: 2.2322 - val_accuracy: 0.4758 - val_loss: 1.6167 - learning_rate: 0.0010
+Epoch 30/150
+409/409 - 61s - 148ms/step - accuracy: 0.4565 - loss: 2.1620 - val_accuracy: 0.5278 - val_loss: 1.5308 - learning_rate: 0.0010
+Epoch 31/150
+409/409 - 48s - 117ms/step - accuracy: 0.4544 - loss: 2.1664 - val_accuracy: 0.5401 - val_loss: 1.4647 - learning_rate: 0.0010
+Epoch 32/150
+409/409 - 48s - 117ms/step - accuracy: 0.4581 - loss: 2.1250 - val_accuracy: 0.5174 - val_loss: 1.4782 - learning_rate: 0.0010
+Epoch 33/150
+409/409 - 48s - 118ms/step - accuracy: 0.4662 - loss: 2.1175 - val_accuracy: 0.5596 - val_loss: 1.4034 - learning_rate: 0.0010
+Epoch 34/150
+409/409 - 49s - 119ms/step - accuracy: 0.4726 - loss: 2.0739 - val_accuracy: 0.5431 - val_loss: 1.3962 - learning_rate: 0.0010
+Epoch 35/150
+409/409 - 46s - 112ms/step - accuracy: 0.4662 - loss: 2.0832 - val_accuracy: 0.5694 - val_loss: 1.4135 - learning_rate: 0.0010
+Epoch 36/150
+409/409 - 45s - 110ms/step - accuracy: 0.4865 - loss: 2.0197 - val_accuracy: 0.5505 - val_loss: 1.5319 - learning_rate: 0.0010
+Epoch 37/150
+409/409 - 45s - 110ms/step - accuracy: 0.4832 - loss: 2.0213 - val_accuracy: 0.5682 - val_loss: 1.3298 - learning_rate: 0.0010
+Epoch 38/150
+409/409 - 46s - 111ms/step - accuracy: 0.5023 - loss: 1.9537 - val_accuracy: 0.5431 - val_loss: 1.4236 - learning_rate: 0.0010
+Epoch 39/150
+409/409 - 46s - 113ms/step - accuracy: 0.4919 - loss: 1.9674 - val_accuracy: 0.5737 - val_loss: 1.3422 - learning_rate: 0.0010
+Epoch 40/150
+409/409 - 45s - 110ms/step - accuracy: 0.5005 - loss: 1.9426 - val_accuracy: 0.5786 - val_loss: 1.3087 - learning_rate: 0.0010
+Epoch 41/150
+409/409 - 45s - 109ms/step - accuracy: 0.5084 - loss: 1.8809 - val_accuracy: 0.6012 - val_loss: 1.2958 - learning_rate: 0.0010
+Epoch 42/150
+409/409 - 51s - 126ms/step - accuracy: 0.5256 - loss: 1.8352 - val_accuracy: 0.5835 - val_loss: 1.3168 - learning_rate: 0.0010
+Epoch 43/150
+409/409 - 49s - 120ms/step - accuracy: 0.5233 - loss: 1.8475 - val_accuracy: 0.5829 - val_loss: 1.3161 - learning_rate: 0.0010
+Epoch 44/150
+409/409 - 48s - 117ms/step - accuracy: 0.5346 - loss: 1.8485 - val_accuracy: 0.6110 - val_loss: 1.2348 - learning_rate: 0.0010
+Epoch 45/150
+409/409 - 46s - 112ms/step - accuracy: 0.5230 - loss: 1.8246 - val_accuracy: 0.6061 - val_loss: 1.2445 - learning_rate: 0.0010
+Epoch 46/150
+409/409 - 45s - 110ms/step - accuracy: 0.5318 - loss: 1.8226 - val_accuracy: 0.6355 - val_loss: 1.2042 - learning_rate: 0.0010
+Epoch 47/150
+409/409 - 45s - 110ms/step - accuracy: 0.5355 - loss: 1.8236 - val_accuracy: 0.5817 - val_loss: 1.2671 - learning_rate: 0.0010
+Epoch 48/150
+409/409 - 45s - 110ms/step - accuracy: 0.5265 - loss: 1.8285 - val_accuracy: 0.6214 - val_loss: 1.1812 - learning_rate: 0.0010
+Epoch 49/150
+409/409 - 46s - 113ms/step - accuracy: 0.5433 - loss: 1.7392 - val_accuracy: 0.6257 - val_loss: 1.1787 - learning_rate: 0.0010
+Epoch 50/150
+409/409 - 45s - 111ms/step - accuracy: 0.5525 - loss: 1.7711 - val_accuracy: 0.6287 - val_loss: 1.1638 - learning_rate: 0.0010
+Epoch 51/150
+409/409 - 45s - 110ms/step - accuracy: 0.5580 - loss: 1.7359 - val_accuracy: 0.6287 - val_loss: 1.1793 - learning_rate: 0.0010
+Epoch 52/150
+409/409 - 45s - 110ms/step - accuracy: 0.5432 - loss: 1.7448 - val_accuracy: 0.6281 - val_loss: 1.1966 - learning_rate: 0.0010
+Epoch 53/150
+409/409 - 45s - 109ms/step - accuracy: 0.5470 - loss: 1.7434 - val_accuracy: 0.6557 - val_loss: 1.1099 - learning_rate: 0.0010
+Epoch 54/150
+409/409 - 45s - 110ms/step - accuracy: 0.5517 - loss: 1.6914 - val_accuracy: 0.6410 - val_loss: 1.1230 - learning_rate: 0.0010
+Epoch 55/150
+409/409 - 45s - 110ms/step - accuracy: 0.5689 - loss: 1.6662 - val_accuracy: 0.6544 - val_loss: 1.1002 - learning_rate: 0.0010
+Epoch 56/150
+409/409 - 45s - 110ms/step - accuracy: 0.5635 - loss: 1.6382 - val_accuracy: 0.6606 - val_loss: 1.0806 - learning_rate: 0.0010
+Epoch 57/150
+409/409 - 45s - 109ms/step - accuracy: 0.5606 - loss: 1.6784 - val_accuracy: 0.6514 - val_loss: 1.1244 - learning_rate: 0.0010
+Epoch 58/150
+409/409 - 45s - 110ms/step - accuracy: 0.5747 - loss: 1.6385 - val_accuracy: 0.6446 - val_loss: 1.1709 - learning_rate: 0.0010
+Epoch 59/150
+409/409 - 45s - 110ms/step - accuracy: 0.5814 - loss: 1.5926 - val_accuracy: 0.6520 - val_loss: 1.0855 - learning_rate: 0.0010
+Epoch 60/150
+409/409 - 45s - 109ms/step - accuracy: 0.5756 - loss: 1.5921 - val_accuracy: 0.6667 - val_loss: 1.0940 - learning_rate: 0.0010
+Epoch 61/150
+409/409 - 81s - 197ms/step - accuracy: 0.5785 - loss: 1.6240 - val_accuracy: 0.6398 - val_loss: 1.0801 - learning_rate: 0.0010
+Epoch 62/150
+409/409 - 45s - 109ms/step - accuracy: 0.5906 - loss: 1.5898 - val_accuracy: 0.6557 - val_loss: 1.0771 - learning_rate: 0.0010
+Epoch 63/150
+409/409 - 45s - 109ms/step - accuracy: 0.5935 - loss: 1.5588 - val_accuracy: 0.6740 - val_loss: 1.0344 - learning_rate: 0.0010
+Epoch 64/150
+409/409 - 54s - 131ms/step - accuracy: 0.5892 - loss: 1.5960 - val_accuracy: 0.6691 - val_loss: 1.0414 - learning_rate: 0.0010
+Epoch 65/150
+409/409 - 52s - 128ms/step - accuracy: 0.5914 - loss: 1.5586 - val_accuracy: 0.7052 - val_loss: 1.0293 - learning_rate: 0.0010
+Epoch 66/150
+409/409 - 47s - 114ms/step - accuracy: 0.5886 - loss: 1.5663 - val_accuracy: 0.6832 - val_loss: 1.0469 - learning_rate: 0.0010
+Epoch 67/150
+409/409 - 45s - 109ms/step - accuracy: 0.6047 - loss: 1.5171 - val_accuracy: 0.6856 - val_loss: 1.0327 - learning_rate: 0.0010
+Epoch 68/150
+409/409 - 45s - 110ms/step - accuracy: 0.6015 - loss: 1.5226 - val_accuracy: 0.7028 - val_loss: 1.0385 - learning_rate: 0.0010
+Epoch 69/150
+409/409 - 45s - 110ms/step - accuracy: 0.6048 - loss: 1.5093 - val_accuracy: 0.6661 - val_loss: 1.0244 - learning_rate: 0.0010
+Epoch 70/150
+409/409 - 45s - 110ms/step - accuracy: 0.6065 - loss: 1.5078 - val_accuracy: 0.6813 - val_loss: 1.0553 - learning_rate: 0.0010
+Epoch 71/150
+409/409 - 45s - 110ms/step - accuracy: 0.6073 - loss: 1.5001 - val_accuracy: 0.6832 - val_loss: 1.0594 - learning_rate: 0.0010
+Epoch 72/150
+409/409 - 80s - 196ms/step - accuracy: 0.6002 - loss: 1.5673 - val_accuracy: 0.6936 - val_loss: 1.0599 - learning_rate: 0.0010
+Epoch 73/150
+409/409 - 45s - 109ms/step - accuracy: 0.6134 - loss: 1.4796 - val_accuracy: 0.7083 - val_loss: 1.0087 - learning_rate: 0.0010
+Epoch 74/150
+409/409 - 45s - 111ms/step - accuracy: 0.6260 - loss: 1.4906 - val_accuracy: 0.7156 - val_loss: 1.0045 - learning_rate: 0.0010
+Epoch 75/150
+409/409 - 45s - 109ms/step - accuracy: 0.6238 - loss: 1.4720 - val_accuracy: 0.6813 - val_loss: 1.0609 - learning_rate: 0.0010
+Epoch 76/150
+409/409 - 45s - 109ms/step - accuracy: 0.6253 - loss: 1.4365 - val_accuracy: 0.7125 - val_loss: 0.9946 - learning_rate: 0.0010
+Epoch 77/150
+409/409 - 45s - 110ms/step - accuracy: 0.6414 - loss: 1.3965 - val_accuracy: 0.6966 - val_loss: 1.0135 - learning_rate: 0.0010
+Epoch 78/150
+409/409 - 45s - 110ms/step - accuracy: 0.6201 - loss: 1.4848 - val_accuracy: 0.6875 - val_loss: 1.0540 - learning_rate: 0.0010
+Epoch 79/150
+409/409 - 45s - 109ms/step - accuracy: 0.6197 - loss: 1.4476 - val_accuracy: 0.7028 - val_loss: 1.0416 - learning_rate: 0.0010
+Epoch 80/150
+409/409 - 45s - 110ms/step - accuracy: 0.6299 - loss: 1.4290 - val_accuracy: 0.7125 - val_loss: 0.9989 - learning_rate: 0.0010
+Epoch 81/150
+409/409 - 45s - 109ms/step - accuracy: 0.6370 - loss: 1.4022 - val_accuracy: 0.7333 - val_loss: 0.9345 - learning_rate: 0.0010
+Epoch 82/150
+409/409 - 45s - 109ms/step - accuracy: 0.6394 - loss: 1.3891 - val_accuracy: 0.7272 - val_loss: 0.9898 - learning_rate: 0.0010
+Epoch 83/150
+409/409 - 45s - 111ms/step - accuracy: 0.6342 - loss: 1.4336 - val_accuracy: 0.7254 - val_loss: 0.9808 - learning_rate: 0.0010
+Epoch 84/150
+409/409 - 45s - 109ms/step - accuracy: 0.6387 - loss: 1.3940 - val_accuracy: 0.7388 - val_loss: 0.9435 - learning_rate: 0.0010
+Epoch 85/150
+409/409 - 45s - 109ms/step - accuracy: 0.6524 - loss: 1.3779 - val_accuracy: 0.7009 - val_loss: 1.0068 - learning_rate: 0.0010
+Epoch 86/150
+409/409 - 45s - 109ms/step - accuracy: 0.6590 - loss: 1.2964 - val_accuracy: 0.6917 - val_loss: 1.0056 - learning_rate: 0.0010
+Epoch 87/150
+409/409 - 80s - 195ms/step - accuracy: 0.6422 - loss: 1.4027 - val_accuracy: 0.7315 - val_loss: 0.9047 - learning_rate: 0.0010
+Epoch 88/150
+409/409 - 45s - 109ms/step - accuracy: 0.6523 - loss: 1.3735 - val_accuracy: 0.7187 - val_loss: 0.9832 - learning_rate: 0.0010
+Epoch 89/150
+409/409 - 44s - 109ms/step - accuracy: 0.6604 - loss: 1.3468 - val_accuracy: 0.7327 - val_loss: 0.9446 - learning_rate: 0.0010
+Epoch 90/150
+409/409 - 45s - 109ms/step - accuracy: 0.6615 - loss: 1.3178 - val_accuracy: 0.7199 - val_loss: 0.9605 - learning_rate: 0.0010
+Epoch 91/150
+409/409 - 44s - 109ms/step - accuracy: 0.6567 - loss: 1.3893 - val_accuracy: 0.7547 - val_loss: 0.8772 - learning_rate: 0.0010
+Epoch 92/150
+409/409 - 45s - 109ms/step - accuracy: 0.6668 - loss: 1.2952 - val_accuracy: 0.7321 - val_loss: 0.9248 - learning_rate: 0.0010
+Epoch 93/150
+409/409 - 45s - 109ms/step - accuracy: 0.6671 - loss: 1.3185 - val_accuracy: 0.7388 - val_loss: 0.9283 - learning_rate: 0.0010
+Epoch 94/150
+409/409 - 45s - 110ms/step - accuracy: 0.6748 - loss: 1.3046 - val_accuracy: 0.7474 - val_loss: 0.8882 - learning_rate: 0.0010
+Epoch 95/150
+409/409 - 45s - 109ms/step - accuracy: 0.6751 - loss: 1.2856 - val_accuracy: 0.7547 - val_loss: 0.8784 - learning_rate: 0.0010
+Epoch 96/150
+409/409 - 45s - 110ms/step - accuracy: 0.6734 - loss: 1.3076 - val_accuracy: 0.7394 - val_loss: 0.9430 - learning_rate: 0.0010
+Epoch 97/150
+409/409 - 45s - 110ms/step - accuracy: 0.6833 - loss: 1.2436 - val_accuracy: 0.7554 - val_loss: 0.8930 - learning_rate: 0.0010
+Epoch 98/150
+409/409 - 45s - 110ms/step - accuracy: 0.6783 - loss: 1.2910 - val_accuracy: 0.7719 - val_loss: 0.8647 - learning_rate: 0.0010
+Epoch 99/150
+409/409 - 45s - 110ms/step - accuracy: 0.6829 - loss: 1.2754 - val_accuracy: 0.7554 - val_loss: 0.8915 - learning_rate: 0.0010
+Epoch 100/150
+409/409 - 45s - 110ms/step - accuracy: 0.6760 - loss: 1.2587 - val_accuracy: 0.7639 - val_loss: 0.8608 - learning_rate: 0.0010
+Epoch 101/150
+409/409 - 45s - 110ms/step - accuracy: 0.6881 - loss: 1.2822 - val_accuracy: 0.7309 - val_loss: 0.9209 - learning_rate: 0.0010
+Epoch 102/150
+409/409 - 45s - 109ms/step - accuracy: 0.6869 - loss: 1.2465 - val_accuracy: 0.7627 - val_loss: 0.8665 - learning_rate: 0.0010
+Epoch 103/150
+409/409 - 45s - 110ms/step - accuracy: 0.6832 - loss: 1.2559 - val_accuracy: 0.7584 - val_loss: 0.8662 - learning_rate: 0.0010
+Epoch 104/150
+409/409 - 45s - 110ms/step - accuracy: 0.6950 - loss: 1.2536 - val_accuracy: 0.7651 - val_loss: 0.8518 - learning_rate: 0.0010
+Epoch 105/150
+409/409 - 45s - 109ms/step - accuracy: 0.6896 - loss: 1.2458 - val_accuracy: 0.7602 - val_loss: 0.8688 - learning_rate: 0.0010
+Epoch 106/150
+409/409 - 45s - 110ms/step - accuracy: 0.7034 - loss: 1.1964 - val_accuracy: 0.7450 - val_loss: 0.9223 - learning_rate: 0.0010
+Epoch 107/150
+409/409 - 45s - 111ms/step - accuracy: 0.6979 - loss: 1.2145 - val_accuracy: 0.7651 - val_loss: 0.8515 - learning_rate: 0.0010
+Epoch 108/150
+409/409 - 80s - 195ms/step - accuracy: 0.6895 - loss: 1.2259 - val_accuracy: 0.7609 - val_loss: 0.8543 - learning_rate: 0.0010
+Epoch 109/150
+409/409 - 45s - 111ms/step - accuracy: 0.7016 - loss: 1.1912 - val_accuracy: 0.7725 - val_loss: 0.8282 - learning_rate: 0.0010
+Epoch 110/150
+409/409 - 46s - 112ms/step - accuracy: 0.6999 - loss: 1.2054 - val_accuracy: 0.7633 - val_loss: 0.8599 - learning_rate: 0.0010
+Epoch 111/150
+409/409 - 46s - 111ms/step - accuracy: 0.7036 - loss: 1.2105 - val_accuracy: 0.7865 - val_loss: 0.8055 - learning_rate: 0.0010
+Epoch 112/150
+409/409 - 46s - 113ms/step - accuracy: 0.7130 - loss: 1.1845 - val_accuracy: 0.7835 - val_loss: 0.8053 - learning_rate: 0.0010
+Epoch 113/150
+409/409 - 44s - 108ms/step - accuracy: 0.7149 - loss: 1.1766 - val_accuracy: 0.7743 - val_loss: 0.8307 - learning_rate: 0.0010
+Epoch 114/150
+409/409 - 45s - 110ms/step - accuracy: 0.7054 - loss: 1.1838 - val_accuracy: 0.7688 - val_loss: 0.8692 - learning_rate: 0.0010
+Epoch 115/150
+409/409 - 46s - 112ms/step - accuracy: 0.7166 - loss: 1.1339 - val_accuracy: 0.7841 - val_loss: 0.8173 - learning_rate: 0.0010
+Epoch 116/150
+409/409 - 45s - 110ms/step - accuracy: 0.7078 - loss: 1.1985 - val_accuracy: 0.7609 - val_loss: 0.8301 - learning_rate: 0.0010
+Epoch 117/150
+409/409 - 80s - 195ms/step - accuracy: 0.7094 - loss: 1.2006 - val_accuracy: 0.7780 - val_loss: 0.8195 - learning_rate: 0.0010
+Epoch 118/150
+409/409 - 45s - 110ms/step - accuracy: 0.7055 - loss: 1.2129 - val_accuracy: 0.7823 - val_loss: 0.8668 - learning_rate: 0.0010
+Epoch 119/150
+409/409 - 45s - 110ms/step - accuracy: 0.7184 - loss: 1.1593 - val_accuracy: 0.7835 - val_loss: 0.8313 - learning_rate: 0.0010
+Epoch 120/150
+409/409 - 45s - 109ms/step - accuracy: 0.7234 - loss: 1.1283 - val_accuracy: 0.7584 - val_loss: 0.8366 - learning_rate: 0.0010
+Epoch 121/150
+409/409 - 45s - 110ms/step - accuracy: 0.7210 - loss: 1.1529 - val_accuracy: 0.7755 - val_loss: 0.8853 - learning_rate: 0.0010
+Epoch 122/150
+409/409 - 45s - 110ms/step - accuracy: 0.7163 - loss: 1.1427 - val_accuracy: 0.7645 - val_loss: 0.8894 - learning_rate: 0.0010
+Epoch 123/150
+409/409 - 45s - 111ms/step - accuracy: 0.7290 - loss: 1.0834 - val_accuracy: 0.7804 - val_loss: 0.8265 - learning_rate: 5.0000e-04
+Epoch 124/150
+409/409 - 45s - 110ms/step - accuracy: 0.7400 - loss: 1.0455 - val_accuracy: 0.7902 - val_loss: 0.7988 - learning_rate: 5.0000e-04
+Epoch 125/150
+409/409 - 46s - 112ms/step - accuracy: 0.7348 - loss: 1.0972 - val_accuracy: 0.7786 - val_loss: 0.8102 - learning_rate: 5.0000e-04
+Epoch 126/150
+409/409 - 45s - 110ms/step - accuracy: 0.7415 - loss: 1.0501 - val_accuracy: 0.7768 - val_loss: 0.8266 - learning_rate: 5.0000e-04
+Epoch 127/150
+409/409 - 45s - 111ms/step - accuracy: 0.7455 - loss: 1.0260 - val_accuracy: 0.7878 - val_loss: 0.7963 - learning_rate: 5.0000e-04
+Epoch 128/150
+409/409 - 45s - 110ms/step - accuracy: 0.7323 - loss: 1.0485 - val_accuracy: 0.7780 - val_loss: 0.8505 - learning_rate: 5.0000e-04
+Epoch 129/150
+409/409 - 45s - 110ms/step - accuracy: 0.7432 - loss: 1.0675 - val_accuracy: 0.8000 - val_loss: 0.8103 - learning_rate: 5.0000e-04
+Epoch 130/150
+409/409 - 45s - 110ms/step - accuracy: 0.7388 - loss: 1.0066 - val_accuracy: 0.7817 - val_loss: 0.8383 - learning_rate: 5.0000e-04
+Epoch 131/150
+409/409 - 45s - 111ms/step - accuracy: 0.7466 - loss: 1.0616 - val_accuracy: 0.7823 - val_loss: 0.8127 - learning_rate: 5.0000e-04
+Epoch 132/150
+409/409 - 45s - 111ms/step - accuracy: 0.7459 - loss: 1.0057 - val_accuracy: 0.7859 - val_loss: 0.8054 - learning_rate: 5.0000e-04
+Epoch 133/150
+409/409 - 45s - 110ms/step - accuracy: 0.7495 - loss: 1.0336 - val_accuracy: 0.7957 - val_loss: 0.7823 - learning_rate: 5.0000e-04
+Epoch 134/150
+409/409 - 45s - 110ms/step - accuracy: 0.7496 - loss: 1.0356 - val_accuracy: 0.7872 - val_loss: 0.8026 - learning_rate: 5.0000e-04
+Epoch 135/150
+409/409 - 45s - 110ms/step - accuracy: 0.7463 - loss: 1.0135 - val_accuracy: 0.7884 - val_loss: 0.8123 - learning_rate: 5.0000e-04
+Epoch 136/150
+409/409 - 80s - 196ms/step - accuracy: 0.7597 - loss: 1.0054 - val_accuracy: 0.7804 - val_loss: 0.8199 - learning_rate: 5.0000e-04
+Epoch 137/150
+409/409 - 47s - 114ms/step - accuracy: 0.7484 - loss: 1.0255 - val_accuracy: 0.7841 - val_loss: 0.8209 - learning_rate: 5.0000e-04
+Epoch 138/150
+409/409 - 45s - 110ms/step - accuracy: 0.7469 - loss: 1.0158 - val_accuracy: 0.7963 - val_loss: 0.7848 - learning_rate: 5.0000e-04
+Epoch 139/150
+409/409 - 45s - 110ms/step - accuracy: 0.7481 - loss: 1.0745 - val_accuracy: 0.7927 - val_loss: 0.8117 - learning_rate: 5.0000e-04
+Epoch 140/150
+409/409 - 57s - 140ms/step - accuracy: 0.7542 - loss: 1.0046 - val_accuracy: 0.7963 - val_loss: 0.7899 - learning_rate: 5.0000e-04
+Epoch 141/150
+409/409 - 51s - 126ms/step - accuracy: 0.7576 - loss: 1.0209 - val_accuracy: 0.7994 - val_loss: 0.7870 - learning_rate: 5.0000e-04
+Epoch 142/150
+409/409 - 45s - 111ms/step - accuracy: 0.7600 - loss: 0.9813 - val_accuracy: 0.7976 - val_loss: 0.8008 - learning_rate: 5.0000e-04
+Epoch 143/150
+409/409 - 45s - 110ms/step - accuracy: 0.7463 - loss: 1.0055 - val_accuracy: 0.7951 - val_loss: 0.8006 - learning_rate: 5.0000e-04
+Epoch 144/150
+409/409 - 46s - 112ms/step - accuracy: 0.7612 - loss: 0.9619 - val_accuracy: 0.8006 - val_loss: 0.7934 - learning_rate: 2.5000e-04
+Epoch 145/150
+409/409 - 45s - 110ms/step - accuracy: 0.7591 - loss: 0.9661 - val_accuracy: 0.7914 - val_loss: 0.7886 - learning_rate: 2.5000e-04
+Epoch 146/150
+409/409 - 45s - 111ms/step - accuracy: 0.7681 - loss: 0.9652 - val_accuracy: 0.7920 - val_loss: 0.8040 - learning_rate: 2.5000e-04
+Epoch 147/150
+409/409 - 46s - 111ms/step - accuracy: 0.7609 - loss: 0.9527 - val_accuracy: 0.7927 - val_loss: 0.8004 - learning_rate: 2.5000e-04
+Epoch 148/150
+409/409 - 45s - 111ms/step - accuracy: 0.7675 - loss: 0.9640 - val_accuracy: 0.7939 - val_loss: 0.8011 - learning_rate: 2.5000e-04
+Epoch 149/150
+409/409 - 45s - 110ms/step - accuracy: 0.7668 - loss: 0.9600 - val_accuracy: 0.7927 - val_loss: 0.7882 - learning_rate: 2.5000e-04
+Epoch 150/150
+409/409 - 45s - 110ms/step - accuracy: 0.7629 - loss: 0.9500 - val_accuracy: 0.7963 - val_loss: 0.8067 - learning_rate: 2.5000e-04
+2026-10-03 06:05:10.063844: I tensorflow/core/framework/local_rendezvous.cc:407] Local rendezvous is aborting with status: OUT_OF_RANGE: End of sequence
+                                  precision    recall  f1-score   support
+
+                       alarm/6am       0.65      0.92      0.76        12
+                       alarm/8am       0.89      0.67      0.76        12
+                       alarm/9pm       0.69      0.92      0.79        12
+                   ask_time/none       0.70      0.78      0.74        50
+                       call/none       0.73      0.92      0.81        12
+     create_reminder/drink_water       0.92      1.00      0.96        12
+        create_reminder/exercise       1.00      1.00      1.00        12
+           create_reminder/study       0.85      0.92      0.88        12
+  light_dim_color/brightness_100       0.89      0.82      0.85        49
+   light_dim_color/brightness_20       0.82      0.88      0.85        48
+   light_dim_color/brightness_60       0.98      0.92      0.95        48
+light_dim_color/brightness_other       0.00      0.00      0.00        12
+      light_dim_color/color_blue       0.77      0.80      0.79        60
+      light_dim_color/color_cool       0.00      0.00      0.00         1
+     light_dim_color/color_green       0.91      0.80      0.85        60
+      light_dim_color/color_pink       0.17      0.42      0.24        12
+       light_dim_color/color_red       0.84      0.70      0.76        60
+     light_dim_color/color_white       0.00      0.00      0.00         1
+    light_dim_color/color_yellow       1.00      0.92      0.96        12
+                light_on_off/off       0.71      0.65      0.68        62
+                 light_on_off/on       0.69      0.66      0.68        62
+             list_reminders/none       0.82      0.75      0.78        12
+              media_control/next       0.94      0.87      0.90        54
+             media_control/pause       0.77      0.70      0.73        53
+              media_control/play       0.73      0.79      0.76        52
+          media_control/previous       1.00      0.40      0.57         5
+              media_control/stop       0.84      0.79      0.82        53
+       media_control/volume_down       0.69      0.76      0.73        54
+         media_control/volume_up       0.72      0.61      0.66        54
+                    message/none       0.77      0.83      0.80        12
+  play_music/easter_good_morning       0.80      1.00      0.89         4
+  play_music/easter_stage_fright       0.67      0.50      0.57         4
+       play_music/playlist_chill       1.00      0.50      0.67         4
+       play_music/playlist_focus       1.00      1.00      1.00         4
+     play_music/playlist_general       0.50      0.20      0.29         5
+        play_music/playlist_jazz       0.50      0.25      0.33         4
+     play_music/playlist_workout       0.67      0.50      0.57         4
+        play_music/whats_playing       0.29      0.40      0.33         5
+                          reject       0.74      0.78      0.76       311
+              set_temperature/18       1.00      0.88      0.93        48
+              set_temperature/22       0.84      1.00      0.91        48
+              set_temperature/26       1.00      0.94      0.97        48
+                 set_timer/10sec       0.91      0.90      0.91        48
+                  set_timer/1min       0.92      0.96      0.94        49
+                 set_timer/30sec       0.90      0.96      0.93        48
+               wake/kuya_jukebox       0.90      1.00      0.95        19
+                    weather/none       0.85      0.92      0.88        12
+
+                        accuracy                           0.80      1635
+                       macro avg       0.74      0.72      0.72      1635
+                    weighted avg       0.80      0.80      0.80      1635
+
+per-intent rollup (val): intent  n  command_acc  intent_acc
+  alarm              36  0.83  0.89
+  ask_time           50  0.78  0.78
+  call               12  0.92  0.92
+  create_reminder    36  0.97  0.97
+  light_dim_color   363  0.77  0.91
+  light_on_off      124  0.65  0.79
+  list_reminders     12  0.75  0.75
+  media_control     325  0.75  0.85
+  message            12  0.83  0.83
+  play_music         34  0.53  0.56
+  reject            311  0.78  0.78
+  set_temperature   144  0.94  0.98
+  set_timer         145  0.94  0.98
+  wake               19  1.00  1.00
+  weather            12  0.92  0.92
+  overall command accuracy 0.80 over 1635 val clips
+
+wake-class report (wake/kuya_jukebox): n=19 precision=0.90 recall=1.00
+  wake/kuya_jukebox -> media_control/stop: 0   |   media_control/stop -> wake/kuya_jukebox: 0
+  wake/kuya_jukebox -> media_control/volume_down: 0   |   media_control/volume_down -> wake/kuya_jukebox: 0
+  wake/kuya_jukebox -> media_control/next: 0   |   media_control/next -> wake/kuya_jukebox: 0
+  wake/kuya_jukebox -> ask_time/none: 0   |   ask_time/none -> wake/kuya_jukebox: 0
+  wake/kuya_jukebox -> reject: 0   |   reject -> wake/kuya_jukebox: 2
+
+Saved artifact at 'C:\Users\Josh\AppData\Local\Temp\tmp9sfj8d8c'. The following endpoints are available:
+
+* Endpoint 'serve'
+  args_0 (POSITIONAL_ONLY): TensorSpec(shape=(None, 40, 301, 1), dtype=tf.float32, name='logmel')
+Output Type:
+  TensorSpec(shape=(None, 47), dtype=tf.float32, name=None)
+Captures:
+  1885987244560: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987244944: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987244752: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987245520: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987245904: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987245712: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987246480: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987247440: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987247056: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987246864: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987246288: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987247248: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987248016: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987248976: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987248784: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987248592: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987246096: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987247632: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987252048: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987251088: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987251472: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987252624: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987252432: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987251664: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987253776: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987254736: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987249936: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  1885987254544: TensorSpec(shape=(), dtype=tf.resource, name=None)
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+W0000 00:00:1790978717.072306  157044 tf_tfl_flatbuffer_helpers.cc:364] Ignored output_format.
+W0000 00:00:1790978717.073008  157044 tf_tfl_flatbuffer_helpers.cc:367] Ignored drop_control_dependency.
+2026-10-03 06:05:17.079564: I tensorflow/cc/saved_model/reader.cc:83] Reading SavedModel from: C:\Users\Josh\AppData\Local\Temp\tmp9sfj8d8c
+2026-10-03 06:05:17.097274: I tensorflow/cc/saved_model/reader.cc:52] Reading meta graph with tags { serve }
+2026-10-03 06:05:17.097311: I tensorflow/cc/saved_model/reader.cc:147] Reading SavedModel debug info (if present) from: C:\Users\Josh\AppData\Local\Temp\tmp9sfj8d8c
+I0000 00:00:1790978717.322149  157044 mlir_graph_optimization_pass.cc:437] MLIR V1 optimization pass is not enabled
+2026-10-03 06:05:17.331957: I tensorflow/cc/saved_model/loader.cc:236] Restoring SavedModel bundle.
+2026-10-03 06:05:17.689778: I tensorflow/cc/saved_model/loader.cc:220] Running initialization op on SavedModel bundle at path: C:\Users\Josh\AppData\Local\Temp\tmp9sfj8d8c
+2026-10-03 06:05:17.980814: I tensorflow/cc/saved_model/loader.cc:471] SavedModel load for tags { serve }; Status: success: OK. Took 901169 microseconds.
+2026-10-03 06:05:18.387693: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:269] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to 
+enable.
+wrote C:\Users\Josh\Documents\MEng AI\AI 231\ME 2\models\vcm_crnn.tflite (596.7 KB)
+artifacts written to C:\Users\Josh\Documents\MEng AI\AI 231\ME 2\models
