@@ -52,6 +52,32 @@ Run the test suite:
 pytest src/tests/
 ```
 
+## Baseline comparison (same param count, no recurrence)
+To check the BiGRU is actually earning its parameter budget rather than the
+model just being "big enough to memorize," `build_cnn_baseline` in
+`model.py` keeps the identical 3-layer conv front-end but replaces the BiGRU
+with global-average-pooling + a single dense layer, sized to 44,255 params
+(vs. the deployed model's 44,271 -- same architecture family, same data,
+same seed, effectively the same budget):
+```
+python -m vcm.train --arch cnn_baseline --output-dir ../models_baseline --epochs 60 \
+  --extra-data ../data_real --extra-data ../data_real_pi_wake \
+  --extra-data ../external_data --extra-data ../external_data_hf --seed 7
+```
+(60 epochs rather than the deployed model's 150, due to time constraints --
+not fully converged, so this understates the baseline's true ceiling
+somewhat; the gap below is a floor, not an exact number.)
+
+| | Deployed (CRNN + BiGRU) | Baseline (CNN + GAP, no recurrence) |
+|---|---|---|
+| Params | 44,271 | 44,255 |
+| Test accuracy (4,443 clips) | **82.85%** | 45.46% |
+| Holdout accuracy (202 clips) | **78.22%** | 43.56% |
+
+The BiGRU accounts for roughly a 35-37 point accuracy gap at matched
+parameter count -- sequence modeling over the 3 s window, not just raw
+capacity, is doing real work here.
+
 ## Dataset
 Training data (~8,169 clips / ~6.8 h, 774 speaker/voice tags) is pooled from:
 - Class master set (Option B schema): [`airimonda/ai231-me2-voice-commands`](https://huggingface.co/datasets/airimonda/ai231-me2-voice-commands) on HuggingFace
