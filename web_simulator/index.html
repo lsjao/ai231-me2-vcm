@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kuya Jukebox Light Simulator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <img src="assets/kuya_jukebox_icon.webp" alt="Kuya Jukebox" class="logo">
+  <h1>Kuya Jukebox</h1>
+</header>
+
+<main>
+  <div class="stage" id="stage">
+    <div class="glow" id="glow"></div>
+    <svg class="bulb" viewBox="0 0 200 300" aria-label="Light bulb">
+      <defs>
+        <radialGradient id="glass" cx="38%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#fff" stop-opacity=".95"/>
+          <stop offset="55%" stop-color="#fff" stop-opacity=".55"/>
+          <stop offset="100%" stop-color="#9aa" stop-opacity=".45"/>
+        </radialGradient>
+        <linearGradient id="metal" x1="0" x2="1">
+          <stop offset="0" stop-color="#6b7b82"/>
+          <stop offset=".5" stop-color="#c9d3d8"/>
+          <stop offset="1" stop-color="#5a6a71"/>
+        </linearGradient>
+      </defs>
+      <!-- glass body, colored by JS -->
+      <path id="bulbFill" d="M100 12C55 12 25 46 25 90c0 30 14 50 30 68 8 9 12 18 12 30v14h66v-14c0-12 4-21 12-30 16-18 30-38 30-68 0-44-30-78-75-78z"/>
+      <path d="M100 12C55 12 25 46 25 90c0 30 14 50 30 68 8 9 12 18 12 30v14h66v-14c0-12 4-21 12-30 16-18 30-38 30-68 0-44-30-78-75-78z" fill="url(#glass)"/>
+      <path d="M60 60c8-20 22-30 38-34" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none" opacity=".8"/>
+      <!-- filament -->
+      <path id="filament" d="M82 190v-40l18 20 18-20v40" fill="none" stroke="#8a6a3a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- base -->
+      <rect x="64" y="202" width="72" height="14" rx="5" fill="url(#metal)"/>
+      <rect x="66" y="220" width="68" height="14" rx="5" fill="url(#metal)"/>
+      <rect x="68" y="238" width="64" height="14" rx="5" fill="url(#metal)"/>
+      <path d="M78 256h44l-8 22h-28z" fill="#3a464b"/>
+    </svg>
+  </div>
+
+  <div class="status">
+    <div class="pill" id="power">OFF</div>
+    <div class="row"><span>Brightness</span><strong id="bri">--</strong></div>
+    <div class="row"><span>Color</span><strong id="col">--</strong></div>
+  </div>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

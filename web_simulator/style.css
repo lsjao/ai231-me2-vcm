@@ -1,0 +1,19 @@
+:root{--bg:#10272c;--fg:#fbe9c6;--accent:#e8613c;--card:#17363c}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center}
+header{display:flex;align-items:center;gap:12px;padding:16px}
+.logo{width:56px;height:56px;object-fit:contain;border-radius:12px;background:#fff}
+h1{font-size:1.4rem;margin:0}
+main{display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:16px}
+.stage{position:relative;width:260px;height:380px;display:grid;place-items:center}
+.glow{position:absolute;width:420px;height:420px;border-radius:50%;top:-20px;left:50%;transform:translateX(-50%);
+  background:radial-gradient(circle,var(--c,#fff) 0%,transparent 65%);opacity:0;transition:opacity .25s,background .25s;pointer-events:none}
+.bulb{position:relative;width:200px;height:300px;filter:drop-shadow(0 8px 10px rgba(0,0,0,.4))}
+#bulbFill{fill:#2c3d42;transition:fill .25s}
+#filament{transition:stroke .25s}
+.on #filament{stroke:#fff}
+.status{background:var(--card);border-radius:16px;padding:20px 24px;min-width:240px;display:flex;flex-direction:column;gap:12px}
+.pill{align-self:flex-start;padding:4px 16px;border-radius:999px;background:#2c3d42;font-weight:700;letter-spacing:.1em}
+.on .pill{background:var(--accent);color:#fff}
+.row{display:flex;justify-content:space-between;gap:24px}
+.row span{opacity:.7}
