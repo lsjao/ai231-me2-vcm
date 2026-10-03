@@ -71,6 +71,12 @@ Not yet released publicly. `models/vcm_crnn.tflite` (and `.keras`) are
 produced locally by `vcm.train` and are gitignored in this repo pending a
 release decision (location + license for the weights themselves).
 
+## License
+This repository's code is MIT-licensed (see `LICENSE`). That covers the code
+only -- training data is drawn from third-party and class-provided datasets
+under their own licenses/access terms (see Dataset above), and trained model
+weights are not included in this repository (see Model weights above).
+
 ## Training compute
 Trained locally (not on the class A100/DGX cluster) due to timeline
 constraints: 150 epochs, batch size 16, Adam (lr 1e-3, ReduceLROnPlateau to
