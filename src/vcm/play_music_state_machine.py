@@ -138,6 +138,9 @@ class PlayMusicStateMachine:
         least {"ok": bool, "message": str}."""
         handler = self._handlers.get(command)
         if handler is None:
+            if command.startswith("playlist_"):
+                name = command.removeprefix("playlist_").replace("_", " ")
+                return {"ok": False, "message": f"The {name} playlist isn't available"}
             return {"ok": False, "message": f"unrecognized play_media command: {command!r}"}
         return handler()
 

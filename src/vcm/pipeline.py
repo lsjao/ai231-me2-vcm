@@ -42,6 +42,10 @@ from .vad import Endpointer, iter_frames
 
 VOLUME_COMMANDS = {"media_control/volume_up", "media_control/volume_down"}
 
+# Playlists with real sourced music; see the comment at PlayMusicStateMachine
+# construction in main() for why the others are excluded at runtime.
+ACTIVE_PLAYLISTS = {"playlist_chill", "playlist_focus"}
+
 
 def make_wake_cue(speaker) -> Callable[[], None]:
     """Audio cue that the wake word was heard -- there's no screen on demo
@@ -336,7 +340,15 @@ def main() -> None:
 
     args = parse_args()
     library = Library(args.music_dir)
-    sm = PlayMusicStateMachine(playlists=library.playlists())
+    # Only playlist_chill/playlist_focus have real music sourced; the other
+    # three (general/jazz/workout) are classifier labels with no backing
+    # files, so playing them falls back to an audible stub tone -- fine for
+    # early dev, bad in a live demo if the classifier picks one by mistake.
+    # Dropping them from the state machine means handle_command() declines
+    # them cleanly (see play_music_state_machine.py) instead of beeping.
+    all_playlists = library.playlists()
+    active_playlists = {k: v for k, v in all_playlists.items() if k in ACTIVE_PLAYLISTS}
+    sm = PlayMusicStateMachine(playlists=active_playlists)
     speaker = PrintSpeaker() if args.speaker == "print" else default_speaker()
     lights = None
     if args.lights == "web":

@@ -93,16 +93,23 @@ class Source(Protocol):
 
 
 class ToneSource:
-    """Endless sine tone; pitch derived from the title so tracks differ."""
+    """Sine tone; pitch derived from the title so tracks differ. Endless by
+    default (for playlist stubs, where "keep playing until paused" is
+    correct); pass duration_s to make it stop itself after that long
+    instead (for one-shot stubs like an easter egg with no audio file yet,
+    which shouldn't drone on forever waiting for an explicit stop)."""
 
     channels = 1
 
-    def __init__(self, title: str, samplerate: int = 22050):
+    def __init__(self, title: str, samplerate: int = 22050, duration_s: float | None = None):
         self.samplerate = samplerate
         self.freq = 220.0 + (sum(ord(c) for c in title) % 440)
         self._phase = 0
+        self._max_frames = int(duration_s * samplerate) if duration_s is not None else None
 
     def read(self, frames: int) -> np.ndarray:
+        if self._max_frames is not None:
+            frames = max(0, min(frames, self._max_frames - self._phase))
         t = (self._phase + np.arange(frames)) / self.samplerate
         self._phase += frames
         return (TONE_AMPLITUDE * np.sin(2 * np.pi * self.freq * t)).astype(np.float32)[:, None]
@@ -226,7 +233,10 @@ class Player:
                 return FileSource(path)
             except Exception as e:  # unreadable/unsupported file: fall back to a tone, keep going
                 print(f"[player] can't decode {path} ({e}); playing a tone instead")
-        return ToneSource(title)
+        # Easter eggs are one-shot gags, not songs -- a short self-stopping
+        # stub instead of an endless tone that drones on until someone says
+        # "stop" (no music/easter/*.mp3 sourced yet as of this writing).
+        return ToneSource(title, duration_s=2.5 if is_easter else None)
 
     def sync(self, sm: PlayMusicStateMachine) -> None:
         self.backend.set_gain(volume_to_gain(sm.volume))
