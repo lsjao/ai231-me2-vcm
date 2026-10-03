@@ -1,7 +1,7 @@
 # Kuya Jukebox simulator
 
-Browser view of the lights (bulb) and phone (call / message) for when the
-hardware isn't wired. Fully offline.
+Browser view of the lights (bulb) and a phone screen that shows the call, message,
+time, weather, alarm, timer, thermostat and reminder commands. Fully offline.
 
 Run on the Pi: `python -m vcm.pipeline --lights web` (add `--web-port N` to change 8000).
 Open `http://<pi-ip>:8000/` from any browser on the same network. Real GPIO LEDs

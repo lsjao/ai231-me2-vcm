@@ -210,18 +210,33 @@ class WebLightController:
 
 
 class PhoneController:
-    """Records the latest call/message event for the simulator page. Idle is
-    computed client-side (the page shows each event briefly), so only the
-    event and a sequence number are written."""
+    """Feeds the simulator's phone screen. Every spoken result (time, weather,
+    alarm, timer, temperature, reminders, call, message) is recorded as one
+    event: its kind, the text, and a few display fields. Idle is computed
+    client-side (the page shows each event briefly), so only the latest event
+    and a sequence number are written. Alarm, thermostat and reminders are
+    also kept as persistent device state so the page can show them at rest."""
 
     def __init__(self, web: WebState) -> None:
         self.web = web
+        self._lock = threading.Lock()
         self._seq = 0
+        self._device: dict = {"alarm": None, "temperature": None, "reminders": []}
 
-    def notify(self, status: str) -> None:  # "calling" | "message"
-        self._seq += 1
-        self.web.update({"phone": {"status": status, "seq": self._seq,
-                                   "updated_at": datetime.now().isoformat(timespec="seconds")}})
+    def notify(self, kind: str, text: str = "", **data) -> None:
+        with self._lock:
+            self._seq += 1
+            if kind == "alarm":
+                self._device["alarm"] = data.get("alarm_time")
+            elif kind == "temperature":
+                self._device["temperature"] = data.get("temperature")
+            elif kind == "reminder":
+                self._device["reminders"] = list(data.get("reminders", []))
+            self.web.update({"phone": {
+                "status": kind, "text": text, "data": data, "seq": self._seq,
+                "device": dict(self._device),
+                "updated_at": datetime.now().isoformat(timespec="seconds"),
+            }})
 
 
 def default_light_controller() -> LightController:
@@ -264,6 +279,9 @@ class TimerManager:
         for t in self._timers:
             t.cancel()
         self._timers.clear()
+
+
+PHONE_KINDS = {"time", "weather", "alarm", "timer", "temperature", "reminder", "call", "message"}
 
 
 class Dispatcher:
@@ -309,7 +327,15 @@ class Dispatcher:
         }.get(intent)
         if handler is None:
             return {"ok": False, "kind": "unknown", "message": f"no handler for {label!r}"}
-        return self._finish(handler(slot))
+        result = self._finish(handler(slot))
+        self._show_on_phone(result)
+        return result
+
+    def _show_on_phone(self, result: dict) -> None:
+        """Visualization only: mirror a successful result on the phone screen."""
+        if self.phone and result.get("ok") and result.get("kind") in PHONE_KINDS:
+            extra = {k: v for k, v in result.items() if k not in ("ok", "kind", "message", "speak")}
+            self.phone.notify(result["kind"], result.get("message", ""), **extra)
 
     # -- media ----------------------------------------------------------
 
@@ -333,7 +359,8 @@ class Dispatcher:
         t = self._now()
         hour = t.hour % 12 or 12
         text = f"It's {hour}:{t.minute:02d} {'AM' if t.hour < 12 else 'PM'}"
-        return {"ok": True, "kind": "time", "message": text, "speak": text}
+        return {"ok": True, "kind": "time", "message": text, "speak": text,
+                "clock": f"{t.hour:02d}:{t.minute:02d}"}
 
     def _set_timer(self, slot: str) -> dict:
         # "sec" checked first: a bug where only "min" was handled meant
@@ -359,6 +386,8 @@ class Dispatcher:
 
     def _timer_expired(self, _seconds: int, label: str) -> None:
         self.speaker.say(f"Your {label} timer is done")
+        if self.phone:
+            self.phone.notify("timer_done", f"Your {label} timer is done", label=label)
 
     def _set_temperature(self, slot: str) -> dict:
         if not slot.isdigit():
@@ -433,14 +462,10 @@ class Dispatcher:
 
     def _call(self, _slot: str) -> dict:
         text = "Calling your emergency contact"
-        if self.phone:
-            self.phone.notify("calling")
         return {"ok": True, "kind": "call", "message": text, "speak": text}
 
     def _message(self, _slot: str) -> dict:
         text = "Message sent"
-        if self.phone:
-            self.phone.notify("message")
         return {"ok": True, "kind": "message", "message": text, "speak": text}
 
     def _finish(self, result: dict) -> dict:
