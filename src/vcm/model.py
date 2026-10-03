@@ -41,3 +41,33 @@ def build_crnn(input_shape: tuple[int, int, int], num_classes: int) -> keras.Mod
     outputs = layers.Dense(num_classes, activation="softmax", name="intent")(x)
 
     return keras.Model(inputs, outputs, name="vcm_crnn")
+
+
+def build_cnn_baseline(input_shape: tuple[int, int, int], num_classes: int, hidden: int = 373) -> keras.Model:
+    """Same conv front-end as build_crnn, but with the BiGRU replaced by
+    global-average-pooling + a single dense layer -- no sequence modeling.
+    `hidden` is picked so total params (~44.3K) match build_crnn, as a
+    same-size baseline for the submission's required size-matched comparison."""
+    inputs = keras.Input(shape=input_shape, name="logmel")
+
+    x = layers.Conv2D(16, 3, padding="same", activation="relu")(inputs)
+    x = layers.BatchNormalization()(x)
+    x = layers.MaxPooling2D(pool_size=(2, 2))(x)
+    x = layers.Dropout(0.2)(x)
+
+    x = layers.Conv2D(32, 3, padding="same", activation="relu")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.MaxPooling2D(pool_size=(2, 2))(x)
+    x = layers.Dropout(0.2)(x)
+
+    x = layers.Conv2D(32, 3, padding="same", activation="relu")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.MaxPooling2D(pool_size=(2, 1))(x)
+    x = layers.Dropout(0.3)(x)
+
+    x = layers.GlobalAveragePooling2D()(x)
+    x = layers.Dense(hidden, activation="relu")(x)
+    x = layers.Dropout(0.3)(x)
+    outputs = layers.Dense(num_classes, activation="softmax", name="intent")(x)
+
+    return keras.Model(inputs, outputs, name="vcm_cnn_baseline")

@@ -42,6 +42,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--drop-labels", action="append", default=[],
                    help="command label to exclude from training (repeatable), e.g. "
                         "stale schema slots left in manifest.csv from before a schema change")
+    p.add_argument("--arch", default="crnn", choices=["crnn", "cnn_baseline"],
+                   help="crnn: the deployed model. cnn_baseline: same conv front-end, no "
+                        "BiGRU, sized to ~match crnn's param count -- for the submission's "
+                        "required same-size baseline comparison")
     return p.parse_args()
 
 
@@ -144,7 +148,10 @@ def main() -> None:
     weights = data.class_weights(train_rows, label_to_idx)
 
     input_shape = audio.feature_shape()
-    model = model_lib.build_crnn(input_shape, len(labels))
+    if args.arch == "cnn_baseline":
+        model = model_lib.build_cnn_baseline(input_shape, len(labels))
+    else:
+        model = model_lib.build_crnn(input_shape, len(labels))
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
         loss="sparse_categorical_crossentropy",
