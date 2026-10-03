@@ -931,3 +931,68 @@ status is unknown -- never got a direct answer on where that stands; slide 1's c
 needs refreshing with tonight's final numbers; a focused retest of "call" in isolation; sourcing
 the two playlists' worth of real music; building the light-simulator app; and a full rehearsal
 once the above settles. Demo is today.
+
+## 2026-10-03 (later) -- retrain attempt, rejected after validation; submission closed out
+
+Closed the submission checklist for real this session: public repo (`github.com/lsjao/
+ai231-me2-vcm`, MIT), README rewritten with repro steps/dataset citations, final checkpoint +
+150-epoch training log committed, and a same-size (44,255 vs 44,271 params) CNN+GAP baseline
+with no recurrence trained and evaluated for comparison -- 45.46%/43.56% (test/holdout) vs the
+deployed model's 82.85%/78.22%, putting the BiGRU's contribution at roughly 35-37 accuracy
+points over a same-budget non-recurrent architecture.
+
+Live re-testing on the Pi (after merging the light + phone simulator built in a separate
+session, see below) surfaced two more real, root-caused issues, same "good eval, bad live mic"
+family as the original wake-word problem:
+- `media_control/volume_down`: confirmed via confusion-matrix inspection that this is NOT a
+  model bias (validation shows volume_down predicted correctly 76% of the time, barely confused
+  with volume_up) -- it's specifically a live-mic issue. Phrasing guidance given for the demo
+  ("volume down" > "quieter" > avoid "turn it down", which always misfires as volume_up).
+- `call/none` confused with `wake/kuya_jukebox`: confirmed via a purpose-built diagnostic
+  (`vcm.debug_topk`, new tool -- records N chunks with an audible "go" TTS cue for real sync
+  instead of guessing chat-message timing, prints full top-5 softmax instead of just the
+  winner) that saying "Kuya Jukebox, call" repeatedly produces back-to-back wake detections
+  with no command in between -- not a near-miss, the model's own top-1 for "call" lands on
+  "wake" itself. In isolation (no adjacent wake phrase) call/none scores 0.972, so this is
+  specifically a wake/call acoustic overlap, not a weak class generally.
+
+**Attempted a real fix, rejected it after validation.** Recorded 30 fresh `volume_down` +
+30 fresh `call` clips on the Pi's own mic (`data_real_pi_fixups/`, same protocol as the
+wake-word fix), retrained from scratch with the same recipe plus this data
+(`models_retrain_v2/`, current model backed up to `models_archive/run12_prevolcall_stable/`
+first, Pi kept running the stable deployed model throughout so the demo was never at risk).
+Result was a genuine trade-off, not a clean win:
+- `volume_down`: 0.69/0.76 -> 0.79/0.83 precision/recall -- improved
+- `wake/kuya_jukebox`: 0.90/1.00 -> 1.00/1.00 -- improved (now zero false wakes)
+- `volume_up`: 0.72/0.61 -> 0.78/0.46 -- recall cratered
+- `call/none`: 0.73/0.92 -> 0.52/0.89 -- precision dropped hard (more false call triggers)
+- Official test accuracy: 82.85% -> 81.30% (down); holdout flat at 78.22%; call's official
+  test accuracy also went 0.87 -> 0.82, the opposite of the intended fix
+
+Fixing the targeted weak spots pulled error mass onto adjacent classes (volume_up, call
+precision) and net-regressed the overall number. Per the protocol set before starting (back up
+the stable model, never overwrite unless the new one validates as strictly better), this was
+rejected -- `models/` and the Pi's deployed copy were never touched, `models_retrain_v2/` kept
+locally (gitignored) as a record of the attempt but not promoted. `volume_down` and
+`call`/`wake` confusion remain known, documented, accepted limitations for the demo.
+
+Also this session: merged a light + phone browser simulator built in a separate Claude
+session (`web_simulator/`, offline, no CDN) -- visualizes lights, call/message, and
+time/weather/alarm/timer/thermostat/reminders by polling a `state.json` the pipeline writes.
+Reviewed both merges carefully before accepting (checked for the no-cloud/offline constraints,
+confirmed a blind-overwrite bug in an early version was properly fixed with a shared
+read-merge-write state writer). Deployed and live-tested on the Pi successfully. Also fixed two
+smaller live-tested issues: ghost playlists (`playlist_general`/`jazz`/`workout`, no real music
+files) no longer fall through to a placeholder sine-tone beep if the classifier mis-picks one --
+only `playlist_chill`/`playlist_focus` are live, others cleanly declined; and the `good_morning`
+easter-egg placeholder tone now self-stops after 2.5s instead of droning until someone says
+"stop". `--min-confidence` raised 0.15 -> 0.35 (the old value was tuned Oct 1 against a since-
+replaced 7-intent model).
+
+### Still open
+Evaluator recruitment and breadboard/GPIO wiring -- explicitly dropped by the user tonight, not
+pursuing. Remaining: full rehearsal (unblocked, nothing left blocking it), the class's shared
+`vcm-benchmarks` tool (still never run, optional), and two cosmetic Slide 2 gaps (dataset DOI
+vs. link -- a DOI was provided this session, `10.57967/hf/10723`, pending confirmation of which
+dataset it belongs to before adding it; and a standalone Pi-latency script vs. the embedded
+`pi_check.py`).

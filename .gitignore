@@ -19,6 +19,9 @@ music/
 models_baseline/
 models_baseline_smoketest/
 train_baseline.log
+models_retrain_v2/
+data_real_pi_fixups/
+train_retrain_v2.log
 
 web_simulator/state.json
 web_simulator/state.json.tmp
