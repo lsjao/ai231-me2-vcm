@@ -989,10 +989,24 @@ easter-egg placeholder tone now self-stops after 2.5s instead of droning until s
 "stop". `--min-confidence` raised 0.15 -> 0.35 (the old value was tuned Oct 1 against a since-
 replaced 7-intent model).
 
+### Dry run (first full rehearsal) finds a third live-mic gap
+Ran the first end-to-end rehearsal against the stable deployed model, lights + phone simulator
+visible throughout. Lights, music, time, weather, alarm, timer, temperature, and
+`create_reminder` (both "drink water" and "study") all worked correctly. Two already-known
+issues reproduced as expected (`volume_down`/"quieter" inconsistency, `call` confused with
+`wake/kuya_jukebox`). One new finding: **`list_reminders/none` ("what are my reminders") failed
+5/5 times** in the same run -- exact trained phrase, every attempt landed as a clean `reject`
+(one near-miss raw-guessed as `media_control/stop`), never once recognized. Not yet root-caused
+in isolation and no retrain attempted for it -- logged as a third known, accepted live-mic
+limitation alongside the other two, same "exact-phrase match rules out a wording problem"
+pattern. `create_reminder` working correctly in the same run narrows this to the list/query
+slot specifically, not reminders as a whole.
+
 ### Still open
 Evaluator recruitment and breadboard/GPIO wiring -- explicitly dropped by the user tonight, not
-pursuing. Remaining: full rehearsal (unblocked, nothing left blocking it), the class's shared
-`vcm-benchmarks` tool (still never run, optional), and two cosmetic Slide 2 gaps (dataset DOI
-vs. link -- a DOI was provided this session, `10.57967/hf/10723`, pending confirmation of which
-dataset it belongs to before adding it; and a standalone Pi-latency script vs. the embedded
-`pi_check.py`).
+pursuing. Remaining: the class's shared `vcm-benchmarks` tool (still never run, optional), and
+two cosmetic Slide 2 gaps (dataset DOI vs. link -- a DOI was provided this session,
+`10.57967/hf/10723`, pending confirmation of which dataset it belongs to before adding it; and a
+standalone Pi-latency script vs. the embedded `pi_check.py`). Demo now carries three known,
+documented, accepted live-mic limitations: `volume_down`/"quieter", `call` (confused with wake),
+and `list_reminders`.

@@ -311,11 +311,31 @@ fallback, class-approved. Live-tested on the Pi and fixed what came up:
   isolated capture (no adjacent wake phrase) `call/none` scored 0.972 --
   very recognizable on its own -- so this is specifically a wake/call
   acoustic overlap in the live-mic domain, same root-cause class as
-  `volume_down` (needs real data + retrain to actually fix, ruled out
-  tonight). **Demo risk**: don't rely on "call" working first try; if it
-  keeps re-triggering wake instead of firing, that's this known issue, not
-  a user error. `message` is unaffected -- confirmed working multiple times
-  tonight (`"message"` / `"send a message"`, 0.80-0.88 confidence).
+  `volume_down`. **A real fix was attempted and rejected**: recorded 30
+  fresh `volume_down` + 30 fresh `call` clips on the Pi's own mic, retrained
+  from scratch (`models_retrain_v2/`, current model backed up first and
+  never touched). Result: `volume_down` and wake/call separation both
+  genuinely improved, but `volume_up` recall cratered (0.61->0.46) and
+  `call` precision dropped hard (0.73->0.52, more false call triggers) --
+  official test accuracy net-regressed 82.85%->81.30%. Rejected per the
+  protocol set before starting (never promote unless strictly better); both
+  issues remain open. **Demo risk**: don't rely on "call" working first
+  try; if it keeps re-triggering wake instead of firing, that's this known
+  issue, not a user error. `message` is unaffected -- confirmed working
+  multiple times tonight (`"message"` / `"send a message"`, 0.80-0.88
+  confidence).
+- **`list_reminders/none` ("what are my reminders") failed live, 5/5
+  attempts** in one rehearsal run -- exact trained phrase (`phrase_list.csv`
+  has `"what are my reminders"` verbatim), all five landed as a clean
+  `reject` (one near-miss raw-guessed as `media_control/stop`), never once
+  as `list_reminders`. Found during the Oct 3 dry run, not yet
+  root-caused in isolation (no `debug_topk` check run on this one) and no
+  retrain attempted -- same likely root-cause family as the other two
+  (live-mic domain mismatch) given the exact-phrase match rules out a
+  phrasing error. `create_reminder` (both "drink water" and "study") worked
+  correctly in the same run, so this is specific to the list/query slot,
+  not reminders generally. **Demo risk**: don't rely on "what are my
+  reminders" working -- no known-good alternate phrasing to suggest yet.
 
 ### Honest progress assessment (Oct 1 night)
 ~55-60% complete, not higher. A working model isn't a finished assignment: evaluator testing
