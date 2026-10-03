@@ -67,9 +67,15 @@ Each is used under its own license/access terms as published by the
 respective source; none of it is redistributed in this repo.
 
 ## Model weights
-Not yet released publicly. `models/vcm_crnn.tflite` (and `.keras`) are
-produced locally by `vcm.train` and are gitignored in this repo pending a
-release decision (location + license for the weights themselves).
+The final deployed checkpoint is committed in this repo: `models/vcm_crnn.tflite`
+(dynamic-range-quantized, ~597 KB, what runs on the Pi) and `models/vcm_crnn.keras`
+(full Keras model), alongside `models/labels.json`, `models/training_config.json`,
+`models/eval_report.txt`, and the full 150-epoch training log
+(`models/train_log_run12.txt`). Later retraining runs are not committed by
+default (`.gitignore` excludes `models/*.keras`/`models/*.tflite`/`*.log`
+generally, to keep throwaway checkpoints out of history) -- this one was
+force-added as the specific run presented in the demo. Licensed under this
+repo's MIT license, same as the code.
 
 ## License
 This repository's code is MIT-licensed (see `LICENSE`). That covers the code
