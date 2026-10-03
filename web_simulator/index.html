@@ -3,52 +3,110 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kuya Jukebox Light Simulator</title>
+<title>Kuya Jukebox Simulator</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
-  <img src="assets/kuya_jukebox_icon.webp" alt="Kuya Jukebox" class="logo">
-  <h1>Kuya Jukebox</h1>
+  <div class="brand">
+    <img src="assets/kuya_jukebox_icon.webp" alt="Kuya Jukebox" class="logo">
+    <div>
+      <h1>Kuya Jukebox</h1>
+      <p class="sub">Voice command simulator</p>
+    </div>
+  </div>
+  <div class="link" id="link" title="Connection to the Pi"><i></i><span>Connecting</span></div>
 </header>
 
 <main>
-  <div class="stage" id="stage">
-    <div class="glow" id="glow"></div>
-    <svg class="bulb" viewBox="0 0 200 300" aria-label="Light bulb">
-      <defs>
-        <radialGradient id="glass" cx="38%" cy="30%" r="75%">
-          <stop offset="0%" stop-color="#fff" stop-opacity=".95"/>
-          <stop offset="55%" stop-color="#fff" stop-opacity=".55"/>
-          <stop offset="100%" stop-color="#9aa" stop-opacity=".45"/>
-        </radialGradient>
-        <linearGradient id="metal" x1="0" x2="1">
-          <stop offset="0" stop-color="#6b7b82"/>
-          <stop offset=".5" stop-color="#c9d3d8"/>
-          <stop offset="1" stop-color="#5a6a71"/>
-        </linearGradient>
-      </defs>
-      <!-- glass body, colored by JS -->
-      <path id="bulbFill" d="M100 12C55 12 25 46 25 90c0 30 14 50 30 68 8 9 12 18 12 30v14h66v-14c0-12 4-21 12-30 16-18 30-38 30-68 0-44-30-78-75-78z"/>
-      <path d="M100 12C55 12 25 46 25 90c0 30 14 50 30 68 8 9 12 18 12 30v14h66v-14c0-12 4-21 12-30 16-18 30-38 30-68 0-44-30-78-75-78z" fill="url(#glass)"/>
-      <path d="M60 60c8-20 22-30 38-34" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none" opacity=".8"/>
-      <!-- filament -->
-      <path id="filament" d="M82 190v-40l18 20 18-20v40" fill="none" stroke="#8a6a3a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-      <!-- base -->
-      <rect x="64" y="202" width="72" height="14" rx="5" fill="url(#metal)"/>
-      <rect x="66" y="220" width="68" height="14" rx="5" fill="url(#metal)"/>
-      <rect x="68" y="238" width="64" height="14" rx="5" fill="url(#metal)"/>
-      <path d="M78 256h44l-8 22h-28z" fill="#3a464b"/>
-    </svg>
-  </div>
+  <!-- LIGHTS -->
+  <section class="card" id="lightCard">
+    <div class="card-head">
+      <h2>Lights</h2>
+      <span class="pill" id="power">OFF</span>
+    </div>
+    <div class="stage">
+      <div class="glow" id="glow"></div>
+      <svg class="bulb" viewBox="0 0 200 300" aria-label="Light bulb">
+        <defs>
+          <radialGradient id="glass" cx="38%" cy="30%" r="75%">
+            <stop offset="0%" stop-color="#fff" stop-opacity=".95"/>
+            <stop offset="55%" stop-color="#fff" stop-opacity=".55"/>
+            <stop offset="100%" stop-color="#9aa" stop-opacity=".45"/>
+          </radialGradient>
+          <linearGradient id="metal" x1="0" x2="1">
+            <stop offset="0" stop-color="#6b7b82"/>
+            <stop offset=".5" stop-color="#c9d3d8"/>
+            <stop offset="1" stop-color="#5a6a71"/>
+          </linearGradient>
+        </defs>
+        <path id="bulbFill" d="M100 12C55 12 25 46 25 90c0 30 14 50 30 68 8 9 12 18 12 30v14h66v-14c0-12 4-21 12-30 16-18 30-38 30-68 0-44-30-78-75-78z"/>
+        <path d="M100 12C55 12 25 46 25 90c0 30 14 50 30 68 8 9 12 18 12 30v14h66v-14c0-12 4-21 12-30 16-18 30-38 30-68 0-44-30-78-75-78z" fill="url(#glass)"/>
+        <path d="M60 60c8-20 22-30 38-34" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none" opacity=".8"/>
+        <path id="filament" d="M82 190v-40l18 20 18-20v40" fill="none" stroke="#8a6a3a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="64" y="202" width="72" height="14" rx="5" fill="url(#metal)"/>
+        <rect x="66" y="220" width="68" height="14" rx="5" fill="url(#metal)"/>
+        <rect x="68" y="238" width="64" height="14" rx="5" fill="url(#metal)"/>
+        <path d="M78 256h44l-8 22h-28z" fill="#3a464b"/>
+      </svg>
+    </div>
+    <dl class="facts">
+      <div><dt>Brightness</dt>
+        <dd><span id="bri">--</span><span class="bar"><b id="briBar"></b></span></dd></div>
+      <div><dt>Color</dt><dd><span class="dot" id="colDot"></span><span id="col">--</span></dd></div>
+    </dl>
+  </section>
 
-  <div class="status">
-    <div class="pill" id="power">OFF</div>
-    <div class="row"><span>Brightness</span><strong id="bri">--</strong></div>
-    <div class="row"><span>Color</span><strong id="col">--</strong></div>
-  </div>
+  <!-- PHONE -->
+  <section class="card" id="phoneCard" data-state="idle">
+    <div class="card-head">
+      <h2>Phone</h2>
+      <span class="pill" id="phonePill">IDLE</span>
+    </div>
+    <div class="stage">
+      <div class="rings"><i></i><i></i><i></i></div>
+      <svg class="phone" viewBox="0 0 160 300" aria-label="Phone">
+        <rect x="8" y="6" width="144" height="288" rx="26" fill="#0c1b1f" stroke="#3b5a62" stroke-width="4"/>
+        <rect x="18" y="24" width="124" height="252" rx="16" class="screen"/>
+        <rect x="58" y="12" width="44" height="7" rx="3.5" fill="#223a40"/>
+
+        <!-- idle -->
+        <g class="v-idle">
+          <text x="80" y="140" text-anchor="middle" class="clock" id="clock">--:--</text>
+          <text x="80" y="165" text-anchor="middle" class="hint">Ready</text>
+        </g>
+
+        <!-- calling -->
+        <g class="v-calling">
+          <circle cx="80" cy="115" r="30" fill="#2f9e6e"/>
+          <path d="M70 102c-2 0-5 3-5 6 0 14 14 28 28 28 3 0 6-3 6-5l-1-6-7-2-4 3c-5-2-9-6-11-11l3-4-2-7z" fill="#fff" transform="translate(-2 4)"/>
+          <text x="80" y="178" text-anchor="middle" class="big">Calling...</text>
+          <text x="80" y="200" text-anchor="middle" class="hint">Emergency contact</text>
+          <circle cx="80" cy="242" r="16" fill="#d9483b"/>
+          <path d="M72 242h16" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+        </g>
+
+        <!-- message -->
+        <g class="v-message">
+          <text x="34" y="62" class="hint left">Messages</text>
+          <g class="bubble">
+            <path d="M32 90h96a12 12 0 0 1 12 12v38a12 12 0 0 1-12 12H72l-16 16v-16H32a12 12 0 0 1-12-12v-38a12 12 0 0 1 12-12z" fill="#e8613c"/>
+            <text x="80" y="127" text-anchor="middle" class="bubble-t">Message sent</text>
+          </g>
+          <g class="tick">
+            <circle cx="80" cy="222" r="18" fill="#2f9e6e"/>
+            <path d="M71 222l7 7 12-14" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <dl class="facts">
+      <div><dt>Last event</dt><dd id="lastEvent">None yet</dd></div>
+    </dl>
+  </section>
 </main>
 
+<footer>Offline simulator &middot; updates live from the Pi</footer>
 <script src="app.js"></script>
 </body>
 </html>

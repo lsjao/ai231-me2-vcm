@@ -169,28 +169,59 @@ class GPIOLightController:
         self._blue.value = b * scale
 
 
-class WebLightController:
-    """Writes the light state to web_simulator/state.json on every call so the
-    local simulator page can mirror it. Optionally forwards to another
-    controller (e.g. real GPIO LEDs) so both stay in sync."""
+class WebState:
+    """Shared writer for web_simulator/state.json. Every section (lights,
+    phone) is merged into the existing file under one lock, so updating one
+    never erases the other. Writes are atomic (tmp + rename)."""
 
-    def __init__(self, path: str, inner: LightController | None = None) -> None:
+    def __init__(self, path: str) -> None:
         self.path = path
-        self.inner = inner
+        self._lock = threading.Lock()
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-        self._write(False, 100, None)  # start from a known "off" state
+        self.update({"lights_on": False, "brightness": 100, "color": None, "phone": None})
 
-    def _write(self, on: bool, brightness: int, color: str | None) -> None:
-        tmp = self.path + ".tmp"
-        with open(tmp, "w") as f:
-            json.dump({"lights_on": on, "brightness": brightness, "color": color,
-                       "updated_at": datetime.now().isoformat(timespec="seconds")}, f)
-        os.replace(tmp, self.path)  # atomic: the page never reads a half-written file
+    def update(self, fields: dict) -> None:
+        with self._lock:
+            try:
+                with open(self.path) as f:
+                    data = json.load(f)
+            except (OSError, ValueError):
+                data = {}
+            data.update(fields)
+            data["updated_at"] = datetime.now().isoformat(timespec="seconds")
+            tmp = self.path + ".tmp"
+            with open(tmp, "w") as f:
+                json.dump(data, f)
+            os.replace(tmp, self.path)  # the page never reads a half-written file
+
+
+class WebLightController:
+    """Mirrors light state to the simulator page. Optionally forwards to
+    another controller (e.g. real GPIO LEDs) so both stay in sync."""
+
+    def __init__(self, web: WebState, inner: LightController | None = None) -> None:
+        self.web = web
+        self.inner = inner
 
     def set_state(self, on: bool, brightness: int, color: str | None) -> None:
-        self._write(on, brightness, color)
+        self.web.update({"lights_on": on, "brightness": brightness, "color": color})
         if self.inner is not None:
             self.inner.set_state(on, brightness, color)
+
+
+class PhoneController:
+    """Records the latest call/message event for the simulator page. Idle is
+    computed client-side (the page shows each event briefly), so only the
+    event and a sequence number are written."""
+
+    def __init__(self, web: WebState) -> None:
+        self.web = web
+        self._seq = 0
+
+    def notify(self, status: str) -> None:  # "calling" | "message"
+        self._seq += 1
+        self.web.update({"phone": {"status": status, "seq": self._seq,
+                                   "updated_at": datetime.now().isoformat(timespec="seconds")}})
 
 
 def default_light_controller() -> LightController:
@@ -241,12 +272,14 @@ class Dispatcher:
         state_machine: PlayMusicStateMachine | None = None,
         speaker: Speaker | None = None,
         lights: LightController | None = None,
+        phone: PhoneController | None = None,
         now: Callable[[], datetime] = datetime.now,
         seconds_per_minute: float = 60.0,
     ):
         self.state_machine = state_machine or PlayMusicStateMachine()
         self.speaker = speaker or default_speaker()
         self.lights = lights or default_light_controller()
+        self.phone = phone
         self.devices = Devices()
         self._now = now
         self.timers = TimerManager(self._timer_expired, seconds_per_minute)
@@ -400,10 +433,14 @@ class Dispatcher:
 
     def _call(self, _slot: str) -> dict:
         text = "Calling your emergency contact"
+        if self.phone:
+            self.phone.notify("calling")
         return {"ok": True, "kind": "call", "message": text, "speak": text}
 
     def _message(self, _slot: str) -> dict:
         text = "Message sent"
+        if self.phone:
+            self.phone.notify("message")
         return {"ok": True, "kind": "message", "message": text, "speak": text}
 
     def _finish(self, result: dict) -> dict:

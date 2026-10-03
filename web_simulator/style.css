@@ -1,19 +1,78 @@
-:root{--bg:#10272c;--fg:#fbe9c6;--accent:#e8613c;--card:#17363c}
+:root{
+  --bg:#0d2227;--bg2:#143238;--fg:#fbe9c6;--muted:#9db3b5;
+  --accent:#e8613c;--gold:#f0b429;--green:#2f9e6e;--card:#173a41;--line:#2a525a;
+}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center}
-header{display:flex;align-items:center;gap:12px;padding:16px}
-.logo{width:56px;height:56px;object-fit:contain;border-radius:12px;background:#fff}
-h1{font-size:1.4rem;margin:0}
-main{display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:16px}
-.stage{position:relative;width:260px;height:380px;display:grid;place-items:center}
-.glow{position:absolute;width:420px;height:420px;border-radius:50%;top:-20px;left:50%;transform:translateX(-50%);
-  background:radial-gradient(circle,var(--c,#fff) 0%,transparent 65%);opacity:0;transition:opacity .25s,background .25s;pointer-events:none}
-.bulb{position:relative;width:200px;height:300px;filter:drop-shadow(0 8px 10px rgba(0,0,0,.4))}
-#bulbFill{fill:#2c3d42;transition:fill .25s}
-#filament{transition:stroke .25s}
-.on #filament{stroke:#fff}
-.status{background:var(--card);border-radius:16px;padding:20px 24px;min-width:240px;display:flex;flex-direction:column;gap:12px}
-.pill{align-self:flex-start;padding:4px 16px;border-radius:999px;background:#2c3d42;font-weight:700;letter-spacing:.1em}
-.on .pill{background:var(--accent);color:#fff}
-.row{display:flex;justify-content:space-between;gap:24px}
-.row span{opacity:.7}
+body{margin:0;min-height:100vh;color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:radial-gradient(1200px 600px at 50% -10%,var(--bg2),var(--bg));display:flex;flex-direction:column}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 28px;max-width:1000px;width:100%;margin:0 auto}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{width:56px;height:56px;object-fit:contain;border-radius:14px;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+h1{font-size:1.45rem;margin:0;letter-spacing:.01em}
+.sub{margin:2px 0 0;color:var(--muted);font-size:.85rem}
+.link{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted);padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.25)}
+.link i{width:9px;height:9px;border-radius:50%;background:#777}
+.link.ok i{background:var(--green);box-shadow:0 0 8px var(--green)}
+.link.bad i{background:var(--accent)}
+
+main{flex:1;align-items:start;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;max-width:1000px;width:100%;margin:0 auto;padding:8px 28px 24px}
+.card{background:linear-gradient(180deg,var(--card),#122f35);border:1px solid var(--line);border-radius:22px;padding:20px 22px;
+  box-shadow:0 18px 40px rgba(0,0,0,.35);display:flex;flex-direction:column}
+.card-head{display:flex;justify-content:space-between;align-items:center}
+h2{margin:0;font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.pill{padding:4px 14px;border-radius:999px;background:#264249;font-weight:700;font-size:.78rem;letter-spacing:.12em;transition:background .25s}
+.stage{position:relative;height:340px;display:grid;place-items:center;overflow:visible}
+
+/* facts */
+.facts{margin:6px 0 0;display:grid;gap:10px}
+.facts div{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 14px;border-radius:12px;background:rgba(0,0,0,.22)}
+dt{color:var(--muted);font-size:.9rem}
+dd{margin:0;font-weight:700;display:flex;align-items:center;gap:10px}
+#col{text-transform:capitalize}
+.bar{width:80px;height:8px;border-radius:4px;background:#264249;overflow:hidden}
+.bar b{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+.dot{width:14px;height:14px;border-radius:50%;background:#264249;border:2px solid rgba(255,255,255,.3);transition:background .25s}
+
+/* lights */
+.glow{position:absolute;width:380px;height:380px;border-radius:50%;top:-10px;left:50%;transform:translateX(-50%);
+  background:radial-gradient(circle,var(--c,#fff) 0%,transparent 65%);opacity:0;transition:opacity .3s,background .3s;pointer-events:none}
+.bulb{position:relative;width:180px;height:270px;filter:drop-shadow(0 10px 12px rgba(0,0,0,.45))}
+#bulbFill{fill:#2c3d42;transition:fill .3s}
+#filament{transition:stroke .3s}
+#lightCard.on #filament{stroke:#fff}
+#lightCard.on .pill{background:var(--gold);color:#2b2000}
+
+/* phone */
+.phone{position:relative;width:150px;height:282px;filter:drop-shadow(0 10px 12px rgba(0,0,0,.45))}
+.screen{fill:#0a1518;transition:fill .3s}
+.phone text{font-family:system-ui,sans-serif;fill:#fff}
+.clock{font-size:30px;font-weight:300}
+.hint{font-size:11px;fill:#9db3b5!important}
+.hint.left{text-anchor:start}
+.big{font-size:17px;font-weight:700}
+.bubble-t{font-size:13px;font-weight:700}
+.v-idle,.v-calling,.v-message{opacity:0;transition:opacity .25s}
+#phoneCard[data-state=idle] .v-idle,
+#phoneCard[data-state=calling] .v-calling,
+#phoneCard[data-state=message] .v-message{opacity:1}
+#phoneCard[data-state=calling] .screen{fill:#10382c}
+#phoneCard[data-state=message] .screen{fill:#1a2f36}
+#phoneCard[data-state=calling] .pill{background:var(--green);color:#fff}
+#phoneCard[data-state=message] .pill{background:var(--accent);color:#fff}
+
+#phoneCard[data-state=calling] .phone{animation:buzz .5s ease-in-out infinite}
+@keyframes buzz{0%,100%{transform:rotate(0)}20%{transform:rotate(-4deg)}40%{transform:rotate(4deg)}60%{transform:rotate(-3deg)}80%{transform:rotate(3deg)}}
+.rings{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.rings i{position:absolute;width:150px;height:150px;border-radius:50%;border:3px solid var(--green);opacity:0}
+#phoneCard[data-state=calling] .rings i{animation:ring 1.6s ease-out infinite}
+.rings i:nth-child(2){animation-delay:.5s!important}
+.rings i:nth-child(3){animation-delay:1s!important}
+@keyframes ring{0%{transform:scale(.7);opacity:.8}100%{transform:scale(2.1);opacity:0}}
+#phoneCard[data-state=message] .bubble{animation:pop .45s cubic-bezier(.2,1.4,.4,1) both}
+#phoneCard[data-state=message] .tick{animation:pop .45s .3s cubic-bezier(.2,1.4,.4,1) both}
+.bubble,.tick{transform-box:fill-box;transform-origin:center}
+@keyframes pop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+
+footer{text-align:center;color:var(--muted);font-size:.78rem;padding:12px 0 20px}
+@media (max-width:520px){header{padding:16px}main{padding:8px 16px 20px}.stage{height:300px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}

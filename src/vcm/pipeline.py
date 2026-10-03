@@ -312,12 +312,12 @@ def parse_args() -> argparse.Namespace:
 
 
 def start_web_simulator(port: int):
-    """Serve web_simulator/ on the LAN and return a controller that feeds it."""
+    """Serve web_simulator/ on the LAN; return (light controller, phone controller)."""
     import functools
     import http.server
     import threading
 
-    from .dispatch import WebLightController, default_light_controller
+    from .dispatch import PhoneController, WebLightController, WebState, default_light_controller
 
     web_dir = root_path("web_simulator")
 
@@ -329,7 +329,8 @@ def start_web_simulator(port: int):
     server = http.server.ThreadingHTTPServer(("0.0.0.0", port), handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     print(f"[lights] simulator at http://<pi-ip>:{port}/")
-    return WebLightController(os.path.join(web_dir, "state.json"), inner=default_light_controller())
+    web = WebState(os.path.join(web_dir, "state.json"))
+    return WebLightController(web, inner=default_light_controller()), PhoneController(web)
 
 
 def main() -> None:
@@ -350,10 +351,10 @@ def main() -> None:
     active_playlists = {k: v for k, v in all_playlists.items() if k in ACTIVE_PLAYLISTS}
     sm = PlayMusicStateMachine(playlists=active_playlists)
     speaker = PrintSpeaker() if args.speaker == "print" else default_speaker()
-    lights = None
+    lights = phone = None
     if args.lights == "web":
-        lights = start_web_simulator(args.web_port)
-    dispatcher = Dispatcher(sm, speaker, lights=lights)
+        lights, phone = start_web_simulator(args.web_port)
+    dispatcher = Dispatcher(sm, speaker, lights=lights, phone=phone)
     player = None if args.no_audio else Player(library)
     ambient = None if args.no_ambient else AmbientAutoVolume(sm.volume)
     config = PipelineConfig(
