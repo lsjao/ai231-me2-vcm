@@ -50,13 +50,19 @@ SSH access set up and working: key-based login (`ssh rpi`, alias in `~/.ssh/conf
 - Speaker + espeak-ng TTS confirmed audible.
 - Mic capture confirmed working, USB mic detected correctly.
 - **First real live `vcm.pipeline --source mic` test, Oct 1** -- see `daily_log_report.md` for
-  full findings. Working: `--min-confidence 0.15`, most intents recognized reasonably. Real
-  open risk: wake-word live reliability only ~18% in testing (worse than the 69-75% offline
-  eval suggested) -- the single biggest risk to the demo right now.
+  full findings. Working: `--min-confidence 0.15`, most intents recognized reasonably. Wake-word
+  live reliability was the single biggest risk after this (~18%, later confirmed as bad as 0/15
+  on a later model) -- **resolved 2026-10-03** by recording fresh wake data on the demo Pi
+  itself; see the "Pi bring-up" ALSA-fix entry below and `daily_log_report.md` for the full
+  investigation.
 
-**Two real hardware problems found and fixed, not hypothetical:**
+**Three real hardware problems found and fixed, not hypothetical:**
 1. **PipeWire, not raw ALSA, owns audio routing on this OS image.** `~/.asoundrc` is silently ignored. The USB mic's card was the default *sink* (wrong -- it has no real speaker), which is why the 3.5mm-jack speaker (confirmed working via `speaker-test`) produced no sound through code that used the "default" device. Fixed with `wpctl set-default <sink-id>` pointed at the 3.5mm jack (`Built-in Audio Stereo`). **This is a runtime setting, not a config file — if it doesn't survive a reboot, re-run `wpctl status` to find the sink id and `wpctl set-default <id>`.**
 2. **The USB mic only supports 48000 Hz capture, not the model's 16000 Hz** (confirmed via `sd.check_input_settings` probing every common rate -- only 48000 succeeded). Fixed properly in code, not worked around: `src/vcm/capture.py` + `audio.resample_integer_ratio()` (dependency-free windowed-sinc decimator, since the Pi deliberately has no scipy/librosa) -- picks the model's rate directly when a mic supports it (e.g. the laptop's mic, unaffected), otherwise captures at the mic's native rate and downsamples. Wired into every capture site (`pi_check`, `record_dataset`, `benchmark_harness` live mode, `pipeline`'s streaming mic loop). Caught and fixed a real bug in the decimator itself during testing (wrong center-tap value distorted the filter) -- verified against `librosa.resample` and an above-Nyquist attenuation test before trusting it. **Moral: this class of "device doesn't support the rate we assumed" bug is real and would have silently broken the live demo on the actual hardware if `pi_check` hadn't been run before demo day.**
+3. **(2026-10-03) TTS went silent again after a reboot/reflash -- the #1 fix above didn't persist, and a second, separate issue was hiding behind it.** Confirmed live: `speaker-test`/`aplay` direct to the named ALSA device played fine (speaker powered, AUX-mode, volume physically maxed), but raw `espeak-ng` produced nothing, even after re-forcing the system default with `sudo raspi-config nonint do_audio 1` (equivalent goal to the `wpctl` fix above, different mechanism -- this one *should* survive reboots better, via `amixer cset`, not a PipeWire runtime setting). Two root causes, both real:
+   - **PCM volume was at 70% (~-27dB)**, too quiet for this hardware's weak analog output stage. Fixed: `amixer -c 2 sset PCM 100% unmute`, persisted with `sudo alsactl store 2` (**if this doesn't survive a reboot either, re-run both the `amixer` and `alsactl store` commands, same caveat as the `wpctl` fix above**).
+   - **`espeak-ng`'s own default audio backend ignores the system ALSA/PipeWire default entirely** -- it exits 0 and produces genuinely nothing audible regardless of what `wpctl`/`raspi-config` point the system default at. The real fix is in code, not system config: `EspeakSpeaker` in `src/vcm/dispatch.py` no longer lets espeak-ng pick its own output -- it pipes explicitly (`espeak-ng --stdout | aplay -D plughw:Headphones,0`) through the named device. Named by driver name (`Headphones`), not a card *number*, since numbers can shift depending on what's plugged in at boot. `aplay` failures are now surfaced (printed), not swallowed -- that exact silence (no error, no sound) cost real debugging time this session.
+   - **If this bites again on a fresh reflash**: run `aplay -l` to confirm the headphone jack's card name is still `Headphones`; if it's different, update `alsa_device` in `EspeakSpeaker.__init__` (`src/vcm/dispatch.py`) to match. Test with `espeak-ng --stdout -a 200 'test' | aplay -D plughw:<name>,0` directly over SSH before trusting the full pipeline.
 
 Not yet done: fan-on noise comparison, live pipeline test on the Pi (`python -m vcm.pipeline --source mic`), copying/using real recorded data on the Pi (training still happens on the laptop; only inference artifacts belong on the Pi).
 
@@ -228,11 +234,17 @@ resolve on its own. Revisit only if live testing shows they're still broken afte
   and in the daily log. **`--min-confidence 0.15` settled on** after empirical testing.
 - [x] Fan-on noise comparison -- fans always-on, no toggle, but clean reading taken: -50 to
   -51 dBFS, matches the "quiet" placeholder almost exactly. No action needed.
-- [x] Added a wake-word audio cue (beep -> fixed to TTS "mm-hmm" after the beep's second audio
-  stream crashed ALSA) since there's no screen on demo day.
-- [ ] **Wake-word live reliability is the single biggest open risk**: ~18% in tonight's
-  session, vs. 69-75% offline. More data (25->65 clips) helped some but didn't close the live
-  gap. Not yet resolved -- top priority for Oct 2.
+- [x] Added a wake-word audio cue (beep -> TTS, since a second concurrent audio stream crashed
+  ALSA) since there's no screen on demo day. Text changed 2026-10-03 from "mm-hmm" (too quiet/
+  mumbled to reliably notice) to a clearly-enunciated "Yes?", alongside a TTS amplitude bump
+  (100->150) -- see the ALSA fix in the "Pi bring-up" section above.
+- [x] **Wake-word live reliability, resolved 2026-10-03**: was the single biggest open risk
+  (~18% live vs. 69-75% offline on Oct 1-2, then 0/15 live on Oct 2 night's 19-intent model
+  despite similar offline numbers -- a real train/live mic mismatch, not a threshold issue).
+  Fixed by recording 30 fresh wake clips directly on the demo Pi's own mic, in the actual demo
+  room (`data_real_pi_wake/`), and retraining. Live recall after the fix: effectively 100%
+  across 40+ consecutive attempts in the same session. See `daily_log_report.md`
+  2026-10-03 (overnight) for the full investigation.
 - [ ] VAD margins / ambient constants beyond `--min-confidence` -- not deeply tuned yet, lower
   priority than wake reliability.
 - [ ] Wire up the GPIO code for real -- kit arrived Sep 30, still not physically wired.

@@ -1,35 +1,86 @@
-# VCM Dataset Scaffold
+# VCM -- On-Device Voice Command Model (AI 231 ME2)
 
-## What's in here
-- `phrase_list.csv` — 70 phrases (69 locked + the `wake/kuya_jukebox` wake phrase) across 7 intents + reject class, with slot labels
-- `dataset/` — folder structure `intent=X/slot=Y/`, pre-populated with 201 synthetic TTS WAV files (3 espeak-ng voices per phrase, ~14MB)
-- `manifest.csv` — one row per audio file: filepath, intent, slot, phrase, speaker, condition, source
+A small, from-scratch-trained voice assistant that runs entirely on a
+Raspberry Pi 4: always-on wake-word + command recognition, no cloud
+round-trip. Built for the AI 231 ME2 class assignment (Option B schema,
+19 required commands).
 
-## Counts per intent (synthetic data only, so far)
-| Intent | Files |
-|---|---|
-| media_control | 48 |
-| play_music | 30 |
-| set_timer | 30 |
-| light_dim_color | 24 |
-| light_on_off | 24 |
-| set_temperature | 18 |
-| ask_time | 12 |
-| reject | 15 |
+## Architecture
+- Features: 16 kHz mic audio -> 40-bin log-mel spectrogram x 301 frames (3 s clips)
+- Model: Conv2D x3 (16/32/32 ch, BN + maxpool + dropout) -> BiGRU (24-dim,
+  unrolled for static-shape TFLite conversion) -> Dense(32) -> 47-way softmax
+  joint `"intent/slot"` head (not causal/streaming -- classifies a fixed 3 s window)
+- 44,271 params. Exported as a dynamic-range-quantized TFLite model
+  (~597 KB) and run on-device via `ai_edge_litert`.
+- Actuation is canned/local: GPIO-driven lights, `espeak-ng` TTS piped
+  through `aplay`, and scripted responses for calls/messages/weather/reminders
+  (no network APIs, per the assignment's standalone-Pi constraint).
 
-Not balanced yet on purpose, media_control has more sub-classes so it needed more phrases. Balance this out once real recordings come in.
+## Repo layout
+- `src/vcm/` -- feature extraction (`audio.py`), model (`model.py`),
+  training (`train.py`), the live pipeline (`pipeline.py`), command dispatch
+  (`dispatch.py`), Pi deployment helpers (`pi_check.py`, `gpio_smoke_test.py`)
+- `scripts/` -- dataset import/merge scripts (class HuggingFace dataset,
+  supplemental datasets, synthetic negatives) and `eval_hf_master_test.py`
+  for scoring a trained model against the class's official test/holdout splits
+- `src/tests/` -- pytest suite (dispatch logic, state machine, timers)
+- `phrase_list.csv` -- locked phrase list used for synthetic/TTS data generation
 
-## Still missing (real recordings needed)
-- `reject/slot=silence` and `reject/slot=noise` — TTS can't produce these, need actual silence clips and ambient noise recordings
-- All real human voices — this is 100% synthetic right now, meant to unblock early training only
-- Easter egg songs — `good_morning` and `stage_fright` phrases are the *trigger commands*, you still need the actual Good Morning / No songs as local MP3 files for playback, that's separate from this dataset
+Training data and trained weights are **not** included in this repository
+(see Dataset and Model weights below) -- `data_real/`, `data_real_pi_wake/`,
+`external_data/`, `external_data_hf/`, and `models/*.keras`/`*.tflite` are
+gitignored.
 
-## How to add real recordings
-Real recordings are kept out of `dataset/` and out of git (bulky, personal voice). Use the guided tool from `src/`:
-`python -m vcm.record_dataset --speaker <name> --condition quiet --distance near --auto` -- it writes to `data_real/`
-with its own `manifest.csv`. Train with `--extra-data ../data_real`. See HANDOFF.md for the full recording plan.
+## Reproducing training
+```
+python -m vcm.train --data-root <path-with-manifest.csv> --extra-data <other-root> ...
+```
+Any data root just needs its own `manifest.csv` with columns
+`filepath,intent,slot,phrase,speaker,condition,source`; `scripts/import_*.py`
+show how each dataset source was pulled and mapped into that schema. Output
+(`models/vcm_crnn.{keras,tflite}`, `labels.json`, `training_config.json`,
+`eval_report.txt`) is written to `--output-dir` (default `models/`).
 
-## Next steps
-- Record real silence + noise clips for the reject class (5 min effort, just record an empty room and a TV-on room)
-- Start team recording sessions against `phrase_list.csv`
-- Once ~20-30% real data is in, start swapping TTS-heavy batches out during training
+Evaluate against the class's official splits:
+```
+python scripts/eval_hf_master_test.py --split test      # 4,443 clips -> 82.85% command accuracy
+python scripts/eval_hf_master_test.py --split holdout    # 202 clips  -> 78.22% command accuracy
+```
+
+Run the test suite:
+```
+pytest src/tests/
+```
+
+## Dataset
+Training data (~8,169 clips / ~6.8 h, 774 speaker/voice tags) is pooled from:
+- Class master set (Option B schema): [`airimonda/ai231-me2-voice-commands`](https://huggingface.co/datasets/airimonda/ai231-me2-voice-commands) on HuggingFace
+- Filipino-accent supplement: [`martinnavs/ai231-fil-supplemental-data`](https://huggingface.co/datasets/martinnavs/ai231-fil-supplemental-data)
+- Synthetic hard-negative clips (noise/babble/reversed/truncated/near-silence) from the same HF org, mapped to the `reject` class
+- Public speech datasets folded into the class master set (SNIPS, SLURP,
+  TimersAndSuch, FluentSpeechCommands, SpeechCommands v2, Common Voice)
+- Locally recorded additions: wake-word clips recorded on the deployment
+  Pi's own USB mic (`data_real_pi_wake/`), and earlier own-voice/TTS
+  recordings (`data_real/`) -- not yet published; see "Still open" below
+
+Each is used under its own license/access terms as published by the
+respective source; none of it is redistributed in this repo.
+
+## Model weights
+Not yet released publicly. `models/vcm_crnn.tflite` (and `.keras`) are
+produced locally by `vcm.train` and are gitignored in this repo pending a
+release decision (location + license for the weights themselves).
+
+## Training compute
+Trained locally (not on the class A100/DGX cluster) due to timeline
+constraints: 150 epochs, batch size 16, Adam (lr 1e-3, ReduceLROnPlateau to
+2.5e-4), class-weighted sparse categorical cross-entropy, ~409 steps/epoch
+(61,350 steps total). The pipeline accepts data roots via CLI args, so it can
+be pointed at a cluster-hosted dataset path the same way, it just wasn't run
+there for this submission.
+
+## Status / known limitations
+See `daily_log_report.md` for the full build log and `HANDOFF.md` for a
+running state-of-the-project summary, including open issues (reject-class
+false-accept rate, a few slot-level confusions) and what's still outstanding
+for submission.

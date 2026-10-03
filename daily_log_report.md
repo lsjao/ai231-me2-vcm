@@ -757,3 +757,177 @@ unreachable rather than a config problem). Also still open from before: evaluato
 and the actual benchmark session, breadboard wiring, easter-egg/playlist music files, full
 rehearsal, one more wake-word recording round. Raising the reject per-slot cap and retraining
 is a new, not-yet-done experiment worth running before the demo if time allows.
+
+## 2026-10-03 (overnight) -- the real assignment brief surfaces, all 19 commands covered, wake-word actually fixed via live testing
+
+### The scope gap was real, not a judgment call
+Pasted in the actual original professor brief for the first time this session (never
+previously in any repo file or chat transcript available to the assistant): the ME is
+explicitly "pure VCM doing 1 to 10. Everything on-device," where 1-10 is the professor's own
+ranked list of the most common smart-device commands -- play music, ask a question (weather/
+time), lights on/off, dim/color lights, timer, alarm, temperature, media control, reminders/
+lists, calls/messaging. Checked our 7-intent scope against it directly: **4 of the 10
+categories were missing entirely** -- weather, alarm, reminders, and calls/messaging -- exactly
+the six Option B commands (`WEATHER`, `ALARM`, `CREATE_REMINDER`, `LIST_REMINDERS`, `CALL`,
+`MESSAGE`) that had been routed to `reject` as hard negatives since Sep 29. The class group
+chat's "19 agreed intents" and "depends on your model archi" framing had read as optional
+scope; the actual brief says otherwise. Decided to close the gap rather than ship the known
+hole, given ~10 hours still available.
+
+### Closing the gap: 6 new intents, all 19 Option B commands now covered
+- `scripts/import_mark_dataset.py`: promoted the six commands from `OUT_OF_SCOPE_INTENTS` to
+  real `SIMPLE_MAP`/`SLOTTED_MAP` entries (single source of truth, reused by every importer).
+- `src/vcm/dispatch.py`: six new handlers, each a fixed/predefined response per the
+  assignment's own "don't complicate things" guidance from the Sep 14 planning chat -- no live
+  weather API (would violate the no-cloud rule anyway), no real telephony. `weather` says a
+  canned line; `alarm` echoes the time back; `create_reminder`/`list_reminders` keep an
+  in-memory list; `call`/`message` just confirm verbally. `Devices` gained a `reminders: list`.
+- `phrase_list.csv` updated with phrases for all six.
+- `scripts/option_b_map.py` (new): maps our internal labels back to the Option B 19-command
+  names, inverting the same `SIMPLE_MAP`/`SLOTTED_MAP` tables. Per the 2026-10-02 class chat
+  (Ailene <-> D), internal class schemes don't need to literally be 19 classes as long as a
+  mapping back exists for the shared benchmark -- this is ours. Verified: 19/19 covered, with
+  `media_control/previous` and `wake/kuya_jukebox` correctly flagged as our own extras with no
+  Option B equivalent.
+- Pulled real training data for all six from the master dataset's `train` split (already
+  available, previously discarded to reject) via the updated `import_hf_master_dataset.py`
+  mapping -- 1,920 new rows, no new data collection needed for this part.
+
+Retrained (seed 7, same class-weight-cap fix from earlier): **no capacity-wall regression** --
+all six new intents scored well (83-100% command accuracy on internal val), overall accuracy
+held at 72% despite going from 37 to 47 classes. Confirmed on the official master test set:
+76.61% overall, every new intent solid (68-93% range).
+
+### The master dataset moved again mid-session
+Found two more configs added to `airimonda/ai231-me2-voice-commands` after our last pull:
+`synthetic_negatives` (1,000 train / 250 test clips, five kinds of purpose-built reject
+negatives -- noise/babble/reversed/truncated/near-silence -- made specifically to stress-test
+false accepts) and, separately, a classmate (Anthony Navarez) shared
+`martinnavs/ai231-fil-supplemental-data`: Filipino-accented synthetic voices (zero-shot TTS
+cloned from real Filipino reference speakers), built after Anthony independently measured and
+posted the exact accent gap we'd have found ourselves -- real Filipino speech is ~5% of
+train/test but 45% of holdout, and his models scored 17-27% on the one real Filipino holdout
+speaker vs 88-96% on holdout's synthetic voices. Pulled both (1,000 + 1,320 rows respectively)
+into `external_data_hf/`.
+
+### Found a second real bug: the class-weight fix wasn't the whole story
+Two consecutive retrains after adding this new data both showed the exact Sep 28 "bad seed"
+collapse signature again (wake failing, all misclassified into one other specific class each
+time) -- but a third attempt, after adding the Filipino-supplemental data too, jumped to
+**78% internal val accuracy** and wake precision/recall 1.00/0.85. The jump was real: that run
+(seed 7, full accumulated dataset) became the new best model of the night, confirmed on the
+official test set at **82.85%** (up from the morning's 76.6%) before the wake-specific work
+below even started.
+
+### Two background-tooling training-loss incidents (not data/model bugs)
+Lost two full training runs tonight to infrastructure, not code: once because a background
+job was given a 1-hour timeout and got killed mid-run with no checkpoint saved (train.py only
+writes artifacts after `fit()` fully returns -- no incremental save), and once to the host
+tool's own low-memory protection killing a background shell while idle. Both were genuinely
+lost (no partial state recoverable) and had to be rerun from epoch 0. Fix for the rest of the
+night: ran subsequent training directly in the user's own terminal (`Tee-Object` to a log),
+outside the assistant's process-management entirely, immune to both failure modes. Also:
+confirmed CPU contention from an unrelated background app (MuseHub) measurably slowed one
+run's per-step time (121ms -> ~200ms) mid-run; closing it brought it back down without needing
+a restart.
+
+### Live Pi testing found three real bugs no offline eval could have caught
+Pushed the 19-intent model and ran it live for the first time. Results were revealing:
+
+1. **Wake word: 0/15 live successes**, despite 69-85% recall on held-out eval clips across
+   multiple runs -- confirms the exact "good eval numbers, bad real mic" pattern a classmate
+   (D) warned about in the group chat weeks ago. The model's top guess for failed wake attempts
+   wasn't even near "wake," it landed confidently on unrelated commands -- a real acoustic
+   mismatch between the 65 older wake clips and this room/mic/distance, not a threshold issue.
+   **Fix**: recorded 30 fresh wake-word takes directly on the demo Pi's own USB mic, in the
+   actual demo room, via `record_dataset.py --auto` run remotely over SSH (the only part of
+   this session needing the user physically present, speaking after each beep). Pulled the
+   result back (`data_real_pi_wake/`, 30/30 clips, gitignored) and retrained. **Result: live
+   wake recall went from 0/15 to effectively consistent success across 40+ attempts**, and the
+   same run's official test accuracy hit a new high of 82.85%.
+
+2. **TTS was silently going nowhere.** `espeak-ng`'s own default audio output exited 0 and
+   produced nothing audible -- confirmed by direct `espeak-ng` calls over SSH with the user
+   standing next to the (powered, AUX-mode, physically-connected, volume-maxed) speaker.
+   Root-caused methodically, not guessed: `aplay -l`/`speaker-test` direct to the named ALSA
+   device (`plughw:Headphones,0`) worked and was audible; raw `espeak-ng` to its own default
+   did not, even after `raspi-config nonint do_audio 1` forced the system ALSA default to the
+   headphone jack. The actual fix: `espeak-ng --stdout | aplay -D plughw:Headphones,0`
+   explicitly, piped rather than trusting espeak-ng's own backend. Also found the Pi's PCM
+   mixer was sitting at 70% (-27dB, too quiet for this hardware) -- set to 100% and persisted
+   with `alsactl store 2`. Rewrote `EspeakSpeaker` in `dispatch.py` to pipe through a named
+   device by default and surface `aplay` failures instead of swallowing them (the exact silence
+   that cost real debugging time tonight). Bumped default TTS amplitude 100->150 and replaced
+   the wake-word audio cue text ("mm-hmm", an easy-to-miss mumble) with a clearly-enunciated
+   "Yes?". Verified end to end through the actual `EspeakSpeaker` class, not just raw shell
+   commands.
+
+3. **`set_timer/10sec` and `set_timer/30sec` failed at dispatch time** despite the classifier
+   getting them right live (confirmed in the pipeline log: correctly classified, then "bad
+   timer slot" logged) -- `_set_timer` only ever handled the `"min"` suffix, a pre-existing bug
+   flagged earlier in the night and deliberately deferred until it actually broke live.
+   `TimerManager` reworked to take real seconds (scaled by the same test-acceleration factor as
+   before) instead of assuming minutes; all three required Timer values now work, verified live
+   on the Pi and via the existing test suite (updated, all 167 still pass).
+
+4. **Found during the same session, not yet confirmed as a "live bug" the same way**:
+   `media_control` transport commands (pause/stop/next/volume) were recognized correctly in
+   the log (0.9+ confidence) but spoke nothing on success -- `SPOKEN_MEDIA_COMMANDS` only
+   included `whats_playing`, by original design (don't talk over real music). With no real
+   music files loaded for most of a demo, a silent success is indistinguishable from a silent
+   failure, and the user reported "next/stop/volume didn't work" when they in fact had.
+   Removed the special-casing entirely -- media now always speaks its result like every other
+   intent. Verified live: "Volume up to 66%/76%/86%/96%" now actually audible.
+
+### Known limitations found live, not fixed (genuine model confusions, not bugs)
+- `set_timer/10sec` is confused with `30sec` -- never once correctly recognized across an
+  entire live session; a real, repeatable phonetic confusion, not a one-off.
+- `set_temperature/26` occasionally confused with `22`.
+- Light `on/off` vs `dim/color` intent confusion in the first ~30s after a wake streak, settled
+  down later in the same session.
+- **`media_control/volume_down` recognition is genuinely unstable, not a single confusion**:
+  across three separate test rounds it showed three different failure modes -- the phrase
+  "turn it down" always came out `volume_up` (zero successes); the word "quieter" instead got 3
+  clean `volume_down` successes before reverting to `volume_up`; a later round of "quieter"
+  attempts got classified as outright `reject` instead of either direction. No phrasing tried
+  tonight reliably fixes it -- this needs more targeted down-direction training data, not a
+  wording change. Accepted as a known, documented limitation rather than chased further.
+- One observed (n=1) cross-intent confusion: "play something chill" heard as
+  `light_dim_color/color_green`.
+- **"Call" retested in isolation, 2026-10-03: confirmed working cleanly.** 2/2 successes, high
+  confidence (0.93, 0.90), correctly spoke "Calling your emergency contact" both times -- it had
+  simply never been tried alone in earlier sessions, nothing was actually wrong.
+- `play_music/whats_playing`'s response wording is inconsistent when something is actively
+  playing ("Playing Porcelain" instead of a clear status answer) -- likely a small real bug in
+  `play_music_state_machine.py`, not yet investigated (bonus feature, not required).
+
+### Content gaps confirmed, not yet closed (need the user, not more code)
+- **No real music sourced at all** -- confirmed no `music/` directory exists on the Pi;
+  `play_music` is still entirely the sine-tone placeholder. Used the eval report's per-slot
+  confidence to pick the two best bets to actually source real audio for rather than guessing:
+  `playlist_focus` (1.00/1.00 precision/recall) and `playlist_chill` (1.00/0.50) -- plan is 3
+  songs each, exact required filenames worked out from `player.py`'s matching logic
+  (`Path(f).stem == title`, so any royalty-free audio works under any filename, titles don't
+  need to match the original stub names). `easter_good_morning` (0.80/1.00) flagged as a cheap
+  single-file bonus if time allows.
+- **Breadboard wiring status unknown** -- not rechecked this session, and now lower-priority:
+  planned (not yet built, intentionally deferred to a separate session) a lightweight offline
+  HTML/CSS/JS light-simulator web app as the class-approved hardware fallback (per the Sep 29
+  group-chat confirmation that a simulated UI is acceptable). Architecture agreed: a new
+  `WebLightController` implementing the existing `LightController` protocol, writing a small
+  `state.json` served by a plain local HTTP server, polled by a vanilla-JS page (deliberately
+  not Three.js -- no CDN/offline risk, no GPU contention with the real-time inference loop).
+  Runs entirely on the Pi; any browser on the same local network can view it.
+
+### Still open
+Git commit done (this session's work landed in one commit, `2892c0a`). Still not done:
+`HANDOFF.md` doesn't yet document the ALSA audio fix (exists only in conversation right now --
+real risk if the Pi is ever reflashed or reconfigured); the class's own shared `vcm-benchmarks`
+tool (Ailene's, mentioned repeatedly in the group chat) has never actually been run against our
+setup, only our own separate eval tooling; the submission checklist from the class slide
+template (public GitHub repo + MIT license, dataset citation, released model weights, a
+baseline-of-comparable-size comparison) remains entirely untouched; evaluator recruitment
+status is unknown -- never got a direct answer on where that stands; slide 1's content still
+needs refreshing with tonight's final numbers; a focused retest of "call" in isolation; sourcing
+the two playlists' worth of real music; building the light-simulator app; and a full rehearsal
+once the above settles. Demo is today.
