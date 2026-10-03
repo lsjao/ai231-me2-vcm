@@ -25,7 +25,7 @@ h2{margin:0;font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase;colo
 
 /* facts */
 .facts{margin:6px 0 0;display:grid;gap:10px}
-.facts div{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 14px;border-radius:12px;background:rgba(0,0,0,.22)}
+.facts>div{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 14px;border-radius:12px;background:rgba(0,0,0,.22)}
 dt{color:var(--muted);font-size:.9rem}
 dd{margin:0;font-weight:700;display:flex;align-items:center;gap:10px}
 #col{text-transform:capitalize}
@@ -43,23 +43,59 @@ dd{margin:0;font-weight:700;display:flex;align-items:center;gap:10px}
 #lightCard.on .pill{background:var(--gold);color:#2b2000}
 
 /* phone */
-.phone{position:relative;width:150px;height:282px;filter:drop-shadow(0 10px 12px rgba(0,0,0,.45))}
-.screen{fill:#0a1518;transition:fill .3s}
-.phone text{font-family:system-ui,sans-serif;fill:#fff}
-.clock{font-size:30px;font-weight:300}
-.hint{font-size:11px;fill:#9db3b5!important}
-.hint.left{text-anchor:start}
-.big{font-size:17px;font-weight:700}
-.bubble-t{font-size:13px;font-weight:700}
-.v-idle,.v-calling,.v-message{opacity:0;transition:opacity .25s}
+.phone{position:relative;width:180px;height:320px;border-radius:30px;background:#0c1b1f;border:4px solid #3b5a62;
+  padding:10px;filter:drop-shadow(0 10px 12px rgba(0,0,0,.45))}
+.notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:44px;height:7px;border-radius:4px;background:#223a40;z-index:2}
+.screen{position:relative;width:100%;height:100%;border-radius:20px;background:#0a1518;overflow:hidden;transition:background .3s}
+.view{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  padding:26px 10px 14px;text-align:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.view b{font-size:1.05rem}
+.view .big{font-size:1.6rem}
+.view .mid{font-size:1.05rem}
+.view small{color:var(--muted);font-size:.72rem}
+.view .app{position:absolute;top:24px;left:14px;letter-spacing:.06em;text-transform:uppercase;font-size:.62rem}
 #phoneCard[data-state=idle] .v-idle,
 #phoneCard[data-state=calling] .v-calling,
-#phoneCard[data-state=message] .v-message{opacity:1}
-#phoneCard[data-state=calling] .screen{fill:#10382c}
-#phoneCard[data-state=message] .screen{fill:#1a2f36}
+#phoneCard[data-state=message] .v-message,
+#phoneCard[data-state=time] .v-time,
+#phoneCard[data-state=weather] .v-weather,
+#phoneCard[data-state=alarm] .v-alarm,
+#phoneCard[data-state=timer] .v-timer,
+#phoneCard[data-state=timer_done] .v-timerdone,
+#phoneCard[data-state=temperature] .v-temperature,
+#phoneCard[data-state=reminder] .v-reminder{opacity:1}
+#phoneCard[data-state=calling] .screen{background:#10382c}
+#phoneCard[data-state=message] .screen{background:#1a2f36}
+#phoneCard[data-state=timer_done] .screen{background:#3a1d17}
+#phoneCard[data-state=idle] .pill{background:#264249}
 #phoneCard[data-state=calling] .pill{background:var(--green);color:#fff}
-#phoneCard[data-state=message] .pill{background:var(--accent);color:#fff}
+#phoneCard[data-state=message] .pill,#phoneCard[data-state=timer_done] .pill{background:var(--accent);color:#fff}
+#phoneCard:not([data-state=idle]):not([data-state=calling]):not([data-state=message]):not([data-state=timer_done]) .pill{background:var(--gold);color:#2b2000}
 
+.idle-logo{width:96px;height:96px;object-fit:contain;border-radius:22px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.avatar{width:72px;height:72px;border-radius:50%;display:grid;place-items:center}
+.avatar.green{background:var(--green)}
+.avatar svg{width:38px;height:38px}
+.hangup{width:38px;height:38px;border-radius:50%;background:#d9483b;display:grid;place-items:center;margin-top:10px}
+.hangup i{width:16px;height:4px;border-radius:2px;background:#fff}
+.bubble{background:var(--accent);border-radius:16px 16px 16px 4px;padding:12px 16px}
+.check{width:40px;height:40px;border-radius:50%;background:var(--green);display:grid;place-items:center;margin-top:8px}
+.check svg{width:24px;height:24px}
+.analog{width:120px;height:120px}
+.sun{width:110px;height:110px}
+.bell{width:96px;height:96px}
+.rays{transform-origin:50px 50px}
+.dial{position:relative;width:128px;height:128px;display:grid;place-items:center}
+.dial svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.dial b{font-size:2rem;z-index:1}
+.track{fill:none;stroke:#223a40;stroke-width:8}
+.prog{fill:none;stroke:var(--gold);stroke-width:8;stroke-linecap:round;stroke-dasharray:264;stroke-dashoffset:264}
+#remList{list-style:none;margin:6px 0 0;padding:0;width:100%;display:grid;gap:6px;text-align:left}
+#remList li{background:#16313a;border-radius:10px;padding:7px 10px;font-size:.8rem;display:flex;gap:8px;align-items:center}
+#remList li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--gold);flex:none}
+#remList li.new{outline:2px solid var(--accent)}
+
+/* animations */
 #phoneCard[data-state=calling] .phone{animation:buzz .5s ease-in-out infinite}
 @keyframes buzz{0%,100%{transform:rotate(0)}20%{transform:rotate(-4deg)}40%{transform:rotate(4deg)}60%{transform:rotate(-3deg)}80%{transform:rotate(3deg)}}
 .rings{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
@@ -68,10 +104,13 @@ dd{margin:0;font-weight:700;display:flex;align-items:center;gap:10px}
 .rings i:nth-child(2){animation-delay:.5s!important}
 .rings i:nth-child(3){animation-delay:1s!important}
 @keyframes ring{0%{transform:scale(.7);opacity:.8}100%{transform:scale(2.1);opacity:0}}
-#phoneCard[data-state=message] .bubble{animation:pop .45s cubic-bezier(.2,1.4,.4,1) both}
-#phoneCard[data-state=message] .tick{animation:pop .45s .3s cubic-bezier(.2,1.4,.4,1) both}
-.bubble,.tick{transform-box:fill-box;transform-origin:center}
+#phoneCard[data-state=message] .bubble,#phoneCard[data-state=message] .check{animation:pop .45s cubic-bezier(.2,1.4,.4,1) both}
+#phoneCard[data-state=message] .check{animation-delay:.3s}
 @keyframes pop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+#phoneCard[data-state=weather] .rays{animation:spin 12s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#phoneCard[data-state=alarm] .bell,#phoneCard[data-state=timer_done] .bell{transform-origin:50% 10%;animation:swing .5s ease-in-out infinite}
+@keyframes swing{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}}
 
 footer{text-align:center;color:var(--muted);font-size:.78rem;padding:12px 0 20px}
 @media (max-width:520px){header{padding:16px}main{padding:8px 16px 20px}.stage{height:300px}}

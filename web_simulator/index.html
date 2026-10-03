@@ -65,43 +65,109 @@
     </div>
     <div class="stage">
       <div class="rings"><i></i><i></i><i></i></div>
-      <svg class="phone" viewBox="0 0 160 300" aria-label="Phone">
-        <rect x="8" y="6" width="144" height="288" rx="26" fill="#0c1b1f" stroke="#3b5a62" stroke-width="4"/>
-        <rect x="18" y="24" width="124" height="252" rx="16" class="screen"/>
-        <rect x="58" y="12" width="44" height="7" rx="3.5" fill="#223a40"/>
+      <div class="phone" id="phone">
+        <div class="notch"></div>
+        <div class="screen">
 
-        <!-- idle -->
-        <g class="v-idle">
-          <text x="80" y="140" text-anchor="middle" class="clock" id="clock">--:--</text>
-          <text x="80" y="165" text-anchor="middle" class="hint">Ready</text>
-        </g>
+          <div class="view v-idle">
+            <img src="assets/kuya_jukebox_icon.webp" alt="" class="idle-logo">
+            <b>Kuya Jukebox</b>
+            <small>Say "Hey Kuya"</small>
+          </div>
 
-        <!-- calling -->
-        <g class="v-calling">
-          <circle cx="80" cy="115" r="30" fill="#2f9e6e"/>
-          <path d="M70 102c-2 0-5 3-5 6 0 14 14 28 28 28 3 0 6-3 6-5l-1-6-7-2-4 3c-5-2-9-6-11-11l3-4-2-7z" fill="#fff" transform="translate(-2 4)"/>
-          <text x="80" y="178" text-anchor="middle" class="big">Calling...</text>
-          <text x="80" y="200" text-anchor="middle" class="hint">Emergency contact</text>
-          <circle cx="80" cy="242" r="16" fill="#d9483b"/>
-          <path d="M72 242h16" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
-        </g>
+          <div class="view v-calling">
+            <div class="avatar green">
+              <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="#fff"/></svg>
+            </div>
+            <b>Calling...</b>
+            <small>Emergency contact</small>
+            <div class="hangup"><i></i></div>
+          </div>
 
-        <!-- message -->
-        <g class="v-message">
-          <text x="34" y="62" class="hint left">Messages</text>
-          <g class="bubble">
-            <path d="M32 90h96a12 12 0 0 1 12 12v38a12 12 0 0 1-12 12H72l-16 16v-16H32a12 12 0 0 1-12-12v-38a12 12 0 0 1 12-12z" fill="#e8613c"/>
-            <text x="80" y="127" text-anchor="middle" class="bubble-t">Message sent</text>
-          </g>
-          <g class="tick">
-            <circle cx="80" cy="222" r="18" fill="#2f9e6e"/>
-            <path d="M71 222l7 7 12-14" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          </g>
-        </g>
-      </svg>
+          <div class="view v-message">
+            <small class="app">Messages</small>
+            <div class="bubble"><b id="msgText">Message sent</b></div>
+            <div class="check"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+
+          <div class="view v-time">
+            <small class="app">Time</small>
+            <svg class="analog" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="46" fill="#10242a" stroke="#f0b429" stroke-width="3"/>
+              <g stroke="#9db3b5" stroke-width="2" stroke-linecap="round">
+                <path d="M50 8v6M50 86v6M8 50h6M86 50h6"/>
+              </g>
+              <line id="hHand" x1="50" y1="50" x2="50" y2="28" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+              <line id="mHand" x1="50" y1="50" x2="50" y2="17" stroke="#f0b429" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="50" cy="50" r="3.5" fill="#e8613c"/>
+            </svg>
+            <b class="big" id="timeText">--:--</b>
+          </div>
+
+          <div class="view v-weather">
+            <small class="app">Weather</small>
+            <svg class="sun" viewBox="0 0 100 100">
+              <g class="rays" stroke="#f0b429" stroke-width="5" stroke-linecap="round">
+                <path d="M50 6v12M50 82v12M6 50h12M82 50h12M19 19l8 8M73 73l8 8M81 19l-8 8M27 73l-8 8"/>
+              </g>
+              <circle cx="50" cy="50" r="22" fill="#f7c948"/>
+            </svg>
+            <b class="big" id="weatherTemp">28&deg;</b>
+            <small id="weatherText">Sunny</small>
+          </div>
+
+          <div class="view v-alarm">
+            <small class="app">Alarm</small>
+            <svg class="bell" viewBox="0 0 100 100">
+              <path d="M50 12c-15 0-26 11-26 26v18l-8 12h68l-8-12V38c0-15-11-26-26-26z" fill="#f0b429"/>
+              <circle cx="50" cy="84" r="8" fill="#f0b429"/>
+              <path d="M18 30c2-8 6-12 10-15M82 30c-2-8-6-12-10-15" stroke="#e8613c" stroke-width="5" stroke-linecap="round" fill="none"/>
+            </svg>
+            <b class="big" id="alarmTime">--</b>
+            <small>Alarm set</small>
+          </div>
+
+          <div class="view v-timer">
+            <small class="app">Timer</small>
+            <div class="dial">
+              <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" class="track"/><circle cx="50" cy="50" r="42" class="prog" id="timerArc"/></svg>
+              <b id="timerNum">0</b>
+            </div>
+            <small id="timerLabel">seconds</small>
+          </div>
+
+          <div class="view v-timerdone">
+            <small class="app">Timer</small>
+            <svg class="bell" viewBox="0 0 100 100">
+              <path d="M50 12c-15 0-26 11-26 26v18l-8 12h68l-8-12V38c0-15-11-26-26-26z" fill="#e8613c"/>
+              <circle cx="50" cy="84" r="8" fill="#e8613c"/>
+            </svg>
+            <b class="big">Time's up!</b>
+            <small id="doneLabel"></small>
+          </div>
+
+          <div class="view v-temperature">
+            <small class="app">Thermostat</small>
+            <div class="dial">
+              <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" class="track"/><circle cx="50" cy="50" r="42" class="prog" id="tempArc"/></svg>
+              <b id="tempNum">--</b>
+            </div>
+            <small>Target temperature</small>
+          </div>
+
+          <div class="view v-reminder">
+            <small class="app">Reminders</small>
+            <b class="mid" id="remTitle">Reminders</b>
+            <ul id="remList"></ul>
+          </div>
+
+        </div>
+      </div>
     </div>
     <dl class="facts">
-      <div><dt>Last event</dt><dd id="lastEvent">None yet</dd></div>
+      <div><dt>Alarm</dt><dd id="devAlarm">--</dd></div>
+      <div><dt>Thermostat</dt><dd id="devTemp">--</dd></div>
+      <div><dt>Reminders</dt><dd id="devRem">None</dd></div>
     </dl>
   </section>
 </main>
