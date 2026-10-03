@@ -25,6 +25,7 @@ Usage (from src/):
 from __future__ import annotations
 
 import argparse
+import os
 import queue
 import time
 from dataclasses import dataclass
@@ -299,8 +300,32 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--no-wake", action="store_true", help="act on commands without a wake word")
     p.add_argument("--no-ambient", action="store_true")
     p.add_argument("--device", default=None, help="mic device index/name")
+    p.add_argument("--lights", choices=["auto", "web"], default="auto",
+                   help="web: also mirror light state to the browser simulator (web_simulator/)")
+    p.add_argument("--web-port", type=int, default=8000, help="port for --lights web")
     p.add_argument("--no-beep", action="store_true", help="no audio cue when wake word is heard")
     return p.parse_args()
+
+
+def start_web_simulator(port: int):
+    """Serve web_simulator/ on the LAN and return a controller that feeds it."""
+    import functools
+    import http.server
+    import threading
+
+    from .dispatch import WebLightController, default_light_controller
+
+    web_dir = root_path("web_simulator")
+
+    class Quiet(http.server.SimpleHTTPRequestHandler):
+        def log_message(self, *args, **kwargs):  # keep the console clean
+            pass
+
+    handler = functools.partial(Quiet, directory=web_dir)
+    server = http.server.ThreadingHTTPServer(("0.0.0.0", port), handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    print(f"[lights] simulator at http://<pi-ip>:{port}/")
+    return WebLightController(os.path.join(web_dir, "state.json"), inner=default_light_controller())
 
 
 def main() -> None:
@@ -313,7 +338,10 @@ def main() -> None:
     library = Library(args.music_dir)
     sm = PlayMusicStateMachine(playlists=library.playlists())
     speaker = PrintSpeaker() if args.speaker == "print" else default_speaker()
-    dispatcher = Dispatcher(sm, speaker)
+    lights = None
+    if args.lights == "web":
+        lights = start_web_simulator(args.web_port)
+    dispatcher = Dispatcher(sm, speaker, lights=lights)
     player = None if args.no_audio else Player(library)
     ambient = None if args.no_ambient else AmbientAutoVolume(sm.volume)
     config = PipelineConfig(

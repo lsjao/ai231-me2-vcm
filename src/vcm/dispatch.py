@@ -26,6 +26,8 @@ what should be said aloud, absent when the action should stay quiet (e.g. a
 
 from __future__ import annotations
 
+import json
+import os
 import shutil
 import subprocess
 import threading
@@ -165,6 +167,30 @@ class GPIOLightController:
         self._red.value = r * scale
         self._green.value = g * scale
         self._blue.value = b * scale
+
+
+class WebLightController:
+    """Writes the light state to web_simulator/state.json on every call so the
+    local simulator page can mirror it. Optionally forwards to another
+    controller (e.g. real GPIO LEDs) so both stay in sync."""
+
+    def __init__(self, path: str, inner: LightController | None = None) -> None:
+        self.path = path
+        self.inner = inner
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        self._write(False, 100, None)  # start from a known "off" state
+
+    def _write(self, on: bool, brightness: int, color: str | None) -> None:
+        tmp = self.path + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump({"lights_on": on, "brightness": brightness, "color": color,
+                       "updated_at": datetime.now().isoformat(timespec="seconds")}, f)
+        os.replace(tmp, self.path)  # atomic: the page never reads a half-written file
+
+    def set_state(self, on: bool, brightness: int, color: str | None) -> None:
+        self._write(on, brightness, color)
+        if self.inner is not None:
+            self.inner.set_state(on, brightness, color)
 
 
 def default_light_controller() -> LightController:
