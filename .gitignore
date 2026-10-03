@@ -15,3 +15,7 @@ data_real_pi_wake/
 external_data/
 external_data_hf/
 models_archive/
+music/
+models_baseline/
+models_baseline_smoketest/
+train_baseline.log
