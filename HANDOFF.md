@@ -275,6 +275,48 @@ resolve on its own. Revisit only if live testing shows they're still broken afte
 - [ ] If wake word is still unreliable: coach the "just try 2-3 times" fallback rather than
   betting the demo on first-attempt reliability -- realistic even for commercial assistants.
 
+### Oct 3 (Sat) overnight/morning -- live-tuning pass, demo script guidance
+Decided: no more evaluator recruitment, no breadboard wiring -- the web light
+simulator (`web_simulator/`, merged to master) is the confirmed-working
+fallback, class-approved. Live-tested on the Pi and fixed what came up:
+- `--min-confidence` raised **0.15 -> 0.35** (the 0.15 figure above was
+  tuned Oct 1 against an older 7-intent model, never revalidated after the
+  Oct 2-3 expansion to 19 commands/47 classes; live testing showed 0.15 let
+  low-confidence guesses like 0.20-0.38 fire as real actions).
+- Ghost playlists (`playlist_general`/`jazz`/`workout` -- classifier labels
+  with no real music files) no longer fall through to a placeholder sine
+  tone if the classifier mis-picks one; `pipeline.py` only hands
+  `playlist_chill`/`playlist_focus` to the state machine, the other three
+  are cleanly declined ("the X playlist isn't available").
+- Easter-egg placeholder tone (no `music/easter/*.mp3` sourced) now
+  self-stops after 2.5s instead of droning until someone says "stop".
+- **`media_control/volume_down` ("quieter") is a known, unfixed live-mic
+  reliability gap** -- confirmed NOT a model-bias issue (validation
+  confusion matrix shows volume_down is fine, 76% correct, barely confused
+  with volume_up) -- it's the same class of live-mic/acoustic domain
+  mismatch that caused the wake-word problem, just not fixed the same way
+  (would need real Pi-mic volume_down recordings + a full ~2hr retrain,
+  ruled out tonight on a tight time budget). **Demo script guidance**: say
+  **"volume down"** (literal, untested live but structurally different from
+  the known-bad phrase below); avoid **"turn it down"** (live-tested,
+  always misfired as `volume_up`); **"quieter"** is a fallback (inconsistent
+  -- worked a few times, then reverted).
+- **`call/none` is confused with `wake/kuya_jukebox`, confirmed via two
+  independent tests** (a controlled per-utterance probability check using
+  `vcm.debug_topk`, and a live pipeline retest with an explicit pause after
+  the wake word): saying "Kuya Jukebox, [pause], call" repeatedly produced
+  five straight `wake` detections with zero commands in between -- the
+  model's own top-1 guess for "call" kept landing on `wake/kuya_jukebox`
+  itself, not a near-miss confusion with some other command. In a clean,
+  isolated capture (no adjacent wake phrase) `call/none` scored 0.972 --
+  very recognizable on its own -- so this is specifically a wake/call
+  acoustic overlap in the live-mic domain, same root-cause class as
+  `volume_down` (needs real data + retrain to actually fix, ruled out
+  tonight). **Demo risk**: don't rely on "call" working first try; if it
+  keeps re-triggering wake instead of firing, that's this known issue, not
+  a user error. `message` is unaffected -- confirmed working multiple times
+  tonight (`"message"` / `"send a message"`, 0.80-0.88 confidence).
+
 ### Honest progress assessment (Oct 1 night)
 ~55-60% complete, not higher. A working model isn't a finished assignment: evaluator testing
 (required), breadboard wiring, real music files, rehearsal, and git hygiene are all
