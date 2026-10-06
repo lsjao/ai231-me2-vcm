@@ -81,3 +81,24 @@ def test_floor_does_not_creep_up_during_long_speech():
     for i in range(0, len(wav), FRAME_SAMPLES):
         ep.process(wav[i : i + FRAME_SAMPLES])
     assert ep.floor_dbfs < -50  # still tracking the room, not the speech
+
+
+def test_floor_is_capped_so_a_gradually_louder_room_cannot_lock_out_speech():
+    # Regression test for a bug confirmed live (2026-10-03 demo): the floor
+    # used to track rising ambient noise with no ceiling, eventually pushing
+    # the speech threshold above normal speech volume -- permanently, until
+    # the process was restarted. Simulate a room gradually getting noisier
+    # over a long session, then confirm normal-volume speech still clears
+    # the threshold afterward.
+    ep = Endpointer()
+    rng = np.random.default_rng(0)
+    for i, dbfs in enumerate(np.linspace(-55, -25, 400)):
+        chunk = (rng.standard_normal(int(SR * 0.3)) * 10 ** (dbfs / 20)).astype(np.float32)
+        for j in range(0, len(chunk), FRAME_SAMPLES):
+            frame = chunk[j : j + FRAME_SAMPLES]
+            if len(frame) == FRAME_SAMPLES:
+                ep.process(frame)
+    assert ep.floor_dbfs <= -39.0  # never adapted past ~calibrated (-55) + MAX_FLOOR_RISE_DB (15)
+
+    clips = run(stream(noise(0.3, dbfs=-25, seed=99), burst(0.6, amp=0.4), noise(0.5, dbfs=-25, seed=98)))
+    assert len(clips) == 1  # normal-volume speech still registers after the drift

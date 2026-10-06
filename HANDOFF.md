@@ -337,6 +337,28 @@ fallback, class-approved. Live-tested on the Pi and fixed what came up:
   not reminders generally. **Demo risk**: don't rely on "what are my
   reminders" working -- no known-good alternate phrasing to suggest yet.
 
+### Oct 6 -- the real cause of Saturday's demo found and fixed: unbounded noise-floor drift
+User confirmed the actual demo was bad -- only `light_on_off/on` worked live. Matches the
+~22-minute wake-word outage logged mid-session on Oct 3 (15 clean wakes, then zero for 1000+
+seconds) that was never root-caused at the time, just worked around by restarting. **This was
+never a mic/hardware issue** -- found and fixed a real bug in `vad.py`'s `Endpointer`: the
+speech-detection noise floor adapted toward ambient noise with no ceiling, so a room getting
+noisier over a long session (crowd, HVAC, anything) drags the floor up indefinitely, eventually
+making normal speech too quiet to ever clear the threshold again -- permanently, until the
+process restarts and recalibrates from scratch. Exactly matches the observed pattern (fine at
+first, degrades over time, instant fix on restart). Confirmed directly by feeding the
+`Endpointer` a synthetic drifting-room signal, not just theorized.
+
+**Fixed**: asymmetric floor adaptation (slow rise, fast fall, matching the already-correct
+pattern in `ambient_volume.py`) plus a ceiling relative to the room's own calibrated starting
+level (+15 dB max), not a fixed number -- a fixed ceiling broke a different test (a room that's
+genuinely loud from the start, correctly calibrated, isn't the same as a room that drifted there
+from quiet). Regression test added. All 168 tests pass. Deployed and running on the Pi.
+
+**This should mean Saturday's specific failure mode -- long sessions going silent -- won't
+recur.** Worth a fresh rehearsal to confirm, ideally a longer one (15-20+ min) to actually
+exercise the scenario this fixes, not just a quick smoke test.
+
 ### Honest progress assessment (Oct 1 night)
 ~55-60% complete, not higher. A working model isn't a finished assignment: evaluator testing
 (required), breadboard wiring, real music files, rehearsal, and git hygiene are all

@@ -1010,3 +1010,43 @@ two cosmetic Slide 2 gaps (dataset DOI vs. link -- a DOI was provided this sessi
 standalone Pi-latency script vs. the embedded `pi_check.py`). Demo now carries three known,
 documented, accepted live-mic limitations: `volume_down`/"quieter", `call` (confused with wake),
 and `list_reminders`.
+
+## 2026-10-06 -- root-caused the demo's real failure: an unbounded noise-floor drift bug
+
+User confirmed in this session that Saturday's actual demo went badly -- "only turn the lights
+on" worked live, consistent with the ~22-minute total wake-word outage logged mid-session on
+Oct 3 (15 clean wake detections, then zero for the rest of a 1000+ second stretch) that was
+never root-caused in the moment, just worked around by restarting.
+
+The same pattern reproduced today (post-demo polishing): wake worked, then went fully silent for
+80+ seconds with zero log activity -- not even `reject` lines, which would still appear from
+ambient noise under normal operation. A restart fixed it immediately, both times. That pattern
+(works fine initially -> degrades the longer the session runs -> instantly recovers on restart)
+pointed at accumulating in-process state, not a hardware/USB flake.
+
+**Root cause, found by reading `vad.py`'s `Endpointer` rather than guessing**: the noise floor
+that speech has to clear (`floor + ONSET_MARGIN_DB`, 12 dB) adapted toward the current frame's
+level on every non-active frame, symmetrically, with **no ceiling at all**. If ambient noise in
+the room drifts upward over a long session for any reason (more people arriving, HVAC cycling,
+another group's demo nearby), the floor just follows it up indefinitely -- and since the
+threshold rises with it, a high enough floor eventually makes normal speech volume too quiet to
+ever register again. Permanently, until the process restarts and the floor recalibrates from
+scratch. Confirmed directly, not just suspected: fed the `Endpointer` a synthetic room drifting
+from -55 to -25 dBFS over a simulated multi-minute session, then normal-volume speech (-11 dBFS)
+-- it never registered. `ambient_volume.py`'s separate noise tracker already uses an asymmetric
+slow-rise/fast-fall rate specifically to resist this; `vad.py`'s used a single symmetric rate,
+confirming the inconsistency rather than just theorizing one.
+
+**Fix**: asymmetric adaptation (slow rise 0.02, fast fall 0.1, matching `ambient_volume.py`'s
+proven approach) plus a ceiling -- but a ceiling *relative to wherever the room actually
+calibrated* (`calibrated_floor + 15 dB`), not a fixed absolute number. First attempt used a flat
+-30 dBFS ceiling and broke an existing test (`test_manual_volume_command_suspends_ambient_
+adjustment`) that calibrates against a genuinely loud -20 dBFS room from the start -- a fixed
+ceiling can't tell "legitimately loud room, correctly calibrated" from "drifted away from a
+quiet start," so it incorrectly clamped a valid calibration. The relative version only resists
+actual drift, leaving an already-loud correctly-calibrated room alone. Added a regression test
+(`test_floor_is_capped_so_a_gradually_louder_room_cannot_lock_out_speech`) reproducing the
+gradual-drift scenario directly. All 168 tests pass (167 existing + 1 new).
+
+This is very likely the real explanation for Saturday's demo, not a mic/hardware issue as
+assumed at the time.

@@ -24,7 +24,24 @@ from .ambient_volume import FRAME_MS, FRAME_SAMPLES, frame_dbfs
 ONSET_MARGIN_DB = 12.0    # frame is "active" this far above the floor
 HOLD_MARGIN_DB = 8.0      # ...and stays active above this lower bar (hysteresis)
 MIN_DBFS = -55.0          # never trigger below this, however quiet the floor is
-FLOOR_ALPHA = 0.05        # floor adaptation rate on non-active frames
+# Floor adaptation on non-active frames was a single symmetric rate (0.05
+# either direction) with no ceiling -- confirmed live (2026-10-03 demo, and
+# reproduced directly in test_vad.py) that this lets the floor drift up with
+# any sustained rise in room noise (crowd arriving, HVAC, etc.), and since
+# the speech threshold is floor + ONSET_MARGIN_DB, a high enough floor
+# eventually makes normal speech volume too quiet to ever register --
+# permanently, until the process is restarted and the floor recalibrates
+# from scratch. Mirrors ambient_volume.py's AmbientNoiseTracker, which
+# already uses a slow-rise/fast-fall asymmetry for the same reason; this
+# adds a hard ceiling too; even a slow rise over a long enough session
+# would otherwise still eventually lock speech out.
+FLOOR_RISE_ALPHA = 0.02   # rate when the room is getting louder (slow, resists drift)
+FLOOR_FALL_ALPHA = 0.1    # rate when the room is getting quieter (fast, recovers quickly)
+# The ceiling is relative to wherever the room actually calibrated, not a
+# fixed constant -- a room that's genuinely loud from the start (e.g. a
+# busy venue) calibrates there correctly and should stay accurate, only
+# drift *away* from that starting point should be resisted.
+MAX_FLOOR_RISE_DB = 15.0  # floor can never adapt more than this above its calibrated value
 CALIBRATION_FRAMES = 10   # initial frames used to seed the floor (~300 ms)
 
 PREROLL_MS = 100
@@ -42,6 +59,7 @@ def _frames(ms: int) -> int:
 class Endpointer:
     def __init__(self):
         self._floor: float | None = None
+        self._floor_ceiling: float | None = None
         self._calib: list[float] = []
         self._preroll: deque[np.ndarray] = deque(maxlen=_frames(PREROLL_MS))
         self._pending: list[np.ndarray] = []  # active frames before the utterance opens
@@ -65,13 +83,15 @@ class Endpointer:
             self._preroll.append(frame)
             if len(self._calib) >= CALIBRATION_FRAMES:
                 self._floor = float(np.mean(self._calib))
+                self._floor_ceiling = self._floor + MAX_FLOOR_RISE_DB
             return None
 
         in_speech = self._utt is not None
         active = level > self._threshold(HOLD_MARGIN_DB if in_speech else ONSET_MARGIN_DB)
 
         if not active:
-            self._floor += FLOOR_ALPHA * (level - self._floor)
+            alpha = FLOOR_RISE_ALPHA if level > self._floor else FLOOR_FALL_ALPHA
+            self._floor = min(self._floor + alpha * (level - self._floor), self._floor_ceiling)
 
         if not in_speech:
             if active:
