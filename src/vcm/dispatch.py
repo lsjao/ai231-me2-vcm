@@ -171,14 +171,15 @@ class GPIOLightController:
 
 class WebState:
     """Shared writer for web_simulator/state.json. Every section (lights,
-    phone) is merged into the existing file under one lock, so updating one
-    never erases the other. Writes are atomic (tmp + rename)."""
+    phone, music) is merged into the existing file under one lock, so
+    updating one never erases the others. Writes are atomic (tmp + rename)."""
 
     def __init__(self, path: str) -> None:
         self.path = path
         self._lock = threading.Lock()
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-        self.update({"lights_on": False, "brightness": 100, "color": None, "phone": None})
+        self.update({"lights_on": False, "brightness": 100, "color": None, "phone": None,
+                     "music": None})
 
     def update(self, fields: dict) -> None:
         with self._lock:
@@ -207,6 +208,19 @@ class WebLightController:
         self.web.update({"lights_on": on, "brightness": brightness, "color": color})
         if self.inner is not None:
             self.inner.set_state(on, brightness, color)
+
+
+class MediaController:
+    """Mirrors now-playing state (track, playlist, playing/paused/idle,
+    volume) to the simulator page -- persistent state like lights, not a
+    transient event like the phone screen, since "what's playing" should
+    stay visible at rest, not flash and revert."""
+
+    def __init__(self, web: WebState) -> None:
+        self.web = web
+
+    def update(self, state: str, track: str | None, playlist: str | None, volume: int) -> None:
+        self.web.update({"music": {"state": state, "track": track, "playlist": playlist, "volume": volume}})
 
 
 class PhoneController:
@@ -291,6 +305,7 @@ class Dispatcher:
         speaker: Speaker | None = None,
         lights: LightController | None = None,
         phone: PhoneController | None = None,
+        media: MediaController | None = None,
         now: Callable[[], datetime] = datetime.now,
         seconds_per_minute: float = 60.0,
     ):
@@ -298,6 +313,7 @@ class Dispatcher:
         self.speaker = speaker or default_speaker()
         self.lights = lights or default_light_controller()
         self.phone = phone
+        self.media = media
         self.devices = Devices()
         self._now = now
         self.timers = TimerManager(self._timer_expired, seconds_per_minute)
@@ -351,6 +367,10 @@ class Dispatcher:
         result = dict(self.state_machine.handle_command(slot))
         result["kind"] = "media"
         result["speak"] = result["message"]
+        if self.media:
+            np_ = self.state_machine.now_playing
+            self.media.update(self.state_machine.state.value, np_.track, np_.playlist,
+                               self.state_machine.volume)
         return self._finish(result)
 
     # -- simulated devices ------------------------------------------------

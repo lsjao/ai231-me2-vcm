@@ -13,8 +13,10 @@ const PILL = { idle: "IDLE", calling: "CALLING", message: "MESSAGE", time: "TIME
                alarm: "ALARM", timer: "TIMER", timer_done: "DONE", temperature: "THERMOSTAT", reminder: "REMINDERS" };
 const TEMP_MIN = 10, TEMP_MAX = 30, ARC = 264;
 
+const MUSIC_PILL = { idle: "IDLE", playing: "PLAYING", paused: "PAUSED" };
+
 const $ = (id) => document.getElementById(id);
-const lightCard = $("lightCard"), phoneCard = $("phoneCard");
+const lightCard = $("lightCard"), phoneCard = $("phoneCard"), musicCard = $("musicCard");
 const glow = $("glow"), fill = $("bulbFill");
 let last = "";
 let loaded = false;    // false until the first poll: whatever is in the file then is old news
@@ -44,6 +46,21 @@ function renderLights(s) {
     fill.style.fill = "";
     glow.style.opacity = 0;
   }
+}
+
+// Persistent state like lights (stays visible at rest), not a transient
+// phone-style event -- "what's playing" should still show after a poll
+// rather than flash and revert.
+function renderMusic(m) {
+  m = m || {};
+  const state = m.state || "idle";
+  musicCard.dataset.state = state;
+  $("musicPill").textContent = MUSIC_PILL[state] || state.toUpperCase();
+  $("musicTrack").textContent = m.track || "--";
+  $("musicPlaylist").textContent = m.playlist || "--";
+  const vol = m.volume != null ? Math.max(0, Math.min(100, Number(m.volume))) : null;
+  $("musicVol").textContent = vol != null ? vol + "%" : "--";
+  $("musicVolBar").style.width = vol != null ? vol + "%" : "0";
 }
 
 function setPhone(state) {
@@ -165,11 +182,13 @@ async function poll() {
     const s = JSON.parse(text);
     last = text;
     renderLights(s);
+    renderMusic(s.music);
     renderPhone(s.phone);
     loaded = true;
   } catch (e) { setLink(false); /* missing or mid-write: keep last state */ }
 }
 
 renderLights({ lights_on: false, brightness: 100, color: null });
+renderMusic(null);
 poll();
 setInterval(poll, POLL_MS);

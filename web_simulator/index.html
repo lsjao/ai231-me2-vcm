@@ -57,6 +57,33 @@
     </dl>
   </section>
 
+  <!-- MUSIC -->
+  <section class="card" id="musicCard" data-state="idle">
+    <div class="card-head">
+      <h2>Now Playing</h2>
+      <span class="pill" id="musicPill">IDLE</span>
+    </div>
+    <div class="stage">
+      <div class="vinyl" id="vinyl">
+        <svg viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="96" fill="#111"/>
+          <circle cx="100" cy="100" r="96" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+          <circle cx="100" cy="100" r="80" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+          <circle cx="100" cy="100" r="64" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+          <circle cx="100" cy="100" r="48" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+          <circle cx="100" cy="100" r="34" fill="var(--gold)"/>
+          <circle cx="100" cy="100" r="5" fill="#111"/>
+        </svg>
+      </div>
+      <div class="tonearm" id="tonearm"></div>
+    </div>
+    <dl class="facts">
+      <div><dt>Track</dt><dd id="musicTrack">--</dd></div>
+      <div><dt>Playlist</dt><dd id="musicPlaylist">--</dd></div>
+      <div><dt>Volume</dt><dd><span id="musicVol">--</span><span class="bar"><b id="musicVolBar"></b></span></dd></div>
+    </dl>
+  </section>
+
   <!-- PHONE -->
   <section class="card" id="phoneCard" data-state="idle">
     <div class="card-head">
@@ -72,7 +99,7 @@
           <div class="view v-idle">
             <img src="assets/kuya_jukebox_icon.webp" alt="" class="idle-logo">
             <b>Kuya Jukebox</b>
-            <small>Say "Hey Kuya"</small>
+            <small>Say "Kuya Jukebox"</small>
           </div>
 
           <div class="view v-calling">
