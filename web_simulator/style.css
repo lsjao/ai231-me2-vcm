@@ -15,7 +15,7 @@ h1{font-size:1.45rem;margin:0;letter-spacing:.01em}
 .link.ok i{background:var(--green);box-shadow:0 0 8px var(--green)}
 .link.bad i{background:var(--accent)}
 
-main{flex:1;align-items:start;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;max-width:1000px;width:100%;margin:0 auto;padding:8px 28px 24px}
+main{flex:1;align-items:start;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1200px;width:100%;margin:0 auto;padding:8px 28px 24px}
 .card{background:linear-gradient(180deg,var(--card),#122f35);border:1px solid var(--line);border-radius:22px;padding:20px 22px;
   box-shadow:0 18px 40px rgba(0,0,0,.35);display:flex;flex-direction:column}
 .card-head{display:flex;justify-content:space-between;align-items:center}
@@ -124,5 +124,6 @@ dd{margin:0;font-weight:700;display:flex;align-items:center;gap:10px}
 @keyframes swing{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}}
 
 footer{text-align:center;color:var(--muted);font-size:.78rem;padding:12px 0 20px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
 @media (max-width:520px){header{padding:16px}main{padding:8px 16px 20px}.stage{height:300px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
