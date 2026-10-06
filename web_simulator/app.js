@@ -1,4 +1,4 @@
-// Polls state.json and renders lights + phone state. Fully offline, no dependencies.
+// Polls state.json and renders the jukebox cabinet. Fully offline, no dependencies.
 // RGB values mirror COLOR_MAP in src/vcm/dispatch.py.
 const COLOR_MAP = {
   red: [1, 0, 0], green: [0, 1, 0], blue: [0, 0, 1], yellow: [1, 1, 0],
@@ -6,22 +6,18 @@ const COLOR_MAP = {
   pink: [1, 0.4, 0.7], warm: [1, 0.6, 0.3], cool: [0.7, 0.85, 1],
 };
 const POLL_MS = 400;
-// UI-invented display durations (ms) for each phone screen; timer is computed.
+// UI-invented display durations (ms) for each transient screen; timer is computed.
 const SHOW_MS = { calling: 5000, message: 3500, time: 5000, weather: 5000, alarm: 4500,
                   temperature: 4500, reminder: 5500, timer_done: 6000 };
-const PILL = { idle: "IDLE", calling: "CALLING", message: "MESSAGE", time: "TIME", weather: "WEATHER",
-               alarm: "ALARM", timer: "TIMER", timer_done: "DONE", temperature: "THERMOSTAT", reminder: "REMINDERS" };
 const TEMP_MIN = 10, TEMP_MAX = 30, ARC = 264;
 
-const MUSIC_PILL = { idle: "IDLE", playing: "PLAYING", paused: "PAUSED" };
-
 const $ = (id) => document.getElementById(id);
-const lightCard = $("lightCard"), phoneCard = $("phoneCard"), musicCard = $("musicCard");
-const glow = $("glow"), fill = $("bulbFill");
+const jukebox = $("jukebox"), screen = $("screen"), glow = $("glow");
 let last = "";
 let loaded = false;    // false until the first poll: whatever is in the file then is old news
-let phoneId = null;    // last phone event seen
+let phoneId = null;    // last transient phone-style event seen
 let phoneTimer = null, countTimer = null;
+let musicState = { state: "idle" };   // last known music state, for the idle-vs-music screen fallback
 
 function rgb(color, k) {
   const c = COLOR_MAP[color] || COLOR_MAP.white;
@@ -32,40 +28,45 @@ function renderLights(s) {
   const on = !!s.lights_on;
   const bri = Math.max(0, Math.min(100, Number(s.brightness) || 0));
   const color = s.color || "white";
-  lightCard.classList.toggle("on", on);
+  jukebox.dataset.power = on ? "on" : "off";
   $("power").textContent = on ? "ON" : "OFF";
   $("bri").textContent = on ? bri + "%" : "--";
   $("briBar").style.width = on ? bri + "%" : "0";
   $("col").textContent = on ? color : "--";
   $("colDot").style.background = on ? rgb(color, 1) : "";
   if (on) {
-    fill.style.fill = rgb(color, 0.35 + 0.65 * (bri / 100));
     glow.style.setProperty("--c", rgb(color, 1));
-    glow.style.opacity = (bri / 100) * 0.9;
+    glow.style.opacity = 0.25 + 0.55 * (bri / 100);
   } else {
-    fill.style.fill = "";
     glow.style.opacity = 0;
   }
 }
 
-// Persistent state like lights (stays visible at rest), not a transient
-// phone-style event -- "what's playing" should still show after a poll
-// rather than flash and revert.
+// Persistent state (stays visible at rest, like lights) -- drives the vinyl
+// spin/tonearm and, when nothing else is showing, the screen's idle view.
 function renderMusic(m) {
-  m = m || {};
-  const state = m.state || "idle";
-  musicCard.dataset.state = state;
-  $("musicPill").textContent = MUSIC_PILL[state] || state.toUpperCase();
-  $("musicTrack").textContent = m.track || "--";
-  $("musicPlaylist").textContent = m.playlist || "--";
-  const vol = m.volume != null ? Math.max(0, Math.min(100, Number(m.volume))) : null;
+  musicState = m || { state: "idle" };
+  const state = musicState.state || "idle";
+  jukebox.dataset.music = state;
+  $("musicTrack").textContent = musicState.track || "--";
+  $("musicPlaylist").textContent = musicState.playlist || "--";
+  const vol = musicState.volume != null ? Math.max(0, Math.min(100, Number(musicState.volume))) : null;
   $("musicVol").textContent = vol != null ? vol + "%" : "--";
   $("musicVolBar").style.width = vol != null ? vol + "%" : "0";
+  // If the screen is currently sitting at rest (idle or music), keep it in
+  // sync with the latest music state; a transient event (call, time, ...)
+  // takes priority and isn't interrupted.
+  if (screen.dataset.state === "idle" || screen.dataset.state === "music") {
+    setScreenRest();
+  }
 }
 
-function setPhone(state) {
-  phoneCard.dataset.state = state;
-  $("phonePill").textContent = PILL[state] || state.toUpperCase();
+function setScreenRest() {
+  screen.dataset.state = musicState.state && musicState.state !== "idle" ? "music" : "idle";
+}
+
+function setScreen(state) {
+  screen.dataset.state = state;
 }
 
 function renderDevice(d) {
@@ -150,9 +151,10 @@ function showEvent(p) {
 }
 
 // The backend only writes "this happened"; idle is computed here. A new event
-// (changed id) shows for a few seconds, then reverts. Timing is local, so clock
-// differences between the Pi and this device don't matter. Whatever was already
-// in the file at page load is treated as old.
+// (changed id) shows for a few seconds, then reverts to the music/idle rest
+// state. Timing is local, so clock differences between the Pi and this
+// device don't matter. Whatever was already in the file at page load is
+// treated as old.
 function renderPhone(p) {
   const id = p ? p.seq + "|" + p.updated_at : "none";
   if (!loaded) { phoneId = id; renderDevice(p && p.device); return; }
@@ -161,9 +163,9 @@ function renderPhone(p) {
   phoneId = id;
   if (p.status !== "timer") clearInterval(countTimer);
   const ms = showEvent(p);
-  setPhone(p.status);
+  setScreen(p.status);
   clearTimeout(phoneTimer);
-  phoneTimer = setTimeout(() => setPhone("idle"), ms);
+  phoneTimer = setTimeout(setScreenRest, ms);
 }
 
 function setLink(ok) {

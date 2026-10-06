@@ -8,62 +8,15 @@
 </head>
 <body>
 <header>
-  <div class="brand">
-    <img src="assets/kuya_jukebox_icon.webp" alt="Kuya Jukebox" class="logo">
-    <div>
-      <h1>Kuya Jukebox</h1>
-      <p class="sub">Voice command simulator</p>
-    </div>
-  </div>
   <div class="link" id="link" title="Connection to the Pi"><i></i><span>Connecting</span></div>
 </header>
 
 <main>
-  <!-- LIGHTS -->
-  <section class="card" id="lightCard">
-    <div class="card-head">
-      <h2>Lights</h2>
-      <span class="pill" id="power">OFF</span>
-    </div>
-    <div class="stage">
-      <div class="glow" id="glow"></div>
-      <svg class="bulb" viewBox="0 0 200 300" aria-label="Light bulb">
-        <defs>
-          <radialGradient id="glass" cx="38%" cy="30%" r="75%">
-            <stop offset="0%" stop-color="#fff" stop-opacity=".95"/>
-            <stop offset="55%" stop-color="#fff" stop-opacity=".55"/>
-            <stop offset="100%" stop-color="#9aa" stop-opacity=".45"/>
-          </radialGradient>
-          <linearGradient id="metal" x1="0" x2="1">
-            <stop offset="0" stop-color="#6b7b82"/>
-            <stop offset=".5" stop-color="#c9d3d8"/>
-            <stop offset="1" stop-color="#5a6a71"/>
-          </linearGradient>
-        </defs>
-        <path id="bulbFill" d="M100 12C55 12 25 46 25 90c0 30 14 50 30 68 8 9 12 18 12 30v14h66v-14c0-12 4-21 12-30 16-18 30-38 30-68 0-44-30-78-75-78z"/>
-        <path d="M100 12C55 12 25 46 25 90c0 30 14 50 30 68 8 9 12 18 12 30v14h66v-14c0-12 4-21 12-30 16-18 30-38 30-68 0-44-30-78-75-78z" fill="url(#glass)"/>
-        <path d="M60 60c8-20 22-30 38-34" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none" opacity=".8"/>
-        <path id="filament" d="M82 190v-40l18 20 18-20v40" fill="none" stroke="#8a6a3a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-        <rect x="64" y="202" width="72" height="14" rx="5" fill="url(#metal)"/>
-        <rect x="66" y="220" width="68" height="14" rx="5" fill="url(#metal)"/>
-        <rect x="68" y="238" width="64" height="14" rx="5" fill="url(#metal)"/>
-        <path d="M78 256h44l-8 22h-28z" fill="#3a464b"/>
-      </svg>
-    </div>
-    <dl class="facts">
-      <div><dt>Brightness</dt>
-        <dd><span id="bri">--</span><span class="bar"><b id="briBar"></b></span></dd></div>
-      <div><dt>Color</dt><dd><span class="dot" id="colDot"></span><span id="col">--</span></dd></div>
-    </dl>
-  </section>
+  <section class="jukebox" id="jukebox" data-power="off">
+    <div class="jb-glow" id="glow"></div>
 
-  <!-- MUSIC -->
-  <section class="card" id="musicCard" data-state="idle">
-    <div class="card-head">
-      <h2>Now Playing</h2>
-      <span class="pill" id="musicPill">IDLE</span>
-    </div>
-    <div class="stage">
+    <div class="jb-dome">
+      <div class="jb-domeglass"></div>
       <div class="vinyl" id="vinyl">
         <svg viewBox="0 0 200 200">
           <circle cx="100" cy="100" r="96" fill="#111"/>
@@ -77,125 +30,136 @@
       </div>
       <div class="tonearm" id="tonearm"></div>
     </div>
-    <dl class="facts">
-      <div><dt>Track</dt><dd id="musicTrack">--</dd></div>
-      <div><dt>Playlist</dt><dd id="musicPlaylist">--</dd></div>
-      <div><dt>Volume</dt><dd><span id="musicVol">--</span><span class="bar"><b id="musicVolBar"></b></span></dd></div>
-    </dl>
-  </section>
 
-  <!-- PHONE -->
-  <section class="card" id="phoneCard" data-state="idle">
-    <div class="card-head">
-      <h2>Phone</h2>
-      <span class="pill" id="phonePill">IDLE</span>
+    <div class="jb-marquee">
+      <img src="assets/kuya_jukebox_icon.webp" alt="" class="jb-badge">
+      <b>KUYA JUKEBOX</b>
     </div>
-    <div class="stage">
-      <div class="rings"><i></i><i></i><i></i></div>
-      <div class="phone" id="phone">
-        <div class="notch"></div>
-        <div class="screen">
 
-          <div class="view v-idle">
-            <img src="assets/kuya_jukebox_icon.webp" alt="" class="idle-logo">
-            <b>Kuya Jukebox</b>
-            <small>Say "Kuya Jukebox"</small>
-          </div>
+    <div class="jb-screen" id="screen" data-state="idle">
 
-          <div class="view v-calling">
-            <div class="avatar green">
-              <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="#fff"/></svg>
-            </div>
-            <b>Calling...</b>
-            <small>Emergency contact</small>
-            <div class="hangup"><i></i></div>
-          </div>
-
-          <div class="view v-message">
-            <small class="app">Messages</small>
-            <div class="bubble"><b id="msgText">Message sent</b></div>
-            <div class="check"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          </div>
-
-          <div class="view v-time">
-            <small class="app">Time</small>
-            <svg class="analog" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="46" fill="#10242a" stroke="#f0b429" stroke-width="3"/>
-              <g stroke="#9db3b5" stroke-width="2" stroke-linecap="round">
-                <path d="M50 8v6M50 86v6M8 50h6M86 50h6"/>
-              </g>
-              <line id="hHand" x1="50" y1="50" x2="50" y2="28" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
-              <line id="mHand" x1="50" y1="50" x2="50" y2="17" stroke="#f0b429" stroke-width="3" stroke-linecap="round"/>
-              <circle cx="50" cy="50" r="3.5" fill="#e8613c"/>
-            </svg>
-            <b class="big" id="timeText">--:--</b>
-          </div>
-
-          <div class="view v-weather">
-            <small class="app">Weather</small>
-            <svg class="sun" viewBox="0 0 100 100">
-              <g class="rays" stroke="#f0b429" stroke-width="5" stroke-linecap="round">
-                <path d="M50 6v12M50 82v12M6 50h12M82 50h12M19 19l8 8M73 73l8 8M81 19l-8 8M27 73l-8 8"/>
-              </g>
-              <circle cx="50" cy="50" r="22" fill="#f7c948"/>
-            </svg>
-            <b class="big" id="weatherTemp">28&deg;</b>
-            <small id="weatherText">Sunny</small>
-          </div>
-
-          <div class="view v-alarm">
-            <small class="app">Alarm</small>
-            <svg class="bell" viewBox="0 0 100 100">
-              <path d="M50 12c-15 0-26 11-26 26v18l-8 12h68l-8-12V38c0-15-11-26-26-26z" fill="#f0b429"/>
-              <circle cx="50" cy="84" r="8" fill="#f0b429"/>
-              <path d="M18 30c2-8 6-12 10-15M82 30c-2-8-6-12-10-15" stroke="#e8613c" stroke-width="5" stroke-linecap="round" fill="none"/>
-            </svg>
-            <b class="big" id="alarmTime">--</b>
-            <small>Alarm set</small>
-          </div>
-
-          <div class="view v-timer">
-            <small class="app">Timer</small>
-            <div class="dial">
-              <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" class="track"/><circle cx="50" cy="50" r="42" class="prog" id="timerArc"/></svg>
-              <b id="timerNum">0</b>
-            </div>
-            <small id="timerLabel">seconds</small>
-          </div>
-
-          <div class="view v-timerdone">
-            <small class="app">Timer</small>
-            <svg class="bell" viewBox="0 0 100 100">
-              <path d="M50 12c-15 0-26 11-26 26v18l-8 12h68l-8-12V38c0-15-11-26-26-26z" fill="#e8613c"/>
-              <circle cx="50" cy="84" r="8" fill="#e8613c"/>
-            </svg>
-            <b class="big">Time's up!</b>
-            <small id="doneLabel"></small>
-          </div>
-
-          <div class="view v-temperature">
-            <small class="app">Thermostat</small>
-            <div class="dial">
-              <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" class="track"/><circle cx="50" cy="50" r="42" class="prog" id="tempArc"/></svg>
-              <b id="tempNum">--</b>
-            </div>
-            <small>Target temperature</small>
-          </div>
-
-          <div class="view v-reminder">
-            <small class="app">Reminders</small>
-            <b class="mid" id="remTitle">Reminders</b>
-            <ul id="remList"></ul>
-          </div>
-
-        </div>
+      <div class="view v-idle">
+        <small>Say</small>
+        <b class="big">"Kuya Jukebox"</b>
       </div>
+
+      <div class="view v-music">
+        <small class="app">Now Playing</small>
+        <b class="mid" id="musicTrack">--</b>
+        <small id="musicPlaylist">--</small>
+      </div>
+
+      <div class="view v-calling">
+        <div class="avatar green">
+          <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="#fff"/></svg>
+        </div>
+        <b>Calling...</b>
+        <small>Emergency contact</small>
+      </div>
+
+      <div class="view v-message">
+        <small class="app">Messages</small>
+        <div class="bubble"><b id="msgText">Message sent</b></div>
+      </div>
+
+      <div class="view v-time">
+        <small class="app">Time</small>
+        <svg class="analog" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="46" fill="#10242a" stroke="#f0b429" stroke-width="3"/>
+          <g stroke="#9db3b5" stroke-width="2" stroke-linecap="round">
+            <path d="M50 8v6M50 86v6M8 50h6M86 50h6"/>
+          </g>
+          <line id="hHand" x1="50" y1="50" x2="50" y2="28" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+          <line id="mHand" x1="50" y1="50" x2="50" y2="17" stroke="#f0b429" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="50" cy="50" r="3.5" fill="#e8613c"/>
+        </svg>
+        <b class="big" id="timeText">--:--</b>
+      </div>
+
+      <div class="view v-weather">
+        <small class="app">Weather</small>
+        <svg class="sun" viewBox="0 0 100 100">
+          <g class="rays" stroke="#f0b429" stroke-width="5" stroke-linecap="round">
+            <path d="M50 6v12M50 82v12M6 50h12M82 50h12M19 19l8 8M73 73l8 8M81 19l-8 8M27 73l-8 8"/>
+          </g>
+          <circle cx="50" cy="50" r="22" fill="#f7c948"/>
+        </svg>
+        <b class="big" id="weatherTemp">28&deg;</b>
+        <small id="weatherText">Sunny</small>
+      </div>
+
+      <div class="view v-alarm">
+        <small class="app">Alarm</small>
+        <svg class="bell" viewBox="0 0 100 100">
+          <path d="M50 12c-15 0-26 11-26 26v18l-8 12h68l-8-12V38c0-15-11-26-26-26z" fill="#f0b429"/>
+          <circle cx="50" cy="84" r="8" fill="#f0b429"/>
+          <path d="M18 30c2-8 6-12 10-15M82 30c-2-8-6-12-10-15" stroke="#e8613c" stroke-width="5" stroke-linecap="round" fill="none"/>
+        </svg>
+        <b class="big" id="alarmTime">--</b>
+        <small>Alarm set</small>
+      </div>
+
+      <div class="view v-timer">
+        <small class="app">Timer</small>
+        <div class="dial">
+          <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" class="track"/><circle cx="50" cy="50" r="42" class="prog" id="timerArc"/></svg>
+          <b id="timerNum">0</b>
+        </div>
+        <small id="timerLabel">seconds</small>
+      </div>
+
+      <div class="view v-timerdone">
+        <small class="app">Timer</small>
+        <svg class="bell" viewBox="0 0 100 100">
+          <path d="M50 12c-15 0-26 11-26 26v18l-8 12h68l-8-12V38c0-15-11-26-26-26z" fill="#e8613c"/>
+          <circle cx="50" cy="84" r="8" fill="#e8613c"/>
+        </svg>
+        <b class="big">Time's up!</b>
+        <small id="doneLabel"></small>
+      </div>
+
+      <div class="view v-temperature">
+        <small class="app">Thermostat</small>
+        <div class="dial">
+          <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" class="track"/><circle cx="50" cy="50" r="42" class="prog" id="tempArc"/></svg>
+          <b id="tempNum">--</b>
+        </div>
+        <small>Target temperature</small>
+      </div>
+
+      <div class="view v-reminder">
+        <small class="app">Reminders</small>
+        <b class="mid" id="remTitle">Reminders</b>
+        <ul id="remList"></ul>
+      </div>
+
     </div>
-    <dl class="facts">
-      <div><dt>Alarm</dt><dd id="devAlarm">--</dd></div>
-      <div><dt>Thermostat</dt><dd id="devTemp">--</dd></div>
-      <div><dt>Reminders</dt><dd id="devRem">None</dd></div>
+
+    <dl class="jb-panel">
+      <div class="knob">
+        <dt>Power</dt><dd id="power">OFF</dd>
+      </div>
+      <div class="knob">
+        <dt>Color</dt><dd><span class="dot" id="colDot"></span><span id="col">--</span></dd>
+      </div>
+      <div class="knob">
+        <dt>Brightness</dt><dd><span id="bri">--</span><span class="bar"><b id="briBar"></b></span></dd>
+      </div>
+      <div class="knob">
+        <dt>Volume</dt><dd><span id="musicVol">--</span><span class="bar"><b id="musicVolBar"></b></span></dd>
+      </div>
+      <div class="knob">
+        <dt>Alarm</dt><dd id="devAlarm">--</dd>
+      </div>
+      <div class="knob">
+        <dt>Thermostat</dt><dd id="devTemp">--</dd>
+      </div>
+      <div class="knob">
+        <dt>Reminders</dt><dd id="devRem">None</dd>
+      </div>
     </dl>
+
+    <div class="jb-grille"></div>
   </section>
 </main>
 
